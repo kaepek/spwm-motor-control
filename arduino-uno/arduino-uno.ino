@@ -40,7 +40,7 @@ void setup() {
 
 void increment_rotation() {
   // increment rotation
-  ELECTRICAL_DEG_PHASE_A =+ 1;
+  ELECTRICAL_DEG_PHASE_A += 1;
   ELECTRICAL_DEG_PHASE_B = ELECTRICAL_DEG_PHASE_A + 120;
   ELECTRICAL_DEG_PHASE_C = ELECTRICAL_DEG_PHASE_B + 120;
   // obey modular arithmetic (loop at 360)
