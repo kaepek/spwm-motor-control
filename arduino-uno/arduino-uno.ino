@@ -53,8 +53,8 @@ double deg_to_rad(int16_t electrical_deg_phase_x) {
   return (((double) electrical_deg_phase_x)*PI)/180;
 }
 
-int spwm_duty_calculator(int16_t electrical_deg_phase_x) {
-  return (int) sin(deg_to_rad(electrical_deg_phase_x))*127.5+127.5;
+float spwm_duty_calculator(int16_t electrical_deg_phase_x) {
+  return sin(deg_to_rad(electrical_deg_phase_x))*127.5+127.5;
 }
 
 float map_int_to_double(int x, int in_min, int in_max, double out_min, double out_max)
@@ -75,18 +75,27 @@ void update_spwm_duties() {
   TORQUE_VALUE = min(TORQUE_VALUE, 0.7);
 
   // calculate SPWM duties
-  SPWM_DUTY_PHASE_A = spwm_duty_calculator(ELECTRICAL_DEG_PHASE_A);
-  SPWM_DUTY_PHASE_B = spwm_duty_calculator(ELECTRICAL_DEG_PHASE_B);
-  SPWM_DUTY_PHASE_C = spwm_duty_calculator(ELECTRICAL_DEG_PHASE_C);
+  SPWM_DUTY_PHASE_A = (int) (spwm_duty_calculator(ELECTRICAL_DEG_PHASE_A)*TORQUE_VALUE);
+  SPWM_DUTY_PHASE_B = (int) (spwm_duty_calculator(ELECTRICAL_DEG_PHASE_B)*TORQUE_VALUE);
+  SPWM_DUTY_PHASE_C = (int) (spwm_duty_calculator(ELECTRICAL_DEG_PHASE_C)*TORQUE_VALUE);
 
   // update PWM duties
-  analogWrite(PIN_L6234_SPWM_PHASE_A, SPWM_DUTY_PHASE_A*TORQUE_VALUE);
-  analogWrite(PIN_L6234_SPWM_PHASE_B, SPWM_DUTY_PHASE_B*TORQUE_VALUE);
-  analogWrite(PIN_L6234_SPWM_PHASE_C, SPWM_DUTY_PHASE_C*TORQUE_VALUE);
+  
+  analogWrite(PIN_L6234_SPWM_PHASE_A, SPWM_DUTY_PHASE_A);
+  analogWrite(PIN_L6234_SPWM_PHASE_B, SPWM_DUTY_PHASE_B);
+  analogWrite(PIN_L6234_SPWM_PHASE_C, SPWM_DUTY_PHASE_C);
 
   Serial.print(SPEED_POT_VALUE);
   Serial.print("\t");
   Serial.print(TORQUE_VALUE);
+
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_A);
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_B);
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_C);
+  
   Serial.print("\n");
 
   delay(SPEED_POT_VALUE/15);
