@@ -16,7 +16,7 @@ int SPWM_DUTY_PHASE_C = 0;
 int SPEED_POT_VALUE = 0; // range 0 1023
 int TORQUE_POT_VALUE = 0; // range 0 1023 (need to map to range 0 -> 1)
 
-long int t1 = millis();
+// long int t1 = millis(); // loop timing variable
 
 void setup() {
   Serial.begin(9600);
@@ -61,7 +61,6 @@ float spwm_duty_calculator(int16_t electrical_deg_phase_x) {
 
 float map_int_to_float(int x, int in_min, int in_max, float out_min, float out_max)
 {
-  // float x, float in_min, float in_max, float out_min, float out_max)
   float dbl_x = (float) x;
   float dbl_in_min = (float) in_min;
   float dbl_in_max = (float) in_max;
@@ -69,16 +68,16 @@ float map_int_to_float(int x, int in_min, int in_max, float out_min, float out_m
 }
 
 void update_spwm_duties() {
-  
-  long int oldTime = t1;
-  t1 = millis();
-  
+  // timing diagnostics
+  // long int oldTime = t1;
+  // t1 = millis();
 
   // read pot values
   SPEED_POT_VALUE = analogRead(PIN_SPEED_POT);
   TORQUE_POT_VALUE = analogRead(PIN_TORQUE_POT);
+  
+  // map and clamp torque value
   float TORQUE_VALUE = map_int_to_float(TORQUE_POT_VALUE, 0, 1023, 0.0, 1.0);
-  // clamp torque value
   TORQUE_VALUE = min(TORQUE_VALUE, 0.7);
 
   // calculate SPWM duties
@@ -87,26 +86,25 @@ void update_spwm_duties() {
   SPWM_DUTY_PHASE_C = (int) (spwm_duty_calculator(ELECTRICAL_DEG_PHASE_C)*TORQUE_VALUE);
 
   // update PWM duties
-  
   analogWrite(PIN_L6234_SPWM_PHASE_A, SPWM_DUTY_PHASE_A);
   analogWrite(PIN_L6234_SPWM_PHASE_B, SPWM_DUTY_PHASE_B);
   analogWrite(PIN_L6234_SPWM_PHASE_C, SPWM_DUTY_PHASE_C);
 
+  // diagnostic prints
   //Serial.print(SPEED_POT_VALUE);
   //Serial.print("\t");
   //Serial.print(TORQUE_VALUE);
   //Serial.print("\t");
-  // Serial.print(t1-oldTime);
+  //Serial.print(t1-oldTime);
   
-
-  // Serial.print("\t");
-  // Serial.print(SPWM_DUTY_PHASE_A);
-  // Serial.print("\t");
-  // Serial.print(SPWM_DUTY_PHASE_B);
-  // Serial.print("\t");
-  // Serial.print(SPWM_DUTY_PHASE_C);
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_A);
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_B);
+  //Serial.print("\t");
+  //Serial.print(SPWM_DUTY_PHASE_C);
   
-  // Serial.print("\n");
+  //Serial.print("\n");
 
   delay(SPEED_POT_VALUE/15);
 }
@@ -119,5 +117,4 @@ void loop() {
 
   // update pwm signal
   update_spwm_duties();
-
 }
