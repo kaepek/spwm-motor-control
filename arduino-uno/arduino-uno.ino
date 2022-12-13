@@ -5,16 +5,18 @@
 #define PIN_SPEED_POT A0
 #define PIN_TORQUE_POT A1
 
-int16_t ELECTRICAL_DEG_PHASE_A = -1; 
-int16_t ELECTRICAL_DEG_PHASE_B = 0;
-int16_t ELECTRICAL_DEG_PHASE_C = 0;
+int ELECTRICAL_DEG_PHASE_A = -1; 
+int ELECTRICAL_DEG_PHASE_B = 0;
+int ELECTRICAL_DEG_PHASE_C = 0;
 
 int SPWM_DUTY_PHASE_A = 0;
 int SPWM_DUTY_PHASE_B = 0;
 int SPWM_DUTY_PHASE_C = 0;
 
-uint32_t SPEED_POT_VALUE = 0; // range 0 1023
-uint32_t TORQUE_POT_VALUE = 0; // range 0 1023 (need to map to range 0 -> 1)
+int SPEED_POT_VALUE = 0; // range 0 1023
+int TORQUE_POT_VALUE = 0; // range 0 1023 (need to map to range 0 -> 1)
+
+long int t1 = millis();
 
 void setup() {
   Serial.begin(9600);
@@ -49,28 +51,33 @@ void increment_rotation() {
   ELECTRICAL_DEG_PHASE_C %= 360;
 }
 
-double deg_to_rad(int16_t electrical_deg_phase_x) {
-  return (((double) electrical_deg_phase_x)*PI)/180;
+float deg_to_rad(int16_t electrical_deg_phase_x) {
+  return (((float) electrical_deg_phase_x)*PI)/180;
 }
 
 float spwm_duty_calculator(int16_t electrical_deg_phase_x) {
   return sin(deg_to_rad(electrical_deg_phase_x))*127.5+127.5;
 }
 
-float map_int_to_double(int x, int in_min, int in_max, double out_min, double out_max)
+float map_int_to_float(int x, int in_min, int in_max, float out_min, float out_max)
 {
   // float x, float in_min, float in_max, float out_min, float out_max)
-  double dbl_x = (double) x;
-  double dbl_in_min = (double) in_min;
-  double dbl_in_max = (double) in_max;
-  return (dbl_x - dbl_in_min) * (out_max - out_min) / ( (double) dbl_in_max - dbl_in_min) + out_min;
+  float dbl_x = (float) x;
+  float dbl_in_min = (float) in_min;
+  float dbl_in_max = (float) in_max;
+  return (dbl_x - dbl_in_min) * (out_max - out_min) / ( dbl_in_max - dbl_in_min) + out_min;
 }
 
 void update_spwm_duties() {
+  
+  long int oldTime = t1;
+  t1 = millis();
+  
+
   // read pot values
   SPEED_POT_VALUE = analogRead(PIN_SPEED_POT);
   TORQUE_POT_VALUE = analogRead(PIN_TORQUE_POT);
-  double TORQUE_VALUE = map_int_to_double(TORQUE_POT_VALUE, 0, 1023, 0.0, 1.0);
+  float TORQUE_VALUE = map_int_to_float(TORQUE_POT_VALUE, 0, 1023, 0.0, 1.0);
   // clamp torque value
   TORQUE_VALUE = min(TORQUE_VALUE, 0.7);
 
@@ -85,18 +92,21 @@ void update_spwm_duties() {
   analogWrite(PIN_L6234_SPWM_PHASE_B, SPWM_DUTY_PHASE_B);
   analogWrite(PIN_L6234_SPWM_PHASE_C, SPWM_DUTY_PHASE_C);
 
-  Serial.print(SPEED_POT_VALUE);
-  Serial.print("\t");
-  Serial.print(TORQUE_VALUE);
-
+  //Serial.print(SPEED_POT_VALUE);
   //Serial.print("\t");
-  //Serial.print(SPWM_DUTY_PHASE_A);
+  //Serial.print(TORQUE_VALUE);
   //Serial.print("\t");
-  //Serial.print(SPWM_DUTY_PHASE_B);
-  //Serial.print("\t");
-  //Serial.print(SPWM_DUTY_PHASE_C);
+  // Serial.print(t1-oldTime);
   
-  Serial.print("\n");
+
+  // Serial.print("\t");
+  // Serial.print(SPWM_DUTY_PHASE_A);
+  // Serial.print("\t");
+  // Serial.print(SPWM_DUTY_PHASE_B);
+  // Serial.print("\t");
+  // Serial.print(SPWM_DUTY_PHASE_C);
+  
+  // Serial.print("\n");
 
   delay(SPEED_POT_VALUE/15);
 }
