@@ -6,9 +6,28 @@ Smooth FOC like control with torque and speed control.
 
 - [Manual](./resources/sinusoidal-pwm-manual.pdf)
 
+# Install repo
+
+```
+git clone --recurse-submodules git@github.com:jk89/spwm-motor-control.git
+```
+
 # Code
 
 - [Arduino Code](./arduino-uno/arduino-uno.ino)
+- [Teensy Code](./teensy-40/teensy-40.ino)
+
+# Controller install
+
+- cd rbot-io
+- npm install
+- npm link
+
+# IO Controller usage
+
+```
+rbotio-torque-delay-direction-dualshock-serial
+```
 
 # Credits/Useful links:
 - EE design and software enginnering - Jonathan Kelsey

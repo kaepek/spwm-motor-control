@@ -1,0 +1,3 @@
+[submodule "rbot-io"]
+	path = rbot-io
+	url = git@github.com:jk89/rbot-io.git
