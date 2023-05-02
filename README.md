@@ -19,14 +19,20 @@ git clone --recurse-submodules git@github.com:jk89/spwm-motor-control.git
 
 # Controller install
 
-- cd rbot-io
+- cd kaepek-io
 - npm install
 - npm link
 
 # IO Controller usage
 
+## Run dualshock to serialport with torque-delay-direction profile (for testing with hardware).
 ```
-rbotio-torque-delay-direction-dualshock-serial
+kaepek-torque-delay-direction-dualshock-serial
+```
+
+## Run dualshock to console with torque-delay-direction profile (for testing without hardware).
+```
+kaepek-torque-delay-direction-dualshock-console
 ```
 
 # Credits/Useful links:
