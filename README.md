@@ -9,7 +9,7 @@ Smooth FOC like control with torque and speed control.
 # Install repo
 
 ```
-git clone --recurse-submodules git@github.com:jk89/spwm-motor-control.git
+git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 ```
 
 # Code
