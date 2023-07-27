@@ -12,14 +12,14 @@ Smooth FOC like control with torque and speed control.
 git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 ```
 
-# Code
+# Open loop code (no feedback)
 
-- [Arduino Code](./arduino-uno/arduino-uno.ino)
-- [Teensy Code](./teensy-40/teensy-40.ino)
+- [Arduino Code](./open-loop/arduino-uno/arduino-uno.ino)
+- [Teensy Code](./open-loop/teensy-40/teensy-40.ino)
 
 # Controller install
 
-- cd kaepek-io
+- cd external/kaepek-io
 - npm install
 - npm link
 

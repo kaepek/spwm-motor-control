@@ -1,3 +1,9 @@
-[submodule "kaepek-io"]
-	path = kaepek-io
-	url = git@github.com:kaepek/io.git
+[submodule "external/kaepek-io"]
+	path = external/kaepek-io
+	url = https://github.com/kaepek/io
+[submodule "external/kaepek-kalman"]
+	path = external/kaepek-kalman
+	url = git@github.com:kaepek/kalman.git
+[submodule "external/kaepek-encoder"]
+	path = external/kaepek-encoder
+	url = git@github.com:kaepek/encoder.git
