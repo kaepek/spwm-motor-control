@@ -27,8 +27,9 @@ def deg_to_rad(deg):
 def rad_to_deg(rad):
     return rad * 180/np.pi
 
-def get_sin_model(poles):
+def get_sin_model(poles, duty_max):
     sin_period_coeff = (poles / 2)
+    duty_max_over_two = duty_max / 2
     def sin_model(angular_position, angular_displacement, phase_current_displacement):
         coefficient=1.0
         phase_a_current = np.zeros((1,angular_position.shape[0]))# 0
@@ -37,6 +38,12 @@ def get_sin_model(poles):
         phase_a_current += coefficient * np.sin(sin_period_coeff * (angular_position + angular_displacement))
         phase_b_current += coefficient * np.sin(sin_period_coeff * (angular_position + angular_displacement + phase_current_displacement))
         phase_c_current += coefficient * np.sin(sin_period_coeff * (angular_position + angular_displacement + (2 * phase_current_displacement)))
+        
+        #convert to duty
+        phase_a_current = np.round((phase_a_current * duty_max_over_two) + duty_max_over_two)
+        phase_b_current = np.round((phase_b_current * duty_max_over_two) + duty_max_over_two)
+        phase_c_current = np.round((phase_c_current * duty_max_over_two) + duty_max_over_two)
+        
         return np.asarray([phase_a_current, phase_b_current, phase_c_current]).ravel()
     return sin_model
 
@@ -49,7 +56,7 @@ def create_voltage_scatter(ax,independant_axis_data,dependant_axis_data):
     ax.set_xlim(left=0, right=2*np.pi)
     ax.hlines(y=[0], xmin=[0], xmax=[2*np.pi], colors='purple', linestyles='--', lw=1, label='Multiple Lines')
 
-def get_voltage_bins(encoder_divisions, number_of_poles, encoder_compression_factor, cw_zero_displacement, cw_phase_displacement, ccw_zero_displacement, ccw_phase_displacement):
+def get_voltage_bins(duty_max, encoder_divisions, number_of_poles, encoder_compression_factor, cw_zero_displacement, cw_phase_displacement, ccw_zero_displacement, ccw_phase_displacement):
     # get a range for angular_position in radians
     angular_resolution = int(encoder_divisions / encoder_compression_factor) # must be int
     angular_position = [((2*float(i)*np.pi)/float(angular_resolution)) for i in range(angular_resolution)]
@@ -58,7 +65,7 @@ def get_voltage_bins(encoder_divisions, number_of_poles, encoder_compression_fac
     print(len(angular_position))
     angular_position = np.asarray(angular_position)
     # get sin model
-    model = get_sin_model(number_of_poles)
+    model = get_sin_model(number_of_poles, duty_max)
     cw_data = model(angular_position, deg_to_rad(cw_zero_displacement), deg_to_rad(cw_phase_displacement))
     ccw_data = model(angular_position, deg_to_rad(ccw_zero_displacement), deg_to_rad(ccw_phase_displacement))
 
@@ -74,7 +81,14 @@ def get_voltage_bins(encoder_divisions, number_of_poles, encoder_compression_fac
     create_voltage_scatter(ax[0],angular_position,cw_data.reshape(3, angular_position.shape[0])) 
     create_voltage_scatter(ax[1],angular_position,ccw_data.reshape(3, angular_position.shape[0])) 
 
-    fig.savefig("discretiser-test.png", pad_inches=0, bbox_inches='tight')
+    fig.savefig("discretiser-test2.png", pad_inches=0, bbox_inches='tight')
+
+    print("max cw_data", np.max(cw_data))
+    print("max ccw_data", np.max(ccw_data))
+    print("min cw_data", np.min(cw_data))
+    print("min ccw_data", np.min(ccw_data))
+    print("avg cw_data", np.average(cw_data))
+    print("avg ccw_data", np.average(ccw_data))
 
 
 cw_zero_displacement = -1.86 # [deg]
@@ -84,8 +98,9 @@ ccw_phase_displacement = 240.1 # [deg]
 number_of_poles = 14
 encoder_divisions = 16384 # 2^14
 encoder_compression_factor = 4
+duty_max = 2048
 
-get_voltage_bins(encoder_divisions, number_of_poles, encoder_compression_factor, cw_zero_displacement, cw_phase_displacement, ccw_zero_displacement, ccw_phase_displacement)
+get_voltage_bins(duty_max, encoder_divisions, number_of_poles, encoder_compression_factor, cw_zero_displacement, cw_phase_displacement, ccw_zero_displacement, ccw_phase_displacement)
 
 
 """
@@ -94,4 +109,16 @@ How would we lookup values....
 use models to create sin tables over compressed range e.g. 0->4095
 then take new encoder value (e.g. 16383) 16383 / (compressions 4) = 4095.75 => round nearest => 4096 => take mod => 0
 lookup zeroth position index voltage values and apply them to pwm 
+"""
+
+
+"""
+bits,pwm val    ,freq 
+12	0 - 4095	36621.09 Hz	 
+11	0 - 2047	73242.19 Hz 
+10	0 - 1023	146484.38 Hz 
+9	0 - 511	    292968.75 Hz 
+8	0 - 255	    585937.5 Hz	 
+
+if we are going for ~50kHz PWM carrier freq then... we are looking at 11 bits so 2048 values, if about 36kHz then we are looking at 12 bits so 4096 values
 """
