@@ -1,4 +1,36 @@
-#include <Arduino.h>
+#include "lib/spwm_voltage_model_discretiser.cpp"
+
+// <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+kaepek::SPWMVoltageModelDiscretiser<16384, 4, 2048> discretiser = kaepek::SPWMVoltageModelDiscretiser<16384, 4, 2048>(-1.88, 240.01, 23.84, 240.01, 14);
+kaepek::SPWMVoltageDutyTriplet current_triplet;
+void setup() {
+
+}
+
+uint32_t max_compressed_encoder_value = 4095;
+uint32_t max_duty = 2046;
+uint32_t current_simulated_encoder_displacement = 0;
+
+void loop() {
+  // get latest simulated voltages
+  current_triplet = discretiser.get_pwm_triplet(max_duty, current_simulated_encoder_displacement, kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise );
+  // print triplet
+  Serial.print(current_triplet.a); Serial.print("\t");
+  Serial.print(current_triplet.b); Serial.print("\t");
+  Serial.print(current_triplet.c); Serial.print("\n");
+  // delay a bit
+  delayMicroseconds(100); // ~10000Hz
+  current_simulated_encoder_displacement++;
+  if (max_compressed_encoder_value == current_simulated_encoder_displacement) {
+    current_simulated_encoder_displacement = 0;
+  }
+}
+
+
+// reintroduce later
+
+
+/*#include <Arduino.h>
 #include "imxrt.h"
 #include "kalman_four_state/kalman_jerk.cpp"
 #include "encoder/digital_rotary_encoder.cpp"
@@ -8,7 +40,7 @@
 using namespace TeensyTimerTool;
 
 // Create a timer to allow for periodic logging to the serial port with the rotary sensor's Kalman and Eular state.
-PeriodicTimer logging_timer(GPT2);
+PeriodicTimer logging_timer(GPT2);*/
 
 /**
  * EscTeensy40AS5147P
@@ -16,6 +48,7 @@ PeriodicTimer logging_timer(GPT2);
  * Class to log out the four state (displacement, velocity, acceleration and jerk) computed by the extended Kalman method for a
  * AS5147P rotary encoder on the teensy40 platform.
  */
+/*
 namespace kaepek
 {
   class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
@@ -193,3 +226,4 @@ void loop()
     delayMicroseconds(10'000'000);
   }
 }
+*/
