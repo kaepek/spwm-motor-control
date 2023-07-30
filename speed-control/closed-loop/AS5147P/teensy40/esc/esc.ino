@@ -11,7 +11,6 @@ kaepek::SPWMVoltageDutyTriplet current_triplet;
 uint32_t max_compressed_encoder_value = ENCODER_DIVISIONS / ENCODER_VALUE_COMPRESSION;
 uint32_t max_duty = MAX_DUTY;
 uint32_t current_simulated_encoder_displacement = 0;
-uint32_t current_duty = 100;
 
 void setup() {
 
@@ -19,7 +18,8 @@ void setup() {
 
 void loop() {
   // get latest simulated voltages
-  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise );
+  kaepek::SPWMVoltageModelDiscretiser::Direction direction = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser::Direction::CounterClockwise;
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, direction );
   // print triplet
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");
@@ -68,11 +68,13 @@ namespace kaepek
     // Constructor with parameters.
     EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
     {
+      // setup discretiser
     }
 
     void post_sample_logic(uint32_t encoder_value)
     {
       // need to do PWM switching here
+      // generate triplet
     }
 
     void post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
@@ -162,7 +164,7 @@ void setup()
   enc = kaepek::DigitalRotaryEncoderSPI(enc_pins);
 
   // Initalise the encoder esc.
-  esc = kaepek::EscTeensy40AS5147P(enc, 2.0); // 2us (micro) sample period
+  esc = kaepek::EscTeensy40AS5147P(enc, 3.0); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   esc.set_skip_tolerance(4.0);
@@ -196,6 +198,9 @@ void loop()
 {
   if (started_ok == true)
   {
+    //readHostControlProfile
+
+    
     // Check the encoder has a new sample.
     if (esc.has_new_sample() == true)
     {
