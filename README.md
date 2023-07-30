@@ -12,10 +12,24 @@ Smooth FOC like control with torque and speed control.
 git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 ```
 
-# Open loop code (no feedback)
+# Speed control:
 
-- [Arduino Code](./open-loop/arduino-uno/arduino-uno.ino)
-- [Teensy Code](./open-loop/teensy-40/teensy-40.ino)
+## Open loop code (no feedback)
+
+- [Arduino Code](./speed-control/open-loop/arduino-uno/arduino-uno.ino)
+- [Teensy40 Code](./speed-control/open-loop/teensy-40/teensy-40.ino)
+
+## Closed loop code (rotary encoder AS5147P)
+
+- [Teensy40 Code](./speed-control/closed-loop/AS5147P/teensy40/esc/esc.ino)
+
+# Position control:
+
+## Open loop code (no feedback)
+- [Teensy40 Code](./position-control/open-loop/teensy-40/teensy-40.ino)
+
+## Closed loop code (rotary encoder AS5147P)
+- [Todo](./)
 
 # Controller install
 
