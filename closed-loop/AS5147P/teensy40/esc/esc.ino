@@ -3,17 +3,49 @@
 // <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
 kaepek::SPWMVoltageModelDiscretiser<16384, 4, 2048> discretiser = kaepek::SPWMVoltageModelDiscretiser<16384, 4, 2048>(-1.88, 240.01, 23.84, 240.01, 14);
 kaepek::SPWMVoltageDutyTriplet current_triplet;
+uint32_t max_compressed_encoder_value = 4096;
+uint32_t max_duty = 2046;
+uint32_t current_simulated_encoder_displacement = 0;
+uint32_t current_duty = 100;
+volatile unsigned int TORQUE_VALUE = 0.0; // UInt16LE
+volatile unsigned int DIRECTION_VALUE = 0; // UInt8
+
+
+// we read 2 bytes in total
+const int SIZE_OF_PROFILE = 4;
+
+// buffer to store the thrust/direction profile from the serial stream
+char HOST_PROFILE_BUFFER[SIZE_OF_PROFILE] = {0, 0, 0};
+int HOST_PROFILE_BUFFER_CTR = 0;
+
+bool readHostControlProfile()
+{
+  bool proccessedAFullProfile = false;
+  cli(); // no interrupt
+  while (Serial.available())
+  {
+    HOST_PROFILE_BUFFER[HOST_PROFILE_BUFFER_CTR] = Serial.read(); // read byte from usb
+    HOST_PROFILE_BUFFER_CTR++;                                    // in buffer
+    if (HOST_PROFILE_BUFFER_CTR % SIZE_OF_PROFILE == 0)
+    { // when we have the right number of bytes for the whole input profile
+      TORQUE_VALUE = (HOST_PROFILE_BUFFER[1] << 8) | HOST_PROFILE_BUFFER[0];
+      // extract direction from buffer (0 is cw 1 is ccw)
+      DIRECTION_VALUE = HOST_PROFILE_BUFFER[2];
+      proccessedAFullProfile = true; // indicate we have processed a full profile
+    }
+    HOST_PROFILE_BUFFER_CTR %= SIZE_OF_PROFILE; // reset buffer ctr for a new profile
+  }
+  sei(); // interrupt
+  return proccessedAFullProfile;
+}
+
 void setup() {
 
 }
 
-uint32_t max_compressed_encoder_value = 4095;
-uint32_t max_duty = 2046;
-uint32_t current_simulated_encoder_displacement = 0;
-
 void loop() {
   // get latest simulated voltages
-  current_triplet = discretiser.get_pwm_triplet(max_duty, current_simulated_encoder_displacement, kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise );
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise );
   // print triplet
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");
