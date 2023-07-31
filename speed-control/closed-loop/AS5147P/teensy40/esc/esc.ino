@@ -1,10 +1,23 @@
 #include "lib/spwm_voltage_model_discretiser.cpp"
 #include "lib/com.cpp"
 
+/*
+https://www.pjrc.com/teensy/td_pulse.html
+
+bits,value     ,freq
+15   0 - 32757 4577.64 Hz
+14   0 - 16383 9155.27 Hz
+13   0 - 8191  18310.55 Hz
+12   0 - 4095  36621.09 Hz
+11   0 - 2047  73242.19 Hz
+10   0 - 1023  146484.38 Hz
+9    0 - 511   292968.75 Hz
+ */
+
 // <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
 const std::size_t ENCODER_DIVISIONS = 16384;
 const std::size_t ENCODER_VALUE_COMPRESSION = 1;
-const std::size_t MAX_DUTY = 2048;
+const std::size_t MAX_DUTY = 2048; //4096; //2048;
 
 double cw_zero_displacement_deg = -1.86;
 double cw_phase_displacement_deg = 240.01;
@@ -24,16 +37,16 @@ void setup() {
 
 void loop() {
   // get latest simulated voltages
-  TORQUE_VALUE = 2048;
+  TORQUE_VALUE = MAX_DUTY - 1;
   kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction dir = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
   current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, dir );
   // print triplet and angle
-  Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
+  // Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");
   Serial.print(current_triplet.c); Serial.print("\n");
   // delay a bit
-  delayMicroseconds(3000); // ~10000Hz
+  delayMicroseconds(5000); // ~10000Hz
   current_simulated_encoder_displacement++;
   if (max_compressed_encoder_value == current_simulated_encoder_displacement) {
     current_simulated_encoder_displacement = 0;
