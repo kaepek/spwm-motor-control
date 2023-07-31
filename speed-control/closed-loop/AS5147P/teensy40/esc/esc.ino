@@ -2,11 +2,17 @@
 #include "lib/com.cpp"
 
 // <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-std::size_t ENCODER_DIVISIONS = 16384;
-std::size_t ENCODER_VALUE_COMPRESSION = 4;
-std::size_t MAX_DUTY = 2048;
+const std::size_t ENCODER_DIVISIONS = 16384;
+const std::size_t ENCODER_VALUE_COMPRESSION = 2;
+const std::size_t MAX_DUTY = 2048;
 
-kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY> discretiser = kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>(-1.88, 240.01, 23.84, 240.01, 14);
+double cw_zero_displacement_deg = -1.86;
+double cw_phase_displacement_deg = 240.01;
+double ccw_zero_displacement_deg = 15.31;
+double ccw_phase_displacement_deg = 119.99;
+uint32_t number_of_poles = 14;
+
+kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY> discretiser = kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>(cw_zero_displacement_deg, cw_phase_displacement_deg, ccw_zero_displacement_deg, ccw_phase_displacement_deg, number_of_poles);
 kaepek::SPWMVoltageDutyTriplet current_triplet;
 uint32_t max_compressed_encoder_value = ENCODER_DIVISIONS / ENCODER_VALUE_COMPRESSION;
 uint32_t max_duty = MAX_DUTY;
@@ -18,14 +24,16 @@ void setup() {
 
 void loop() {
   // get latest simulated voltages
-  kaepek::SPWMVoltageModelDiscretiser::Direction direction = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser::Direction::CounterClockwise;
-  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, direction );
-  // print triplet
+  TORQUE_VALUE = 2048;
+  kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction dir = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, dir );
+  // print triplet and angle
+  Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");
   Serial.print(current_triplet.c); Serial.print("\n");
   // delay a bit
-  delayMicroseconds(100); // ~10000Hz
+  delayMicroseconds(3000); // ~10000Hz
   current_simulated_encoder_displacement++;
   if (max_compressed_encoder_value == current_simulated_encoder_displacement) {
     current_simulated_encoder_displacement = 0;

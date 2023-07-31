@@ -15,12 +15,12 @@ namespace kaepek
     class SPWMVoltageModelDiscretiser
     {
     private:
-        float cw_phase_a_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-        float cw_phase_b_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-        float cw_phase_c_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-        float ccw_phase_a_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-        float ccw_phase_b_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-        float ccw_phase_c_loopup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float cw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float cw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float cw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+        float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
         double spwm_angular_resolution_dbl = (double) (ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
 
