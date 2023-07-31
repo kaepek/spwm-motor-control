@@ -34,7 +34,7 @@ namespace kaepek
         double cw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(cw_phase_displacement_deg);
         double ccw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_zero_displacement_deg);
         double ccw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_phase_displacement_deg);
-        double sin_period_coeff = (double)number_of_poles / 2.0;
+        double sin_period_coeff = ((double)number_of_poles * (double) ENCODER_COMPRESSION_FACTOR) / (2.0);
 
         for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
         {
