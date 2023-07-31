@@ -4,7 +4,7 @@
 #define PIN_L6234_SPWM_EN 8
 #define PWM_FREQUENCY 36000
 
-int ELECTRICAL_DEG_PHASE_A = -1;
+int ELECTRICAL_DEG_PHASE_A = 0;
 int ELECTRICAL_DEG_PHASE_B = 0;
 int ELECTRICAL_DEG_PHASE_C = 0;
 int SPWM_DUTY_PHASE_A = 0;
@@ -12,7 +12,7 @@ int SPWM_DUTY_PHASE_B = 0;
 int SPWM_DUTY_PHASE_C = 0;
 
 volatile float TORQUE_VALUE = 0.0;
-volatile unsigned int PHASE_VALUE = 0;
+volatile signed int PHASE_CHANGE_VALUE = 0;
 volatile unsigned int DIRECTION_VALUE = 0;
 
 long int t1 = millis(); // loop timing variable
@@ -46,7 +46,7 @@ void setup()
 void update_phase()
 {
   // increment rotation
-  ELECTRICAL_DEG_PHASE_A = PHASE_VALUE;
+  ELECTRICAL_DEG_PHASE_A = ELECTRICAL_DEG_PHASE_A + PHASE_CHANGE_VALUE;
   ELECTRICAL_DEG_PHASE_B = ELECTRICAL_DEG_PHASE_A + 120;
   ELECTRICAL_DEG_PHASE_C = ELECTRICAL_DEG_PHASE_B + 120;
   // obey modular arithmetic (loop at 360)
@@ -92,7 +92,9 @@ void update_spwm_duties()
   // diagnostic prints
   Serial.print(DIRECTION_VALUE);
   Serial.print("\t");
-  Serial.print(PHASE_VALUE);
+  Serial.print(PHASE_CHANGE_VALUE);
+  Serial.print("\t");
+  Serial.print(ELECTRICAL_DEG_PHASE_A);
   Serial.print("\t");
   Serial.print(TORQUE_VALUE);
   Serial.print("\t");
@@ -106,6 +108,8 @@ void update_spwm_duties()
   Serial.print(SPWM_DUTY_PHASE_C);
 
   Serial.print("\n");
+
+  delayMicroseconds(2000);
 }
 
 // we read 2 bytes in total
@@ -126,7 +130,7 @@ bool readHostControlProfile()
     if (HOST_PROFILE_BUFFER_CTR % SIZE_OF_PROFILE == 0)
     { // when we have the right number of bytes for the whole input profile
       TORQUE_VALUE = min((float)HOST_PROFILE_BUFFER[0] / (float)255, 0.7);
-      PHASE_VALUE = (HOST_PROFILE_BUFFER[2] << 8) | HOST_PROFILE_BUFFER[1];
+      PHASE_CHANGE_VALUE = (int)((double)(((HOST_PROFILE_BUFFER[2] << 8) | HOST_PROFILE_BUFFER[1]) - 127) / 10);
       // extract direction from buffer (0 is cw 1 is ccw)
       DIRECTION_VALUE = HOST_PROFILE_BUFFER[3];
       proccessedAFullProfile = true; // indicate we have processed a full profile
