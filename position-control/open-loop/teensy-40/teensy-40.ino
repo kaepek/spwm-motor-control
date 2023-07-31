@@ -109,7 +109,7 @@ void update_spwm_duties()
 
   Serial.print("\n");
 
-  delayMicroseconds(2000);
+  delayMicroseconds(1000);
 }
 
 // we read 2 bytes in total
@@ -130,7 +130,7 @@ bool readHostControlProfile()
     if (HOST_PROFILE_BUFFER_CTR % SIZE_OF_PROFILE == 0)
     { // when we have the right number of bytes for the whole input profile
       TORQUE_VALUE = min((float)HOST_PROFILE_BUFFER[0] / (float)255, 0.7);
-      PHASE_CHANGE_VALUE = (int)((double)(((HOST_PROFILE_BUFFER[2] << 8) | HOST_PROFILE_BUFFER[1]) - 127) / 10);
+      PHASE_CHANGE_VALUE = (int)((double)(((HOST_PROFILE_BUFFER[2] << 8) | HOST_PROFILE_BUFFER[1]) - 127) / 20);
       // extract direction from buffer (0 is cw 1 is ccw)
       DIRECTION_VALUE = HOST_PROFILE_BUFFER[3];
       proccessedAFullProfile = true; // indicate we have processed a full profile
