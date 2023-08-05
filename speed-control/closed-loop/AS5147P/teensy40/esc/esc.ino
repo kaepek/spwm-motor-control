@@ -16,7 +16,7 @@ bits,value     ,freq
 
 // <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
 const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 8;
+const std::size_t ENCODER_VALUE_COMPRESSION = 1;
 const std::size_t MAX_DUTY = 2048; //4096; //2048;
 
 double cw_zero_displacement_deg = -1.86;
