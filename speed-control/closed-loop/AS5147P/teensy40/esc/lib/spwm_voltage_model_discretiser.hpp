@@ -23,13 +23,7 @@ namespace kaepek
         float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
         double spwm_angular_resolution_dbl = (double) (ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
-
-        /**
-         * raw_encoder_value_to_compressed_encoder_value default constructor.
-         * @param raw_encoder_value The encoder value as read by the sensor
-         * @return Returns the encoder value compressed by the ENCODER_COMPRESSION_FACTOR
-         */
-        uint32_t raw_encoder_value_to_compressed_encoder_value(uint32_t raw_encoder_value);
+        double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
 
     public:
         /**
@@ -50,6 +44,13 @@ namespace kaepek
         SPWMVoltageModelDiscretiser(double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, double ccw_phase_displacement_deg, uint32_t number_of_poles);
 
         /**
+         * raw_encoder_value_to_compressed_encoder_value default constructor.
+         * @param raw_encoder_value The encoder value as read by the sensor
+         * @return Returns the encoder value compressed by the ENCODER_COMPRESSION_FACTOR
+         */
+        uint32_t raw_encoder_value_to_compressed_encoder_value(double raw_encoder_value);
+
+        /**
          * SPWMVoltageModelDiscretiser Direction enum class type:
          * - CounterClockwise
          * - Clockwise
@@ -63,10 +64,10 @@ namespace kaepek
         /**
          * Method to get the current phase a,b and c duty triplet.
          * @param current_duty The current duty magnitude.
-         * @param encoder_current_displacement The current encoder displacement measurement value.
+         * @param encoder_current_compressed_displacement The current encoder displacement measurement value compressed by the compression factor.
          * @return a SPWMVoltageDutyTriplet struct with the 3 phase duties.
          */
-        SPWMVoltageDutyTriplet get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_displacement, Direction direction);
+        SPWMVoltageDutyTriplet get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_compressed_displacement, Direction direction);
 
         /**
          * Method to get radians from degrees.

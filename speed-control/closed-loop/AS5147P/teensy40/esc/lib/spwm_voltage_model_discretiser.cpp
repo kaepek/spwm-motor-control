@@ -53,10 +53,10 @@ namespace kaepek
 
     // raw_encoder_value_to_compressed_encoder_value
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    uint32_t SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::raw_encoder_value_to_compressed_encoder_value(uint32_t raw_encoder_value)
+    uint32_t SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::raw_encoder_value_to_compressed_encoder_value(double raw_encoder_value)
     {
         // compress the encoder displacement to the new range.
-        double compressed_encoder_displacement_value_raw = ((double)raw_encoder_value / (double)(ENCODER_COMPRESSION_FACTOR));
+        double compressed_encoder_displacement_value_raw = (raw_encoder_value / encoder_compression_factor_dbl);
         
         Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
 
@@ -66,13 +66,10 @@ namespace kaepek
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_displacement, Direction direction)
+    SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_compressed_displacement, Direction direction)
     {
-        // compress the encoder displacement to the new range.
-        uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_current_displacement);
 
-        Serial.print(encoder_current_displacement); Serial.print("\t");
-        Serial.print(compressed_encoder_value); Serial.print("\t");
+        Serial.print(encoder_current_compressed_displacement); Serial.print("\t");
 
         double phase_a_lookup;
         double phase_b_lookup;
@@ -80,16 +77,16 @@ namespace kaepek
         if (direction == Direction::Clockwise)
         {
             // cw
-            phase_a_lookup = cw_phase_a_lookup[compressed_encoder_value];
-            phase_b_lookup = cw_phase_b_lookup[compressed_encoder_value];
-            phase_c_lookup = cw_phase_c_lookup[compressed_encoder_value];
+            phase_a_lookup = cw_phase_a_lookup[encoder_current_compressed_displacement];
+            phase_b_lookup = cw_phase_b_lookup[encoder_current_compressed_displacement];
+            phase_c_lookup = cw_phase_c_lookup[encoder_current_compressed_displacement];
         }
         else
         {
             // ccw
-            phase_a_lookup = ccw_phase_a_lookup[compressed_encoder_value];
-            phase_b_lookup = ccw_phase_b_lookup[compressed_encoder_value];
-            phase_c_lookup = ccw_phase_c_lookup[compressed_encoder_value];
+            phase_a_lookup = ccw_phase_a_lookup[encoder_current_compressed_displacement];
+            phase_b_lookup = ccw_phase_b_lookup[encoder_current_compressed_displacement];
+            phase_c_lookup = ccw_phase_c_lookup[encoder_current_compressed_displacement];
         }
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();

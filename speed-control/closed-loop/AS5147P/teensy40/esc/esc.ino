@@ -40,7 +40,11 @@ void loop() {
   TORQUE_VALUE = MAX_DUTY - 1;
   kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction dir = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
 
-  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, dir );
+  Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
+  // compress the encoder displacement to the new range.
+  uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(current_simulated_encoder_displacement);
+
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, compressed_encoder_value, dir );
   // print triplet and angle
   Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
 
