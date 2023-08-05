@@ -103,6 +103,8 @@ void loop() {
   90 deg π/2
   60 deg π/3
 
+  perhaps try 30 deg as well
+
  
   we will need to convert from these displacements in rads into encoder steps. so go from rad electrical to rad mechanical to angular steps (un compressed)
 
