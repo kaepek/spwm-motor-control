@@ -39,16 +39,21 @@ void loop() {
   // get latest simulated voltages
   TORQUE_VALUE = MAX_DUTY - 1;
   kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction dir = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
-  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, dir );
+  double compressed_encoder_displacement_value_raw =  ((double) current_simulated_encoder_displacement / (double) ( ENCODER_VALUE_COMPRESSION));
+  int compressed_encoder_value_mod = (int) round(compressed_encoder_displacement_value_raw) % max_compressed_encoder_value;
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, compressed_encoder_value_mod, dir );
   // print triplet and angle
-  // Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
+  Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
+  Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
+  Serial.print(compressed_encoder_value_mod); Serial.print("\t");
+
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");
   Serial.print(current_triplet.c); Serial.print("\n");
   // delay a bit
-  delayMicroseconds(5000); // ~10000Hz
+  delayMicroseconds(2000); // ~10000Hz
   current_simulated_encoder_displacement++;
-  if (max_compressed_encoder_value == current_simulated_encoder_displacement) {
+  if (ENCODER_DIVISIONS == current_simulated_encoder_displacement) {
     current_simulated_encoder_displacement = 0;
   }
 }
