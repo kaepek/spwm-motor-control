@@ -16,7 +16,7 @@ bits,value     ,freq
 
 // <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
 const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 1;
+const std::size_t ENCODER_VALUE_COMPRESSION = 8;
 const std::size_t MAX_DUTY = 2048; //4096; //2048;
 
 double cw_zero_displacement_deg = -1.86;
@@ -39,13 +39,10 @@ void loop() {
   // get latest simulated voltages
   TORQUE_VALUE = MAX_DUTY - 1;
   kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction dir = DIRECTION_VALUE == 0 ? kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
-  double compressed_encoder_displacement_value_raw =  ((double) current_simulated_encoder_displacement / (double) ( ENCODER_VALUE_COMPRESSION));
-  int compressed_encoder_value_mod = (int) round(compressed_encoder_displacement_value_raw) % max_compressed_encoder_value;
-  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, compressed_encoder_value_mod, dir );
+
+  current_triplet = discretiser.get_pwm_triplet(TORQUE_VALUE, current_simulated_encoder_displacement, dir );
   // print triplet and angle
   Serial.print(current_simulated_encoder_displacement); Serial.print("\t");
-  Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
-  Serial.print(compressed_encoder_value_mod); Serial.print("\t");
 
   Serial.print(current_triplet.a); Serial.print("\t");
   Serial.print(current_triplet.b); Serial.print("\t");

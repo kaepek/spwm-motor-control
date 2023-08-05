@@ -24,6 +24,13 @@ namespace kaepek
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
         double spwm_angular_resolution_dbl = (double) (ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
 
+        /**
+         * raw_encoder_value_to_compressed_encoder_value default constructor.
+         * @param raw_encoder_value The encoder value as read by the sensor
+         * @return Returns the encoder value compressed by the ENCODER_COMPRESSION_FACTOR
+         */
+        uint32_t raw_encoder_value_to_compressed_encoder_value(uint32_t raw_encoder_value);
+
     public:
         /**
          * SPWMVoltageModelDiscretiser default constructor.

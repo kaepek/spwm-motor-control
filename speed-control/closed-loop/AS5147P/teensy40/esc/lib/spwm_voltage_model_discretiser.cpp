@@ -4,9 +4,8 @@
 namespace kaepek
 {
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser()
-    {
-        
+    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser(){
+
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
@@ -34,7 +33,7 @@ namespace kaepek
         double cw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(cw_phase_displacement_deg);
         double ccw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_zero_displacement_deg);
         double ccw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_phase_displacement_deg);
-        double sin_period_coeff = ((double)number_of_poles * (double) ENCODER_COMPRESSION_FACTOR) / (2.0);
+        double sin_period_coeff = ((double)number_of_poles ) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
 
         for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
         {
@@ -52,14 +51,28 @@ namespace kaepek
         }
     };
 
+    // raw_encoder_value_to_compressed_encoder_value
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    uint32_t SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::raw_encoder_value_to_compressed_encoder_value(uint32_t raw_encoder_value)
+    {
+        // compress the encoder displacement to the new range.
+        double compressed_encoder_displacement_value_raw = ((double)raw_encoder_value / (double)(ENCODER_COMPRESSION_FACTOR));
+        
+        Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
+
+        // could have rounded up and therefore gone > spwm_angular_resolution_dbl, so perform mod to bring back to zero if needed.
+        uint32_t compressed_encoder_value_mod = (uint32_t)round(compressed_encoder_displacement_value_raw) % spwm_angular_resolution_uint32;
+        return compressed_encoder_value_mod;
+    };
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
     SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_displacement, Direction direction)
     {
         // compress the encoder displacement to the new range.
-        uint32_t compressed_encoder_value = round((double)encoder_current_displacement / (double)ENCODER_COMPRESSION_FACTOR);
-        // could have rounded up and therefore gone > spwm_angular_resolution_dbl, so perform mod to bring back to zero if needed.
-        compressed_encoder_value = (uint32_t)SPWMVoltageModelDiscretiser::fnmod((double)compressed_encoder_value, spwm_angular_resolution_dbl);
-        // should check here that we have not exceeded the maximum index... todo
+        uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_current_displacement);
+
+        Serial.print(encoder_current_displacement); Serial.print("\t");
+        Serial.print(compressed_encoder_value); Serial.print("\t");
 
         double phase_a_lookup;
         double phase_b_lookup;
@@ -81,7 +94,7 @@ namespace kaepek
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
         // now modify based on lookup and duty
-        double current_duty_over_2 = (double) current_duty / 2.0;
+        double current_duty_over_2 = (double)current_duty / 2.0;
         triplet.a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
         triplet.b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
         triplet.c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
@@ -92,4 +105,5 @@ namespace kaepek
 
         return triplet;
     }
+
 }
