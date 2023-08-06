@@ -75,6 +75,8 @@ namespace kaepek
     const double cw_displacement_deg = 60.0;
     const double ccw_displacement_deg = -60.0;
 
+    uint32_t current_encoder_displacement = 0;
+
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
 
     volatile uint16_t com_torque_value = 0;        // UInt16LE

@@ -37,7 +37,12 @@ namespace kaepek
     {
         // cw_displacement_deg
         // ccw_displacement_deg
-
+        /*
+          Translating between electrical and mechanical degrees
+          Electrical angle = P\2 (mechanical angle)
+          So (2 * Electrical angle) / P = mechanical angle
+          P is poles (NOT POLE PAIRS)
+        */
         // dont forget you can transition over 0 or 16384 so need to fnmod this value before returning.
     }
 
@@ -51,11 +56,20 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
+        // take encoder value
+        // apply displacement
+        // convert to compressed
+        // get triplet
+        // apply triplet
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
     {
+        // force stop
+        // shut off motor pins
+        // disable logging
+        // print debug message
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -116,11 +130,15 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::start()
     {
+        // start esc
+        // start logging timer
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::stop()
     {
+        // stop esc
+        // stop logging timer
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
