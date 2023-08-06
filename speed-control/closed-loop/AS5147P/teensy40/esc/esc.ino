@@ -1,7 +1,20 @@
+#include <Arduino.h>
+#include "imxrt.h"
+#include "kalman_four_state/kalman_jerk.cpp"
+#include "encoder/digital_rotary_encoder.cpp"
+#include "encoder/generic/rotary_encoder_sample_validator.cpp"
+#include "TeensyTimerTool.h"
 #include "lib/spwm_voltage_model_discretiser.cpp"
 #include "lib/com.cpp"
 
-/*
+using namespace TeensyTimerTool;
+
+// Encoder sampler config
+const std::size_t ENCODER_DIVISIONS = 16384;
+const std::size_t ENCODER_VALUE_COMPRESSION = 8;
+
+// PWM config 
+/* info from:
 https://www.pjrc.com/teensy/td_pulse.html
 
 bits,value     ,freq
@@ -12,24 +25,88 @@ bits,value     ,freq
 11   0 - 2047  73242.19 Hz
 10   0 - 1023  146484.38 Hz
 9    0 - 511   292968.75 Hz
- */
+*/
 
-// <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 1;
-const std::size_t MAX_DUTY = 2048; //4096; //2048;
+const std::size_t PWM_WRITE_RESOLUTION = 11;
+const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION);
 
+// Motor constants
 double cw_zero_displacement_deg = -1.86;
 double cw_phase_displacement_deg = 240.01;
 double ccw_zero_displacement_deg = 15.31;
 double ccw_phase_displacement_deg = 119.99;
 uint32_t number_of_poles = 14;
 
+// SPWM voltage discretiser vs angle
 kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY> discretiser = kaepek::SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>(cw_zero_displacement_deg, cw_phase_displacement_deg, ccw_zero_displacement_deg, ccw_phase_displacement_deg, number_of_poles);
 kaepek::SPWMVoltageDutyTriplet current_triplet;
 uint32_t max_compressed_encoder_value = ENCODER_DIVISIONS / ENCODER_VALUE_COMPRESSION;
 uint32_t max_duty = MAX_DUTY;
 uint32_t current_simulated_encoder_displacement = 0;
+
+// Define encoder pin config struct.
+kaepek::DigitalEncoderPinsSPI enc_pins = kaepek::DigitalEncoderPinsSPI();
+// Define the encoder.
+kaepek::DigitalRotaryEncoderSPI enc;
+
+// Create a timer to allow for periodic logging to the serial port with the rotary sensor's Kalman and Eular state.
+PeriodicTimer logging_timer(GPT2);
+
+// Create a 1D four state Kalman filter: 
+double alpha = 50000.0;
+double angular_resolution_error = 40.0;
+double process_noise = 0.000000000001;
+kaepek::KalmanJerk1D filter = kaepek::KalmanJerk1D(alpha, angular_resolution_error, process_noise, true, (double) ENCODER_DIVISIONS); // constructor with relative time and mod limit of 16384;
+
+// Rotary encoder Kalman/Eular state storage.
+kaepek::Dbl4x1 kalman_vec_store = {};
+kaepek::Dbl5x1 eular_vec_store = {};
+
+/**
+ * EscTeensy40AS5147P
+ *
+ * Class to log out the four state (displacement, velocity, acceleration and jerk) computed by the extended Kalman method for a
+ * AS5147P rotary encoder on the teensy40 platform.
+ */
+
+namespace kaepek
+{
+  class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
+  {
+  public:
+    // Default constuctor.
+    EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
+    {
+    }
+
+    // Constructor with parameters.
+    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
+    {
+      // setup discretiser
+    }
+
+    void post_sample_logic(uint32_t encoder_value)
+    {
+      // need to do PWM switching here
+      // generate triplet
+    }
+
+    void post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
+    {
+      // Stop logging.
+      logging_timer.stop();
+      // Print that a fault has occured.
+      Serial.println("A fault occured. Check your encoder connection.");
+    }
+
+  };
+}
+
+// Define the encoder esc.
+kaepek::EscTeensy40AS5147P esc;
+// Define bool for knowing if the esc started is a good state.
+bool started_ok = false;
+
 
 void setup() {
 
@@ -135,66 +212,8 @@ void loop() {
 // reintroduce later
 
 
-/*#include <Arduino.h>
-#include "imxrt.h"
-#include "kalman_four_state/kalman_jerk.cpp"
-#include "encoder/digital_rotary_encoder.cpp"
-#include "encoder/generic/rotary_encoder_sample_validator.cpp"
-#include "TeensyTimerTool.h"
 
-using namespace TeensyTimerTool;
 
-// Create a timer to allow for periodic logging to the serial port with the rotary sensor's Kalman and Eular state.
-PeriodicTimer logging_timer(GPT2);*/
-
-/**
- * EscTeensy40AS5147P
- *
- * Class to log out the four state (displacement, velocity, acceleration and jerk) computed by the extended Kalman method for a
- * AS5147P rotary encoder on the teensy40 platform.
- */
-/*
-namespace kaepek
-{
-  class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
-  {
-  public:
-    // Default constuctor.
-    EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
-    {
-    }
-
-    // Constructor with parameters.
-    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
-    {
-      // setup discretiser
-    }
-
-    void post_sample_logic(uint32_t encoder_value)
-    {
-      // need to do PWM switching here
-      // generate triplet
-    }
-
-    void post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
-    {
-      // Stop logging.
-      logging_timer.stop();
-      // Print that a fault has occured.
-      Serial.println("A fault occured. Check your encoder connection.");
-    }
-
-  };
-}
-
-// Define encoder pin config struct.
-kaepek::DigitalEncoderPinsSPI enc_pins = kaepek::DigitalEncoderPinsSPI();
-// Define the encoder.
-kaepek::DigitalRotaryEncoderSPI enc;
-// Define the encoder esc.
-kaepek::EscTeensy40AS5147P esc;
-// Define bool for knowing if the esc started is a good state.
-bool started_ok = false;
 
 // Method to print Kalman state via the serial port.
 void print_kalman_flat(double *kalman_vec)
@@ -237,9 +256,7 @@ void print_eular_flat(double *eular_vec)
   Serial.print(eular_vec[4]);
 }
 
-// Rotary encoder Kalman/Eular state storage.
-kaepek::Dbl4x1 kalman_vec_store = {};
-kaepek::Dbl5x1 eular_vec_store = {};
+
 
 // Method to print both the Eular and Kalman state of the rotary sensor from the cache.
 void print_k()
@@ -249,6 +266,8 @@ void print_k()
   print_kalman_flat(kalman_vec_store, false);
   Serial.print("\n");
 }
+
+/*
 
 void setup()
 {
@@ -285,12 +304,6 @@ void setup()
     logging_timer.begin(print_k, 10'000);
   }
 }
-
-// Create a 1D four state Kalman filter: 
-double alpha = 50000.0;
-double angular_resolution_error = 40.0;
-double process_noise = 0.000000000001;
-kaepek::KalmanJerk1D filter = kaepek::KalmanJerk1D(alpha, angular_resolution_error, process_noise, true, 16384.0); // constructor with relative time and mod limit of 16384;
 
 
 void loop()
@@ -336,4 +349,5 @@ void loop()
     delayMicroseconds(10'000'000);
   }
 }
+
 */
