@@ -79,7 +79,17 @@ namespace kaepek
                 // extract direction from buffer (0 is cw 1 is ccw)
                 com_direction_value = host_profile_buffer[2];
                 // set direction / thrust
-                discretiser_direction = com_direction_value == 0 ? SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise : SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
+                if (com_direction_value == 0)
+                {
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise;
+                    set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
+                }
+                else
+                {
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
+                    set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
+
+                }
                 // indicate we have processed a full profile
                 processed_a_full_profile = true;
             }
@@ -198,12 +208,6 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     bool EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::start()
     {
-        // delay serial read as too early and it gets junk noise data // maybe ddo this outside
-        while (!Serial.available())
-        {
-            delay(100);
-        }
-
         digitalWrite(spwm_pin_config.en, HIGH);
 
         this.started_ok = base::start();

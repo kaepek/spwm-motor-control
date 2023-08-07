@@ -108,7 +108,7 @@ namespace kaepek
     EscTeensy40AS5147P(); // : RotaryEncoderSampleValidator();
 
     // Constructor with parameters.
-    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_ping_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
+    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
 
     void post_sample_logic(uint32_t encoder_value);
 
