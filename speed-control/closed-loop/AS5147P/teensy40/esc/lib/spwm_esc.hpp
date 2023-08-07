@@ -69,10 +69,10 @@ namespace kaepek
   class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
   {
   private:
-    const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION);
+    const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
-    Dbl4x1 kalman_vec_store = {};
-    Dbl5x1 eular_vec_store = {};
+    Dbl4x1 kalman_vec_store = { 0 };
+    Dbl5x1 eular_vec_store = { 0 };
     SPWMVoltageDutyTriplet current_triplet;
     const double cw_displacement_deg = 60.0;
     const double ccw_displacement_deg = -60.0;
@@ -92,6 +92,10 @@ namespace kaepek
     SPWMMotorConfig motor_config;
     SPWMPinConfig spwm_pin_config;
     KalmanConfig kalman_config;
+
+    KalmanJerk1D kalman_filter;
+
+    const float log_frequency_micros = 100;
 
     // we read 3 bytes in total
     const int size_of_host_profile = 3;
@@ -114,7 +118,7 @@ namespace kaepek
 
     void loop();
 
-    void start();
+    bool start();
 
     void stop();
 

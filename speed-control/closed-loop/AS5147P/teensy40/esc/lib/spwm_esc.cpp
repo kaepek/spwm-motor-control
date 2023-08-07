@@ -9,18 +9,6 @@ PeriodicTimer logging_timer(GPT2);
 
 namespace kaepek
 {
-    /*
-
-       template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    uint32_t SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::raw_encoder_value_to_compressed_encoder_value(double raw_encoder_value)
-
-    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser(){
-
-    };
-
-   EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::
-    */
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
@@ -34,6 +22,10 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
+        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.angular_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
+        logging_timer.begin([this]
+                            { this->log(); },
+                            this->log_frequency_micros, false);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -82,6 +74,8 @@ namespace kaepek
             if (host_profile_buffer_ctr % size_of_host_profile == 0)
             { // when we have the right number of bytes for the whole input profile
                 com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
+                // clamp value to max
+                com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
                 // extract direction from buffer (0 is cw 1 is ccw)
                 com_direction_value = host_profile_buffer[2];
                 // set direction / thrust
@@ -120,6 +114,8 @@ namespace kaepek
         // disable logging
         // print debug message
         stop();
+
+        Serial.println("Experienced a fault shutting down");
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -147,63 +143,61 @@ namespace kaepek
         digitalWrite(spwm_pin_config.phase_b, LOW);
         digitalWrite(spwm_pin_config.phase_c, LOW);
 
-        // increment_rotation();
         this.current_triplet.phase_a = 0;
         this.current_triplet.phase_b = 0;
         this.current_triplet.phase_c = 0;
+
+        base::setup();
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::loop()
     {
-        /*
-          if (started_ok == true)
-  {
-    //readHostControlProfile
 
+        if (started_ok == true)
+        {
+            // readHostControlProfile
 
-    // Check the encoder has a new sample.
-    if (esc.has_new_sample() == true)
-    {
-      // Define variables to store the sampled encoder value and the number of elapsed microseconds since the last samples retrieval.
-      uint32_t encoder_value;
-      uint32_t elapsed_micros_since_last_sample;
-      // Fetch the stored values from the buffer.
-      esc.get_sample_and_elapsed_time(encoder_value, elapsed_micros_since_last_sample);
-      // Convert microseconds to seconds.
-      double seconds_since_last = (double) elapsed_micros_since_last_sample * (double) 1e-6;
-      // Perform one kalman step with the data.
-      filter.step(seconds_since_last, encoder_value);
-      // Extract state values.
-      double *kalman_vec = filter.get_kalman_vector();
-      double *eular_vec = filter.get_eular_vector();
-      // Store state in cache ready for printing.
-      cli();
-      kalman_vec_store[0] = kalman_vec[0];
-      kalman_vec_store[1] = kalman_vec[1];
-      kalman_vec_store[2] = kalman_vec[2];
-      kalman_vec_store[3] = kalman_vec[3];
-      eular_vec_store[0] = eular_vec[0];
-      eular_vec_store[1] = eular_vec[1];
-      eular_vec_store[2] = eular_vec[2];
-      eular_vec_store[3] = eular_vec[3];
-      eular_vec_store[4] = eular_vec[4];
-      sei();
-    }
-  }
-  else
-  {
-    // If the esc did not start in a good state, then print the configuration issues out via the serial port, by invoking the print_configuration_issues method of the esc.
-    esc.print_configuration_issues();
-    delayMicroseconds(10'000'000);
-  }
-        */
+            // Check the encoder has a new sample.
+            if (has_new_sample() == true)
+            {
+                // Define variables to store the sampled encoder value and the number of elapsed microseconds since the last samples retrieval.
+                uint32_t encoder_value;
+                uint32_t elapsed_micros_since_last_sample;
+                // Fetch the stored values from the buffer.
+                get_sample_and_elapsed_time(encoder_value, elapsed_micros_since_last_sample);
+                // Convert microseconds to seconds.
+                double seconds_since_last = (double)elapsed_micros_since_last_sample * (double)1e-6;
+                // Perform one kalman step with the data.
+                kalman_filter.step(seconds_since_last, encoder_value);
+                // Extract state values.
+                double *kalman_vec = kalman_filter.get_kalman_vector();
+                double *eular_vec = kalman_filter.get_eular_vector();
+                // Store state in cache ready for printing.
+                cli();
+                kalman_vec_store[0] = kalman_vec[0];
+                kalman_vec_store[1] = kalman_vec[1];
+                kalman_vec_store[2] = kalman_vec[2];
+                kalman_vec_store[3] = kalman_vec[3];
+                eular_vec_store[0] = eular_vec[0];
+                eular_vec_store[1] = eular_vec[1];
+                eular_vec_store[2] = eular_vec[2];
+                eular_vec_store[3] = eular_vec[3];
+                eular_vec_store[4] = eular_vec[4];
+                sei();
+            }
+        }
+        else
+        {
+            // If the esc did not start in a good state, then print the configuration issues out via the serial port, by invoking the print_configuration_issues method of the esc.
+            print_configuration_issues();
+            delayMicroseconds(10'000'000);
+        }
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::start()
+    bool EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::start()
     {
-
         // delay serial read as too early and it gets junk noise data // maybe ddo this outside
         while (!Serial.available())
         {
@@ -212,20 +206,24 @@ namespace kaepek
 
         digitalWrite(spwm_pin_config.en, HIGH);
 
-        // start esc
-        // start logging timer
+        this.started_ok = base::start();
+
+        logging_timer.start();
+
+        return this.started_ok;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::stop()
     {
+        base::stop();
+
         digitalWrite(spwm_pin_config.en, LOW);
         digitalWrite(spwm_pin_config.phase_a, LOW);
         digitalWrite(spwm_pin_config.phase_b, LOW);
         digitalWrite(spwm_pin_config.phase_c, LOW);
 
-        // stop esc
-        // stop logging timer
+        logging_timer.stop();
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
