@@ -109,7 +109,7 @@ namespace kaepek
         uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
         // get triplet
         // apply triplet
-        current_triplet = discretiser.get_pwm_triplet(com_torque_value, compressed_encoder_value, dir);
+        current_triplet = discretiser.get_pwm_triplet(com_torque_value, compressed_encoder_value, discretiser_direction);
         // set pin values
         analogWrite(spwm_pin_config.phase_a, current_triplet.phase_a);
         analogWrite(spwm_pin_config.phase_b, current_triplet.phase_b);
