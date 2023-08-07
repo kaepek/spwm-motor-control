@@ -58,9 +58,11 @@ namespace kaepek
 
   struct SPWMPinConfig
   {
-    uint32_t phaseA;
-    uint32_t phaseB;
-    uint32_t phaseC;
+    uint32_t phase_a;
+    uint32_t phase_b;
+    uint32_t phase_c;
+    uint32_t en;
+    uint32_t frequency;
   };
 
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -86,6 +88,16 @@ namespace kaepek
     void read_host_control_profile();
 
     bool started_ok = false;
+
+    SPWMMotorConfig motor_config;
+    SPWMPinConfig spwm_pin_config;
+    KalmanConfig kalman_config;
+
+    // we read 3 bytes in total
+    const int size_of_host_profile = 3;
+    // buffer to store the thrust/direction profile from the serial stream
+    char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
+    int host_profile_buffer_ctr = 0;
 
   public:
     // Default constuctor.

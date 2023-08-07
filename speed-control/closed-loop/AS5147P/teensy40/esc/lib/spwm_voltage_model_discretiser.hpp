@@ -6,9 +6,9 @@ namespace kaepek
 {
     struct SPWMVoltageDutyTriplet
     {
-        uint32_t a;
-        uint32_t b;
-        uint32_t c;
+        uint32_t phase_a;
+        uint32_t phase_b;
+        uint32_t phase_c;
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>

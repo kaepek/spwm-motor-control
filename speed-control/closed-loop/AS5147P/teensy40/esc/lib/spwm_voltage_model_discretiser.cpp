@@ -92,13 +92,13 @@ namespace kaepek
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
         // now modify based on lookup and duty
         double current_duty_over_2 = (double)current_duty / 2.0;
-        triplet.a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-        triplet.b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-        triplet.c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+        triplet.phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
+        triplet.phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
+        triplet.phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
 
-        triplet.a = triplet.a > MAX_DUTY ? MAX_DUTY : triplet.a;
-        triplet.b = triplet.b > MAX_DUTY ? MAX_DUTY : triplet.b;
-        triplet.c = triplet.c > MAX_DUTY ? MAX_DUTY : triplet.c;
+        triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
+        triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
+        triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;
 
         return triplet;
     }
