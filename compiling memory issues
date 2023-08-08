@@ -1,0 +1,107 @@
+fastest discretiser
+
+compression 4
+
+FLASH: code:14408, data:2968, headers:8220   free for files:2006020
+   RAM1: variables:101824, code:12704, padding:20064   free for local variables:389696
+   RAM2: variables:12384  free for malloc/new:511904
+
+compression 1
+
+Memory Usage on Teensy 4.0:
+  FLASH: code:14408, data:2968, headers:8220   free for files:2006020
+   RAM1: variables:396736, code:12704, padding:20064   free for local variables:94784
+   RAM2: variables:12384  free for malloc/new:511904
+ 
+
+fastest esc 
+
+comp 1
+
+Opening Teensy Loader...
+Memory Usage on Teensy 4.0:
+  FLASH: code:279912, data:31640, headers:9016   free for files:1711048
+   RAM1: variables:434240, code:278152, padding:16760   free for local variables:-204864
+   RAM2: variables:12384  free for malloc/new:511904
+Error program exceeds memory space
+exit status 255
+/home/jonathan/bin/arduino-1.8.19/arduino-builder returned 255
+Error compiling for board Teensy 4.0.
+
+smallest code
+
+comp 1
+
+Memory Usage on Teensy 4.0:
+  FLASH: code:163704, data:21396, headers:8432   free for files:1838084
+   RAM1: variables:423904, code:162008, padding:1832   free for local variables:-63456
+   RAM2: variables:12384  free for malloc/new:511904
+Error program exceeds memory space
+exit status 255
+/home/jonathan/bin/arduino-1.8.19/arduino-builder returned 255
+Error compiling for board Teensy 4.0.
+
+----------------------------------------------------------------
+
+
+why is code so much more now?? 278152
+
+
+comp 2....
+
+
+Memory Usage on Teensy 4.0:
+  FLASH: code:283112, data:31640, headers:8888   free for files:1707976
+   RAM1: variables:237632, code:281352, padding:13560   free for local variables:-8256
+   RAM2: variables:12384  free for malloc/new:511904
+Error program exceeds memory space
+exit status 255
+/home/jonathan/bin/arduino-1.8.19/arduino-builder returned 255
+Error compiling for board Teensy 4.0.
+
+
+
+
+Memory Usage on Teensy 4.0:
+  FLASH: code:283112, data:31640, headers:8888   free for files:1707976
+   RAM1: variables:237632, code:281352, padding:13560   free for local variables:-8256
+   RAM2: variables:12384  free for malloc/new:511904
+Error program exceeds memory space
+exit status 255
+/home/jonathan/bin/arduino-1.8.19/arduino-builder returned 255
+Error compiling for board Teensy 4.0.
+
+
+
+-------------------------------------------- just discretiser
+
+
+Memory Usage on Teensy 4.0:
+  FLASH: code:16008, data:2968, headers:8668   free for files:2003972
+   RAM1: variables:200128, code:14304, padding:18464   free for local variables:291392
+   RAM2: variables:12384  free for malloc/new:511904
+   
+   
+   disc with esc demo and kalman filter failes to compile 4 works
+   
+   
+   
+-------------- again esc comp 1
+
+
+  FLASH: code:283176, data:31640, headers:8824   free for files:1707976
+   RAM1: variables:434240, code:281416, padding:13496   free for local variables:-204864
+   RAM2: variables:12384  free for malloc/new:511904
+   
+     FLASH: code:283176, data:31640, headers:8824   free for files:1707976
+   RAM1: variables:139328, code:281416, padding:13496   free for local variables:90048
+   RAM2: variables:12384  free for malloc/new:511904
+
+
+   
+
+
+
+
+
+

@@ -4,7 +4,7 @@
 
 // Encoder sampler config
 const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 1;
+const std::size_t ENCODER_VALUE_COMPRESSION = 4;
 
 // encoder pin config
 
