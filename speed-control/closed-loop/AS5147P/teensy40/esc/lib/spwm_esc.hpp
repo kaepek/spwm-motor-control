@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "imxrt.h"
 #include "../kalman_four_state/kalman_jerk.hpp"
-#include "../encoder/digital_rotary_encoder.hpp"
+#include "../encoder/generic/digital_rotary_encoder.hpp"
 #include "../encoder/generic/rotary_encoder_sample_validator.hpp"
 #include "TeensyTimerTool.h"
 #include "spwm_voltage_model_discretiser.hpp"
@@ -40,6 +40,8 @@ uint32_t number_of_poles = 14;
 */
 namespace kaepek
 {
+#ifndef KAEPEK_L6234_TEENSY40_AS5147P_ESC
+#define KAEPEK_L6234_TEENSY40_AS5147P_ESC
   struct SPWMMotorConfig
   {
     double cw_zero_displacement_deg;
@@ -69,25 +71,22 @@ namespace kaepek
   class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
   {
   private:
-    const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
+    static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
-    Dbl4x1 kalman_vec_store = { 0 };
-    Dbl5x1 eular_vec_store = { 0 };
+    Dbl4x1 kalman_vec_store = {0};
+    Dbl5x1 eular_vec_store = {0};
     SPWMVoltageDutyTriplet current_triplet;
-    const double cw_displacement_deg = 60.0;
-    const double ccw_displacement_deg = -60.0;
+    static constexpr double cw_displacement_deg = 60.0;
+    static constexpr double ccw_displacement_deg = -60.0;
 
     uint32_t current_encoder_displacement = 0;
 
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
+    typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
 
     volatile uint16_t com_torque_value = 0;        // UInt16LE
     volatile unsigned int com_direction_value = 0; // UInt8
 
     uint32_t apply_phase_displacement(double encoder_value);
-    void read_host_control_profile();
-
-    bool started_ok = false;
 
     SPWMMotorConfig motor_config;
     SPWMPinConfig spwm_pin_config;
@@ -95,15 +94,17 @@ namespace kaepek
 
     KalmanJerk1D kalman_filter;
 
-    const float log_frequency_micros = 100;
+    static constexpr float log_frequency_micros = 100;
 
     // we read 3 bytes in total
-    const int size_of_host_profile = 3;
+    static const int size_of_host_profile = 3;
     // buffer to store the thrust/direction profile from the serial stream
     char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
     int host_profile_buffer_ctr = 0;
 
   public:
+    bool started_ok = false;
+
     // Default constuctor.
     EscTeensy40AS5147P(); // : RotaryEncoderSampleValidator();
 
@@ -123,5 +124,8 @@ namespace kaepek
     void stop();
 
     void log();
+
+    bool read_host_control_profile();
   };
+#endif
 }

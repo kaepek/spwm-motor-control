@@ -4,6 +4,9 @@
 
 namespace kaepek
 {
+#ifndef KAEPEK_SPWM_DISCRETISER_ESC
+#define KAEPEK_SPWM_DISCRETISER_ESC
+
     struct SPWMVoltageDutyTriplet
     {
         uint32_t phase_a;
@@ -22,7 +25,7 @@ namespace kaepek
         float ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
-        double spwm_angular_resolution_dbl = (double) (ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
+        double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
         double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
 
     public:
@@ -91,6 +94,7 @@ namespace kaepek
          */
         static double fnmod(double value, double mod);
     };
+#endif
 }
 
 /**

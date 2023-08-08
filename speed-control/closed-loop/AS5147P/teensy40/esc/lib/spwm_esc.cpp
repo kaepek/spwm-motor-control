@@ -11,17 +11,17 @@ namespace kaepek
 {
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
+    EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
     {
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
+    EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
     {
         this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
-        this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
+        this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.angular_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
         logging_timer.begin([this]
                             { this->log(); },
@@ -29,10 +29,10 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    uint32_t EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::apply_phase_displacement(double encoder_value)
+    uint32_t EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::apply_phase_displacement(double encoder_value)
     {
         double electrical_displacement_deg = 0.0;
-        if (this->discretiser_direction == SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise)
+        if (this->discretiser_direction == SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise)
         {
             // clockwise
             electrical_displacement_deg = cw_displacement_deg;
@@ -43,12 +43,12 @@ namespace kaepek
             electrical_displacement_deg = ccw_displacement_deg;
         }
 
-        /*
-        Translating between electrical and mechanical degrees
-        Electrical angle = P\2 (mechanical angle)
-        So (2 * Electrical angle) / P = mechanical angle
-        P is poles (NOT POLE PAIRS)
-        */
+        
+        //Translating between electrical and mechanical degrees
+        //Electrical angle = P\2 (mechanical angle)
+        //So (2 * Electrical angle) / P = mechanical angle
+        //P is poles (NOT POLE PAIRS)
+        
 
         double mechanical_displacement_deg = (2.0 * electrical_displacement_deg) / (double)motor_config.number_of_poles;
         double mechanical_displacement_steps = (mechanical_displacement_deg / 360.0) * (double)ENCODER_DIVISIONS;
@@ -62,7 +62,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::read_host_control_profile()
+    bool EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::read_host_control_profile()
     {
         // read profile
         bool processed_a_full_profile = false;
@@ -81,12 +81,12 @@ namespace kaepek
                 // set direction / thrust
                 if (com_direction_value == 0)
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::Clockwise;
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 else
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, MAX_DUTY>::Direction::CounterClockwise;
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
 
                 }
@@ -100,7 +100,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
         // take encoder value
         // apply displacement
@@ -117,7 +117,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
     {
         // force stop
         // shut off motor pins
@@ -129,7 +129,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::setup()
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
         // set pwm pins for output
         // set pwm write resolution
@@ -153,15 +153,15 @@ namespace kaepek
         digitalWrite(spwm_pin_config.phase_b, LOW);
         digitalWrite(spwm_pin_config.phase_c, LOW);
 
-        this.current_triplet.phase_a = 0;
-        this.current_triplet.phase_b = 0;
-        this.current_triplet.phase_c = 0;
+        current_triplet.phase_a = 0;
+        current_triplet.phase_b = 0;
+        current_triplet.phase_c = 0;
 
-        base::setup();
+        RotaryEncoderSampleValidator::setup();
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::loop()
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop()
     {
 
         if (started_ok == true)
@@ -206,21 +206,21 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    bool EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::start()
+    bool EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::start()
     {
         digitalWrite(spwm_pin_config.en, HIGH);
 
-        this.started_ok = base::start();
+        started_ok = RotaryEncoderSampleValidator::start();
 
         logging_timer.start();
 
-        return this.started_ok;
+        return started_ok;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::stop()
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop()
     {
-        base::stop();
+        RotaryEncoderSampleValidator::stop();
 
         digitalWrite(spwm_pin_config.en, LOW);
         digitalWrite(spwm_pin_config.phase_a, LOW);
@@ -231,25 +231,25 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    void EscTeensy40AS5147P<std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>::log()
+    void EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
-        Serial.print(eular_vec[0]);
+        Serial.print(eular_vec_store[0]);
         Serial.print(",");
-        Serial.print(eular_vec[1]);
+        Serial.print(eular_vec_store[1]);
         Serial.print(",");
-        Serial.print(eular_vec[2]);
+        Serial.print(eular_vec_store[2]);
         Serial.print(",");
-        Serial.print(eular_vec[3]);
+        Serial.print(eular_vec_store[3]);
         Serial.print(",");
-        Serial.print(eular_vec[4]);
+        Serial.print(eular_vec_store[4]);
         Serial.print(",");
-        Serial.print(kalman_vec[0]);
+        Serial.print(kalman_vec_store[0]);
         Serial.print(",");
-        Serial.print(kalman_vec[1]);
+        Serial.print(kalman_vec_store[1]);
         Serial.print(",");
-        Serial.print(kalman_vec[2]);
+        Serial.print(kalman_vec_store[2]);
         Serial.print(",");
-        Serial.print(kalman_vec[3]);
+        Serial.print(kalman_vec_store[3]);
         Serial.print(",");
         Serial.print(current_triplet.phase_a);
         Serial.print(",");
