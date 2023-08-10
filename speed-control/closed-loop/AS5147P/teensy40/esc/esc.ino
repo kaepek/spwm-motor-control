@@ -6,8 +6,7 @@
 const std::size_t ENCODER_DIVISIONS = 16384;
 const std::size_t ENCODER_VALUE_COMPRESSION = 4;
 
-// encoder pin config
-
+// Encoder pin config
 uint32_t ENC_PIN_CSN = 10;
 uint32_t ENC_PIN_MISO = 12;
 uint32_t enc_pin_MOSI = 11;
@@ -21,7 +20,6 @@ double MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG = 119.99;
 uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 14;
 
 // Kalman config
-
 double KALMAN_ALPHA = 50000.0;
 double KALMAN_X_RESOLUTION_ERROR = 40.0;
 double KALMAN_PROCESS_NOISE = 0.000000000001;
@@ -31,7 +29,8 @@ uint32_t SPWM_PIN_PHASE_A = 1;
 uint32_t SPWM_PIN_PHASE_B = 0;
 uint32_t SPWM_PIN_PHASE_C = 7;
 uint32_t SPWM_PIN_EN = 8;
-/* Frequency / pwm write resolution 
+
+/* Frequency / pwm write resolution selection
 info from:
 https://www.pjrc.com/teensy/td_pulse.html
 
@@ -49,16 +48,17 @@ uint32_t SPWM_PIN_PWM_FREQUENCY = 36000;
 
 // Define encoder pin config struct.
 kaepek::DigitalEncoderPinsSPI ENC_PINS = kaepek::DigitalEncoderPinsSPI();
+
 // Define the encoder.
 kaepek::DigitalRotaryEncoderSPI ENC;
 
 // kalman config struct
 kaepek::KalmanConfig KALMAN_CONFIG = kaepek::KalmanConfig();
 
-// motor calibration struct
+// Motor calibration struct
 kaepek::SPWMMotorConfig MOTOR_CALIBRATION_CONFIG = kaepek::SPWMMotorConfig();
 
-// spwm pin config struct
+// SPWM pin config struct
 kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 
 // Define the encoder ESC.
