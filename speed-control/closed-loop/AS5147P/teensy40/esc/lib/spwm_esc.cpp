@@ -141,6 +141,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
+#if !DISABLE_SPWM_PIN_MODIFICATION
         // set pwm pins for output
         pinMode(spwm_pin_config.phase_a, OUTPUT);
         pinMode(spwm_pin_config.phase_b, OUTPUT);
@@ -160,6 +161,7 @@ namespace kaepek
         digitalWrite(spwm_pin_config.phase_a, LOW);
         digitalWrite(spwm_pin_config.phase_b, LOW);
         digitalWrite(spwm_pin_config.phase_c, LOW);
+#endif
 
         // init the current phase triplet as 0
         current_triplet.phase_a = 0;
@@ -233,10 +235,12 @@ namespace kaepek
     {
         RotaryEncoderSampleValidator::stop();
 
+#if !DISABLE_SPWM_PIN_MODIFICATION
         digitalWrite(spwm_pin_config.en, LOW);
         digitalWrite(spwm_pin_config.phase_a, LOW);
         digitalWrite(spwm_pin_config.phase_b, LOW);
         digitalWrite(spwm_pin_config.phase_c, LOW);
+#endif
 
         logging_timer.stop();
     }
