@@ -108,7 +108,7 @@ void setup()
   // Run setup procedure of the ESC. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
   ESC.setup();
 
-  // delay serial read as too early and it gets junk noise data
+  // Delay serial read as too early and it gets junk noise data
   while (!Serial.available())
   {
     delay(100);
@@ -122,7 +122,9 @@ void loop()
 {
   if (ESC.started_ok == true)
   {
+    // Perform the ESC loop tick function.
     ESC.loop();
+    // Read from the serial port to see if the control profile has changed (direction or torque value)
     ESC.read_host_control_profile();
   }
 }
