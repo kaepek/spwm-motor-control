@@ -8,29 +8,29 @@ const std::size_t ENCODER_VALUE_COMPRESSION = 4;
 
 // encoder pin config
 
-uint32_t enc_pin_csn = 10;
-uint32_t enc_pin_miso = 12;
-uint32_t enc_pin_mosi = 11;
-uint32_t enc_pin_sck = 22;
+uint32_t ENC_PIN_CSN = 10;
+uint32_t ENC_PIN_MISO = 12;
+uint32_t enc_pin_MOSI = 11;
+uint32_t enc_pin_SCK = 22;
 
 // Motor constants
-double motor_config_cw_zero_displacement_deg = -1.86;
-double motor_config_cw_phase_displacement_deg = 240.01;
-double motor_config_ccw_zero_displacement_deg = 15.31;
-double motor_config_ccw_phase_displacement_deg = 119.99;
-uint32_t motor_config_number_of_poles = 14;
+double MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG = -1.86;
+double MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG = 240.01;
+double MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG = 15.31;
+double MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG = 119.99;
+uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 14;
 
 // Kalman config
 
-double kalman_alpha = 50000.0;
-double kalman_x_resolution_error = 40.0;
-double kalman_process_noise = 0.000000000001;
+double KALMAN_ALPHA = 50000.0;
+double KALMAN_X_RESOLUTION_ERROR = 40.0;
+double KALMAN_PROCESS_NOISE = 0.000000000001;
 
 // spwm pin config
-uint32_t spwm_pin_phase_a = 1;
-uint32_t spwm_pin_phase_b = 0;
-uint32_t spwm_pin_phase_c = 7;
-uint32_t spwm_pin_en = 8;
+uint32_t SPWM_PIN_PHASE_A = 1;
+uint32_t SPWM_PIN_PHASE_B = 0;
+uint32_t SPWM_PIN_PHASE_C = 7;
+uint32_t SPWM_PIN_EN = 8;
 /* Frequency / pwm write resolution 
 info from:
 https://www.pjrc.com/teensy/td_pulse.html
@@ -45,68 +45,68 @@ bits,value     ,freq
 9    0 - 511   292968.75 Hz
 */
 const std::size_t PWM_WRITE_RESOLUTION = 11;
-uint32_t spwm_pin_pwm_frequency = 36000;
+uint32_t SPWM_PIN_PWM_FREQUENCY = 36000;
 
 // Define encoder pin config struct.
-kaepek::DigitalEncoderPinsSPI enc_pins = kaepek::DigitalEncoderPinsSPI();
+kaepek::DigitalEncoderPinsSPI ENC_PINS = kaepek::DigitalEncoderPinsSPI();
 // Define the encoder.
-kaepek::DigitalRotaryEncoderSPI enc;
+kaepek::DigitalRotaryEncoderSPI ENC;
 
 // kalman config struct
-kaepek::KalmanConfig kalman_config = kaepek::KalmanConfig();
+kaepek::KalmanConfig KALMAN_CONFIG = kaepek::KalmanConfig();
 
 // motor calibration struct
-kaepek::SPWMMotorConfig motor_calibration_config = kaepek::SPWMMotorConfig();
+kaepek::SPWMMotorConfig MOTOR_CALIBRATION_CONFIG = kaepek::SPWMMotorConfig();
 
 // spwm pin config struct
-kaepek::SPWML6234PinConfig spwm_pin_config = kaepek::SPWML6234PinConfig();
+kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 
-// Define the encoder esc.
-kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> esc;
+// Define the encoder ESC.
+kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
 void setup()
 {
-  // kalman_config
-  kalman_config.alpha = kalman_alpha;
-  kalman_config.x_resolution_error = kalman_x_resolution_error;
-  kalman_config.process_noise = kalman_process_noise;
+  // KALMAN_CONFIG
+  KALMAN_CONFIG.alpha = KALMAN_ALPHA;
+  KALMAN_CONFIG.x_resolution_error = KALMAN_X_RESOLUTION_ERROR;
+  KALMAN_CONFIG.process_noise = KALMAN_PROCESS_NOISE;
 
-  // motor_calibration_config
-  motor_calibration_config.cw_zero_displacement_deg = motor_config_cw_zero_displacement_deg;
-  motor_calibration_config.cw_phase_displacement_deg = motor_config_cw_phase_displacement_deg;
-  motor_calibration_config.ccw_zero_displacement_deg = motor_config_ccw_zero_displacement_deg;
-  motor_calibration_config.ccw_phase_displacement_deg = motor_config_ccw_phase_displacement_deg;
-  motor_calibration_config.number_of_poles = motor_config_number_of_poles;
+  // MOTOR_CALIBRATION_CONFIG
+  MOTOR_CALIBRATION_CONFIG.cw_zero_displacement_deg = MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG;
+  MOTOR_CALIBRATION_CONFIG.cw_phase_displacement_deg = MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG;
+  MOTOR_CALIBRATION_CONFIG.ccw_zero_displacement_deg = MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG;
+  MOTOR_CALIBRATION_CONFIG.ccw_phase_displacement_deg = MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG;
+  MOTOR_CALIBRATION_CONFIG.number_of_poles = MOTOR_CONFIG_NUMBER_OF_POLES;
 
-  // spwm_pin_config
-  spwm_pin_config.phase_a = spwm_pin_phase_a;
-  spwm_pin_config.phase_b = spwm_pin_phase_b;
-  spwm_pin_config.phase_c = spwm_pin_phase_c;
-  spwm_pin_config.en = spwm_pin_en;
-  spwm_pin_config.frequency = spwm_pin_pwm_frequency;
+  // SPWM_PIN_CONFIG
+  SPWM_PIN_CONFIG.phase_a = SPWM_PIN_PHASE_A;
+  SPWM_PIN_CONFIG.phase_b = SPWM_PIN_PHASE_B;
+  SPWM_PIN_CONFIG.phase_c = SPWM_PIN_PHASE_C;
+  SPWM_PIN_CONFIG.en = SPWM_PIN_EN;
+  SPWM_PIN_CONFIG.frequency = SPWM_PIN_PWM_FREQUENCY;
 
   // Setup the encoder pin configuration.
-  enc_pins.csn = enc_pin_csn;
-  enc_pins.miso = enc_pin_miso;
-  enc_pins.mosi = enc_pin_mosi;
-  enc_pins.sck = enc_pin_sck;
+  ENC_PINS.csn = ENC_PIN_CSN;
+  ENC_PINS.miso = ENC_PIN_MISO;
+  ENC_PINS.mosi = enc_pin_MOSI;
+  ENC_PINS.sck = enc_pin_SCK;
 
   // Initalise the encoder with giving it the pin configuration.
-  enc = kaepek::DigitalRotaryEncoderSPI(enc_pins);
+  ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
-  // Initalise the encoder esc.
-  esc = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(enc, 3.0, motor_calibration_config, spwm_pin_config, kalman_config); // 3us (micro) sample period
+  // Initalise the encoder ESC.
+  ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.0, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
-  esc.set_skip_tolerance(4.0);
+  ESC.set_skip_tolerance(4.0);
   // Only allow skipping ahead twice before faulting.
-  esc.set_skip_threshold(2);
+  ESC.set_skip_threshold(2);
 
   // To disable direction enforcement.
-  esc.set_direction_enforcement(false);
+  ESC.set_direction_enforcement(false);
 
-  // Run setup procedure of the esc. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
-  esc.setup();
+  // Run setup procedure of the ESC. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
+  ESC.setup();
 
   // delay serial read as too early and it gets junk noise data
   while (!Serial.available())
@@ -115,14 +115,14 @@ void setup()
   }
 
   // Start sampling.
-  esc.start();
+  ESC.start();
 }
 
 void loop()
 {
-  if (esc.started_ok == true)
+  if (ESC.started_ok == true)
   {
-    esc.loop();
-    esc.read_host_control_profile();
+    ESC.loop();
+    ESC.read_host_control_profile();
   }
 }
