@@ -54,11 +54,11 @@ namespace kaepek
   struct KalmanConfig
   {
     double alpha;
-    double angular_resolution_error;
+    double x_jerk_error;
     double process_noise;
   };
 
-  struct SPWMPinConfig
+  struct SPWML6234PinConfig
   {
     uint32_t phase_a;
     uint32_t phase_b;
@@ -78,38 +78,41 @@ namespace kaepek
     SPWMVoltageDutyTriplet current_triplet;
     static constexpr double cw_displacement_deg = 60.0;
     static constexpr double ccw_displacement_deg = -60.0;
-
     uint32_t current_encoder_displacement = 0;
-
     typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
-
     volatile uint16_t com_torque_value = 0;        // UInt16LE
     volatile unsigned int com_direction_value = 0; // UInt8
 
-    uint32_t apply_phase_displacement(double encoder_value);
-
     SPWMMotorConfig motor_config;
-    SPWMPinConfig spwm_pin_config;
+    SPWML6234PinConfig spwm_pin_config;
     KalmanConfig kalman_config;
-
     KalmanJerk1D kalman_filter;
-
     static constexpr float log_frequency_micros = 100;
-
     // we read 3 bytes in total
     static const int size_of_host_profile = 3;
     // buffer to store the thrust/direction profile from the serial stream
     char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
     int host_profile_buffer_ctr = 0;
 
+    uint32_t apply_phase_displacement(double encoder_value);
+
   public:
     bool started_ok = false;
 
-    // Default constuctor.
-    EscL6234Teensy40AS5147P(); // : RotaryEncoderSampleValidator();
+    /**
+     * EscL6234Teensy40AS5147P default constructor.
+     */
+    EscL6234Teensy40AS5147P();
 
-    // Constructor with parameters.
-    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
+    /**
+     * EscL6234Teensy40AS5147P constructor with parameters.
+     * @param encoder The digital rotary encoder instance.
+     * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
+     * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
+     * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
+     * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_jerk_error, double process_noise
+     */
+    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
 
     void post_sample_logic(uint32_t encoder_value);
 

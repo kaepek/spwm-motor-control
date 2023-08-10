@@ -54,9 +54,9 @@ PeriodicTimer logging_timer(GPT2);
 
 // Create a 1D four state Kalman filter: 
 double alpha = 50000.0;
-double angular_resolution_error = 40.0;
+double x_resolution_error = 40.0;
 double process_noise = 0.000000000001;
-kaepek::KalmanJerk1D filter = kaepek::KalmanJerk1D(alpha, angular_resolution_error, process_noise, true, (double) ENCODER_DIVISIONS); // constructor with relative time and mod limit of 16384;
+kaepek::KalmanJerk1D filter = kaepek::KalmanJerk1D(alpha, x_resolution_error, process_noise, true, (double) ENCODER_DIVISIONS); // constructor with relative time and mod limit of 16384;
 
 // Rotary encoder Kalman/Eular state storage.
 kaepek::Dbl4x1 kalman_vec_store = {};

@@ -23,7 +23,7 @@ uint32_t motor_config_number_of_poles = 14;
 // Kalman config
 
 double kalman_alpha = 50000.0;
-double kalman_angular_resolution_error = 40.0;
+double kalman_x_resolution_error = 40.0;
 double kalman_process_noise = 0.000000000001;
 
 // spwm pin config
@@ -59,7 +59,7 @@ kaepek::KalmanConfig kalman_config = kaepek::KalmanConfig();
 kaepek::SPWMMotorConfig motor_calibration_config = kaepek::SPWMMotorConfig();
 
 // spwm pin config struct
-kaepek::SPWMPinConfig spwm_pin_config = kaepek::SPWMPinConfig();
+kaepek::SPWML6234PinConfig spwm_pin_config = kaepek::SPWML6234PinConfig();
 
 // Define the encoder esc.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> esc;
@@ -68,7 +68,7 @@ void setup()
 {
   // kalman_config
   kalman_config.alpha = kalman_alpha;
-  kalman_config.angular_resolution_error = kalman_angular_resolution_error;
+  kalman_config.x_resolution_error = kalman_x_resolution_error;
   kalman_config.process_noise = kalman_process_noise;
 
   // motor_calibration_config
