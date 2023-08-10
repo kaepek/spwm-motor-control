@@ -120,10 +120,10 @@ void setup()
 
 void loop()
 {
+  // Perform the ESC loop tick function.
+  ESC.loop();
   if (ESC.started_ok == true)
   {
-    // Perform the ESC loop tick function.
-    ESC.loop();
     // Read from the serial port to see if the control profile has changed (direction or torque value)
     ESC.read_host_control_profile();
   }
