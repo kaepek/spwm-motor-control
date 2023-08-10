@@ -25,7 +25,7 @@ read coms from serial port
 */
 
 /**
- * EscTeensy40AS5147P
+ * EscL6234Teensy40AS5147P
  *
  * Class to perform SPWM switching and speed calculations for a AS5147P rotary encoder on the teensy40 platform.
  */
@@ -68,7 +68,7 @@ namespace kaepek
   };
 
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-  class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
+  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator
   {
   private:
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
@@ -106,10 +106,10 @@ namespace kaepek
     bool started_ok = false;
 
     // Default constuctor.
-    EscTeensy40AS5147P(); // : RotaryEncoderSampleValidator();
+    EscL6234Teensy40AS5147P(); // : RotaryEncoderSampleValidator();
 
     // Constructor with parameters.
-    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
+    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWMPinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
 
     void post_sample_logic(uint32_t encoder_value);
 

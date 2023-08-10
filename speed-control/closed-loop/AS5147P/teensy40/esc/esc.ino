@@ -62,7 +62,7 @@ kaepek::SPWMMotorConfig motor_calibration_config = kaepek::SPWMMotorConfig();
 kaepek::SPWMPinConfig spwm_pin_config = kaepek::SPWMPinConfig();
 
 // Define the encoder esc.
-kaepek::EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> esc;
+kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> esc;
 
 void setup()
 {
@@ -95,7 +95,7 @@ void setup()
   enc = kaepek::DigitalRotaryEncoderSPI(enc_pins);
 
   // Initalise the encoder esc.
-  esc = kaepek::EscTeensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(enc, 3.0, motor_calibration_config, spwm_pin_config, kalman_config); // 3us (micro) sample period
+  esc = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(enc, 3.0, motor_calibration_config, spwm_pin_config, kalman_config); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   esc.set_skip_tolerance(4.0);

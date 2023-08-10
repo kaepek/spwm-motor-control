@@ -63,7 +63,7 @@ kaepek::Dbl4x1 kalman_vec_store = {};
 kaepek::Dbl5x1 eular_vec_store = {};
 
 /**
- * EscTeensy40AS5147P
+ * EscL6234Teensy40AS5147P
  *
  * Class to log out the four state (displacement, velocity, acceleration and jerk) computed by the extended Kalman method for a
  * AS5147P rotary encoder on the teensy40 platform.
@@ -71,16 +71,16 @@ kaepek::Dbl5x1 eular_vec_store = {};
 
 namespace kaepek
 {
-  class EscTeensy40AS5147P : public RotaryEncoderSampleValidator
+  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator
   {
   public:
     // Default constuctor.
-    EscTeensy40AS5147P() : RotaryEncoderSampleValidator()
+    EscL6234Teensy40AS5147P() : RotaryEncoderSampleValidator()
     {
     }
 
     // Constructor with parameters.
-    EscTeensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
+    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
     {
       // setup discretiser
     }
@@ -103,7 +103,7 @@ namespace kaepek
 }
 
 // Define the encoder esc.
-kaepek::EscTeensy40AS5147P esc;
+kaepek::EscL6234Teensy40AS5147P esc;
 // Define bool for knowing if the esc started is a good state.
 bool started_ok = false;
 
@@ -282,7 +282,7 @@ void setup()
   enc = kaepek::DigitalRotaryEncoderSPI(enc_pins);
 
   // Initalise the encoder esc.
-  esc = kaepek::EscTeensy40AS5147P(enc, 3.0); // 3us (micro) sample period
+  esc = kaepek::EscL6234Teensy40AS5147P(enc, 3.0); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   esc.set_skip_tolerance(4.0);
