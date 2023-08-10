@@ -26,7 +26,7 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
-        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_jerk_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
+        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
         logging_timer.begin([this]
                             { this->log(); },
                             this->log_frequency_micros, false);
