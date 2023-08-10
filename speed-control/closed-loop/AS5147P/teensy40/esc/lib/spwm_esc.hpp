@@ -36,6 +36,10 @@ namespace kaepek
 {
 #ifndef KAEPEK_L6234_TEENSY40_AS5147P_ESC
 #define KAEPEK_L6234_TEENSY40_AS5147P_ESC
+
+  /**
+   * Struct to hold a bldc bemf voltage model.
+  */
   struct SPWMMotorConfig
   {
     double cw_zero_displacement_deg;
@@ -45,6 +49,9 @@ namespace kaepek
     uint32_t number_of_poles;
   };
 
+  /**
+   * Struct to hold the config for the 4 state Kalman filter. Allows for measuring velocity / acceleration / jerk of the motor.
+  */
   struct KalmanConfig
   {
     double alpha;
@@ -52,6 +59,9 @@ namespace kaepek
     double process_noise;
   };
 
+  /**
+   * Stuct to hold the pin outs for the L6234 SPWM motor driver.
+  */
   struct SPWML6234PinConfig
   {
     uint32_t phase_a;
@@ -70,27 +80,35 @@ namespace kaepek
   class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator
   {
   private:
-    static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
-    Dbl4x1 kalman_vec_store = {0};
-    Dbl5x1 eular_vec_store = {0};
-    SPWMVoltageDutyTriplet current_triplet;
+    // constants
     static constexpr double cw_displacement_deg = 60.0;
     static constexpr double ccw_displacement_deg = -60.0;
-    uint32_t current_encoder_displacement = 0;
-    typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
-    volatile uint16_t com_torque_value = 0;        // UInt16LE
-    volatile unsigned int com_direction_value = 0; // UInt8
-    SPWMMotorConfig motor_config;
-    SPWML6234PinConfig spwm_pin_config;
-    KalmanConfig kalman_config;
-    KalmanJerk1D kalman_filter;
     static constexpr float log_frequency_micros = 100;
-    // we read 3 bytes in total
+    static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     static const int size_of_host_profile = 3;
-    // buffer to store the thrust/direction profile from the serial stream
+    // discretiser
+    typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
+    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
+    // physical model values
+    Dbl4x1 kalman_vec_store = {0};
+    Dbl5x1 eular_vec_store = {0};
+    // voltage model values
+    SPWMVoltageDutyTriplet current_triplet;
+    uint32_t current_encoder_displacement = 0;
+    // motor calibration config
+    SPWMMotorConfig motor_config;
+    // L6234 motor driver pin configuration
+    SPWML6234PinConfig spwm_pin_config;
+    // kalman filter config
+    KalmanConfig kalman_config;
+    // kalman filter instance
+    KalmanJerk1D kalman_filter;
+    // host communication buffer to store the thrust/direction profile (3 bytes in total) from the serial stream
     char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
     int host_profile_buffer_ctr = 0;
+    // host communication variables
+    volatile uint16_t com_torque_value = 0;        // UInt16LE
+    volatile unsigned int com_direction_value = 0; // UInt8
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
