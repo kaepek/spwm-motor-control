@@ -14,6 +14,13 @@ namespace kaepek
         uint32_t phase_c;
     };
 
+    /**
+     * SPWMVoltageModelDiscretiser
+     *
+     * Class to discretise a 3 phase bemf voltage sine wave vs angular displacement model into a compressed lookup table so that
+     * the voltages of each phase combined in a SPWMVoltageDutyTriplet can be sampled given a specific compressed encoder value via the get_pwm_triplet method.
+     * A compressed encoder value can be obtained from raw_encoder_value_to_compressed_encoder_value method given a raw encoder value.
+     */
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
     class SPWMVoltageModelDiscretiser
     {

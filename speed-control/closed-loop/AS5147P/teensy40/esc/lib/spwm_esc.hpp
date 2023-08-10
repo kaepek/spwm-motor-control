@@ -25,12 +25,6 @@ read coms from serial port
 */
 
 /**
- * EscL6234Teensy40AS5147P
- *
- * Class to perform SPWM switching and speed calculations for a AS5147P rotary encoder on the teensy40 platform.
- */
-
-/**
  * double cw_zero_displacement_deg = -1.86;
 double cw_phase_displacement_deg = 240.01;
 double ccw_zero_displacement_deg = 15.31;
@@ -67,6 +61,11 @@ namespace kaepek
     uint32_t frequency;
   };
 
+  /**
+   * EscL6234Teensy40AS5147P
+   *
+   * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
+   */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
   class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator
   {
@@ -96,7 +95,7 @@ namespace kaepek
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
      * the motor and rotor magnetic fields ~90 degrees seperated, thus allowing for peak efficiency.
-    */
+     */
     uint32_t apply_phase_displacement(double encoder_value);
 
   public:
@@ -152,12 +151,12 @@ namespace kaepek
 
     /**
      * Method to log the values of the physical models to serial out. These include the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_C).
-    */
+     */
     void log();
 
     /**
      * Method to read the serial port for changes in the host control profile. Profile encodes the direction of the motor and the torque value.
-    */
+     */
     bool read_host_control_profile();
   };
 #endif
