@@ -80,8 +80,8 @@ namespace kaepek
                 // clamp value to max
                 com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
                 // calculate torque percentage
-                com_torque_percentage = (double) com_torque_value / (double) MAX_DUTY;
-                // clamp to max 0.7 
+                com_torque_percentage = (double)com_torque_value / (double)MAX_DUTY;
+                // clamp to max 0.7
                 // com_torque_percentage = min(com_torque_percentage, 0.7); //todo
                 // extract direction from buffer (0 is cw 1 is ccw)
                 com_direction_value = host_profile_buffer[2];
@@ -134,9 +134,9 @@ namespace kaepek
         // print debug message
         stop();
         Serial.print("Error SkippedSteps: ");
-        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps );
+        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps);
         Serial.print("Error WrongDirection: ");
-        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::WrongDirection );
+        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::WrongDirection);
         Serial.println("Experienced a fault shutting down");
     }
 
@@ -258,14 +258,22 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
         cli();
-        Serial.println("log");
+        // Serial.println("log");
         Serial.print(com_direction_value);
         Serial.print(",");
         Serial.print(com_torque_percentage);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_a);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_b);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_c);
+        Serial.print("\n");
         sei();
         /*
-        
-        
+
+        Serial.print(",");
+        Serial.print(eular_vec_store[0]);
         Serial.print(",");
         Serial.print(eular_vec_store[0]);
         Serial.print(",");
