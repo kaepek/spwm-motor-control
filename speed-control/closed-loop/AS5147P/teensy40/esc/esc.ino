@@ -98,15 +98,15 @@ void setup()
   ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.0, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
-  ESC.set_skip_tolerance(4.0);
+  // ESC.set_skip_tolerance(4.0);
   // Only allow skipping ahead twice before faulting.
-  ESC.set_skip_threshold(2);
+  // ESC.set_skip_threshold(2);
 
   // To disable direction enforcement.
-  ESC.set_direction_enforcement(false);
+  // ESC.set_direction_enforcement(false);
 
   // Run setup procedure of the ESC. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
-  ESC.setup();
+  /*ESC.setup();
 
   // Delay serial read as too early and it gets junk noise data
   while (!Serial.available())
@@ -115,16 +115,16 @@ void setup()
   }
 
   // Start sampling.
-  ESC.start();
+  ESC.start();*/
 }
 
 void loop()
 {
   // Perform the ESC loop tick function.
-  ESC.loop();
+  /*ESC.loop();
   if (ESC.started_ok == true)
   {
     // Read from the serial port to see if the control profile has changed (direction or torque value)
     ESC.read_host_control_profile();
-  }
+  }*/
 }
