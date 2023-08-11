@@ -109,7 +109,28 @@ bool started_ok = false;
 
 
 void setup() {
+  // Setup the encoder pin configuration.
+  enc_pins.csn = 10;
+  enc_pins.miso = 12;
+  enc_pins.mosi = 11;
+  enc_pins.sck = 22;
 
+  // Initalise the encoder with giving it the pin configuration.
+  enc = kaepek::DigitalRotaryEncoderSPI(enc_pins);
+
+  // Initalise the encoder esc.
+  esc = kaepek::EscL6234Teensy40AS5147P(enc, 3.0); // 3us (micro) sample period
+
+  // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
+  esc.set_skip_tolerance(4.0);
+  // Only allow skipping ahead twice before faulting.
+  esc.set_skip_threshold(2);
+
+  // To disable direction enforcement.
+  esc.set_direction_enforcement(false);
+
+  // Run setup procedure of the esc. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
+  esc.setup();
 }
 
 void loop() {
