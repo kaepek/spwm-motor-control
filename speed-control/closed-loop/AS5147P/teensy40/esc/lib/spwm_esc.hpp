@@ -108,6 +108,7 @@ namespace kaepek
     int host_profile_buffer_ctr = 0;
     // host communication variables
     volatile uint16_t com_torque_value = 0;        // UInt16LE
+    volatile double com_torque_percentage = 0.0;
     volatile unsigned int com_direction_value = 0; // UInt8
 
     /**

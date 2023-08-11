@@ -77,7 +77,7 @@ namespace kaepek
          * @param encoder_current_compressed_displacement The current encoder displacement measurement value compressed by the compression factor.
          * @return a SPWMVoltageDutyTriplet struct with the 3 phase duties.
          */
-        SPWMVoltageDutyTriplet get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_compressed_displacement, Direction direction);
+        SPWMVoltageDutyTriplet get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, Direction direction);
 
         /**
          * Method to get radians from degrees.

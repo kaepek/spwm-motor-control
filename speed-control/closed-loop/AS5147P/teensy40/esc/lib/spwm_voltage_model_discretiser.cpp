@@ -66,7 +66,7 @@ namespace kaepek
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
-    SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(uint32_t current_duty, uint32_t encoder_current_compressed_displacement, Direction direction)
+    SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, Direction direction)
     {
 
         Serial.print(encoder_current_compressed_displacement); Serial.print("\t");

@@ -78,6 +78,10 @@ namespace kaepek
                 com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
                 // clamp value to max
                 com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
+                // calculate torque percentage
+                com_torque_percentage = (double) com_torque_value / (double) MAX_DUTY;
+                // clamp to max 0.7 
+                // com_torque_percentage = min(com_torque_percentage, 0.7); //todo
                 // extract direction from buffer (0 is cw 1 is ccw)
                 com_direction_value = host_profile_buffer[2];
                 // set direction / thrust
@@ -110,7 +114,7 @@ namespace kaepek
         uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
         // get triplet
         // apply triplet
-        current_triplet = discretiser.get_pwm_triplet(com_torque_value, compressed_encoder_value, discretiser_direction);
+        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
         // set pin values
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
