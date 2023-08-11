@@ -23,6 +23,18 @@ git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 
 - [Teensy40 Code](./speed-control/closed-loop/AS5147P/teensy40/esc/esc.ino)
 
+### Control-Console
+
+```
+kaepek-ThrustU16LEDirectionU8Model-dualshock-console
+```
+
+### Control-Serial
+
+```
+kaepek-ThrustU16LEDirectionU8Model-dualshock-serial
+```
+
 # Position control:
 
 ## Open loop code (no feedback)
