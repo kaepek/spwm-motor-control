@@ -133,7 +133,10 @@ namespace kaepek
         // disable logging
         // print debug message
         stop();
-
+        Serial.print("Error SkippedSteps: ");
+        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps );
+        Serial.print("Error WrongDirection: ");
+        Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::WrongDirection );
         Serial.println("Experienced a fault shutting down");
     }
 
@@ -253,6 +256,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
+        /*cli();
         Serial.print(com_direction_value);
         Serial.print(",");
         Serial.print(com_torque_percentage);
@@ -280,6 +284,7 @@ namespace kaepek
         Serial.print(current_triplet.phase_b);
         Serial.print(",");
         Serial.print(current_triplet.phase_c);
+        sei();*/
     }
 
 }
