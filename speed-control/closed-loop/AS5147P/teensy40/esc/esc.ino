@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include "imxrt.h"
 #include "lib/spwm_esc.cpp"
+#include "TeensyTimerTool.h"
+using namespace TeensyTimerTool;
+PeriodicTimer logging_timer(GPT2);
 
 // Encoder sampler config
 const std::size_t ENCODER_DIVISIONS = 16384;
@@ -64,6 +67,10 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
+void logIt() {
+  ESC.log();
+}
+
 void setup()
 {
   // KALMAN_CONFIG
@@ -116,6 +123,8 @@ void setup()
 
   // Start sampling.
   ESC.start();
+
+  logging_timer.begin(logIt, 5000);
 }
 
 void loop()

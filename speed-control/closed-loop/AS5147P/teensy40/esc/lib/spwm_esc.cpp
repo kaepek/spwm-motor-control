@@ -9,7 +9,7 @@ using namespace TeensyTimerTool;
 #define DISABLE_SPWM_PIN_MODIFICATION true
 #endif
 
-PeriodicTimer logging_timer(GPT2);
+// PeriodicTimer logging_timer(GPT2);
 
 namespace kaepek
 {
@@ -26,9 +26,9 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
-        logging_timer.begin([this]
+        /*logging_timer.begin([this]
                             { this->log(); },
-                            this->log_frequency_micros, false);
+                            this->log_frequency_micros, false);*/
         this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
     }
 
@@ -76,7 +76,7 @@ namespace kaepek
             host_profile_buffer_ctr++;                                    // in buffer
             if (host_profile_buffer_ctr % size_of_host_profile == 0)
             {
-                Serial.println("reading from serial has full buffer");
+                // Serial.println("reading from serial has full buffer");
                 // when we have the right number of bytes for the whole input profile
                 this->com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
                 // clamp value to max
@@ -140,7 +140,7 @@ namespace kaepek
 
         // get triplet
         // apply triplet
-        // current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
+        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
         // set pin values
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
@@ -258,7 +258,7 @@ namespace kaepek
 
         started_ok = RotaryEncoderSampleValidator::start();
 
-        logging_timer.start();
+        // logging_timer.start();
 
         return started_ok;
     }
@@ -275,7 +275,7 @@ namespace kaepek
         digitalWrite(spwm_pin_config.phase_c, LOW);
 #endif
 
-        logging_timer.stop();
+        // logging_timer.stop();
         Serial.println("called stopped!");
     }
 
@@ -289,6 +289,12 @@ namespace kaepek
         Serial.print(this->com_torque_percentage);
         Serial.print(",");
         Serial.print(this->current_encoder_displacement);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_a);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_b);
+        Serial.print(",");
+        Serial.print(current_triplet.phase_c);
         /*Serial.print(",");
         Serial.print(eular_vec_store[0]);
         Serial.print(",");
@@ -309,12 +315,7 @@ namespace kaepek
         Serial.print(kalman_vec_store[2]);
         Serial.print(",");
         Serial.print(kalman_vec_store[3]);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_a);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_b);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_c);*/
+*/
         Serial.print("\n");
         sei();
         /*
