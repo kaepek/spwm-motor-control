@@ -140,7 +140,7 @@ namespace kaepek
 
         // get triplet
         // apply triplet
-        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
+        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage * (double) MAX_DUTY, compressed_encoder_value, discretiser_direction);
         // set pin values
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
