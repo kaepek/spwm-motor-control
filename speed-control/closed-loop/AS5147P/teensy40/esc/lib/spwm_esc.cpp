@@ -75,16 +75,29 @@ namespace kaepek
             host_profile_buffer[host_profile_buffer_ctr] = Serial.read(); // read byte from usb
             host_profile_buffer_ctr++;                                    // in buffer
             if (host_profile_buffer_ctr % size_of_host_profile == 0)
-            { // when we have the right number of bytes for the whole input profile
-                com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
+            {
+                Serial.println("reading from serial has full buffer");
+                // when we have the right number of bytes for the whole input profile
+                this->com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
                 // clamp value to max
-                com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
+                this->com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
                 // calculate torque percentage
-                com_torque_percentage = (double)com_torque_value / (double)MAX_DUTY;
+                this->com_torque_percentage = (double)com_torque_value / (double)MAX_DUTY;
                 // clamp to max 0.7
                 // com_torque_percentage = min(com_torque_percentage, 0.7); //todo
                 // extract direction from buffer (0 is cw 1 is ccw)
-                com_direction_value = host_profile_buffer[2];
+                this->com_direction_value = host_profile_buffer[2];
+
+                // prints to update
+                /*Serial.println("com_torque_value");
+                Serial.println(this->com_torque_value);
+                Serial.println("com_torque_value");
+                Serial.println(this->com_torque_value);
+                Serial.println("com_torque_percentage");
+                Serial.println(this->com_torque_percentage);
+                Serial.println("this->com_direction_value");
+                Serial.println(this->com_direction_value);*/
+
                 // set direction / thrust
                 if (com_direction_value == 0)
                 {
@@ -109,13 +122,25 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
         // take encoder value
+        this->current_encoder_displacement = encoder_value;
         // apply displacement
         uint32_t displaced_encoder_value = apply_phase_displacement(encoder_value);
         // convert to compressed
         uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
+
+        /*Serial.println("post sample logic");
+        Serial.println("com_torque_value");
+        Serial.println(this->com_torque_value);
+        Serial.println("com_torque_value");
+        Serial.println(this->com_torque_value);
+        Serial.println("com_torque_percentage");
+        Serial.println(this->com_torque_percentage);
+        Serial.println("this->com_direction_value");
+        Serial.println(this->com_direction_value);*/
+
         // get triplet
         // apply triplet
-        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
+        // current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
         // set pin values
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
@@ -259,20 +284,12 @@ namespace kaepek
     {
         cli();
         // Serial.println("log");
-        Serial.print(com_direction_value);
+        Serial.print(this->com_direction_value);
         Serial.print(",");
-        Serial.print(com_torque_percentage);
+        Serial.print(this->com_torque_percentage);
         Serial.print(",");
-        Serial.print(current_triplet.phase_a);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_b);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_c);
-        Serial.print("\n");
-        sei();
-        /*
-
-        Serial.print(",");
+        Serial.print(this->current_encoder_displacement);
+        /*Serial.print(",");
         Serial.print(eular_vec_store[0]);
         Serial.print(",");
         Serial.print(eular_vec_store[0]);
@@ -297,7 +314,11 @@ namespace kaepek
         Serial.print(",");
         Serial.print(current_triplet.phase_b);
         Serial.print(",");
-        Serial.print(current_triplet.phase_c);
+        Serial.print(current_triplet.phase_c);*/
+        Serial.print("\n");
+        sei();
+        /*
+
         sei();*/
     }
 

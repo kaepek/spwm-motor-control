@@ -84,7 +84,7 @@ namespace kaepek
     // constants
     static constexpr double cw_displacement_deg = 60.0;
     static constexpr double ccw_displacement_deg = -60.0;
-    static constexpr float log_frequency_micros = 100;
+    static constexpr float log_frequency_micros = 5000;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     static const int size_of_host_profile = 3;
     // discretiser
@@ -110,7 +110,7 @@ namespace kaepek
     // host communication variables
     volatile uint16_t com_torque_value = 0;        // UInt16LE
     volatile double com_torque_percentage = 0.0;
-    volatile unsigned int com_direction_value = 0; // UInt8
+    volatile byte com_direction_value = 0; // UInt8
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
