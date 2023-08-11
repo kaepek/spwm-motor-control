@@ -124,7 +124,7 @@ void setup()
   // Start sampling.
   ESC.start();
 
-  logging_timer.begin(logIt, 5000);
+  logging_timer.begin(logIt, 10000);
 }
 
 void loop()
