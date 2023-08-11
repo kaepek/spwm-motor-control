@@ -84,7 +84,7 @@ namespace kaepek
     // constants
     static constexpr double cw_displacement_deg = 60.0;
     static constexpr double ccw_displacement_deg = -60.0;
-    static constexpr float log_frequency_micros = 100;
+    static constexpr float log_frequency_micros = 10;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     static const int size_of_host_profile = 3;
     // discretiser

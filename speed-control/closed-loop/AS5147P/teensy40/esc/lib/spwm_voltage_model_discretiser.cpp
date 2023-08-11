@@ -58,7 +58,7 @@ namespace kaepek
         // compress the encoder displacement to the new range.
         double compressed_encoder_displacement_value_raw = (raw_encoder_value / encoder_compression_factor_dbl);
         
-        Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
+        // Serial.print(compressed_encoder_displacement_value_raw); Serial.print("\t");
 
         // could have rounded up and therefore gone > spwm_angular_resolution_dbl, so perform mod to bring back to zero if needed.
         uint32_t compressed_encoder_value_mod = (uint32_t)round(compressed_encoder_displacement_value_raw) % spwm_angular_resolution_uint32;
@@ -69,7 +69,7 @@ namespace kaepek
     SPWMVoltageDutyTriplet SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, Direction direction)
     {
 
-        Serial.print(encoder_current_compressed_displacement); Serial.print("\t");
+        // Serial.print(encoder_current_compressed_displacement); Serial.print("\t");
 
         double phase_a_lookup;
         double phase_b_lookup;

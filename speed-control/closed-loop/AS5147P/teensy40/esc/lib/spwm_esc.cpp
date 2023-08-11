@@ -251,15 +251,21 @@ namespace kaepek
 #endif
 
         logging_timer.stop();
+        Serial.println("called stopped!");
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
-        /*cli();
+        cli();
+        Serial.println("log");
         Serial.print(com_direction_value);
         Serial.print(",");
         Serial.print(com_torque_percentage);
+        sei();
+        /*
+        
+        
         Serial.print(",");
         Serial.print(eular_vec_store[0]);
         Serial.print(",");
