@@ -288,8 +288,12 @@ namespace kaepek
         Serial.print(",");
         Serial.print(this->com_torque_percentage);
         Serial.print(",");
-        Serial.print(this->current_encoder_displacement);
+        Serial.print((double) this->current_encoder_displacement / (double) ENCODER_COMPRESSION_FACTOR);
         Serial.print(",");
+
+        Serial.print(kalman_vec_store[1] / (double) ENCODER_COMPRESSION_FACTOR);
+        Serial.print(",");
+
         /*Serial.print(eular_vec_store[0]);
         Serial.print(",");
         Serial.print(eular_vec_store[0]);
