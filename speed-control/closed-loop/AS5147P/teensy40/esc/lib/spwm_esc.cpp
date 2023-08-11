@@ -22,23 +22,21 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds)
     {
-        this->motor_config = motor_config;
+        /*this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
+        this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
         logging_timer.begin([this]
                             { this->log(); },
-                            this->log_frequency_micros, false);
-        Serial.print(MAX_DUTY); // this errors out
-        /*this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
-*/
+                            this->log_frequency_micros, false);*/
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     uint32_t EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::apply_phase_displacement(double encoder_value)
     {
         double electrical_displacement_deg = 0.0;
-        if (this->discretiser_direction == SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise)
+        /*if (this->discretiser_direction == SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise)
         {
             // clockwise
             electrical_displacement_deg = cw_displacement_deg;
@@ -62,7 +60,8 @@ namespace kaepek
 
         uint32_t final_encoder_value = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::fnmod(translated_mechanical_steps, ENCODER_DIVISIONS);
 
-        return final_encoder_value;
+        return final_encoder_value;*/
+        return 0;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -89,12 +88,12 @@ namespace kaepek
                 // set direction / thrust
                 if (com_direction_value == 0)
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
+                    //// discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 else
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
+                    //// discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 // indicate we have processed a full profile
@@ -113,10 +112,10 @@ namespace kaepek
         // apply displacement
         uint32_t displaced_encoder_value = apply_phase_displacement(encoder_value);
         // convert to compressed
-        uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
+        //// uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
         // get triplet
         // apply triplet
-        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
+        //// current_triplet = discretiser.get_pwm_triplet(com_torque_percentage, compressed_encoder_value, discretiser_direction);
         // set pin values
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
