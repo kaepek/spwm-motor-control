@@ -69,19 +69,36 @@ def get_voltage_bins(duty_max, encoder_divisions, number_of_poles, encoder_compr
     cw_data = model(angular_position, deg_to_rad(cw_zero_displacement), deg_to_rad(cw_phase_displacement))
     ccw_data = model(angular_position, deg_to_rad(ccw_zero_displacement), deg_to_rad(ccw_phase_displacement))
 
+    # add electrical degrees to phase displacements
+    electrical_deg_displacement_cw = 60.0
+    electrical_deg_displacement_ccw = -60.0
+
+    mechanical_displacement_deg_cw = (2.0 * electrical_deg_displacement_cw) / float(number_of_poles);
+    mechanical_displacement_deg_ccw = (2.0 * electrical_deg_displacement_ccw) / float(number_of_poles);
+
+    #mechanical_displacement_steps_cw = (mechanical_displacement_deg_cw / 360.0) * float(encoder_divisions);
+    #mechanical_displacement_steps_ccw = (mechanical_displacement_deg_ccw / 360.0) * float(encoder_divisions);
+
+    # now simulate the displaces bemf to driving voltages
+    cw_displaced_data = model(angular_position, deg_to_rad(cw_zero_displacement)+deg_to_rad(mechanical_displacement_deg_cw), deg_to_rad(cw_phase_displacement))
+    ccw_displaced_data = model(angular_position, deg_to_rad(ccw_zero_displacement)+deg_to_rad(mechanical_displacement_deg_ccw), deg_to_rad(ccw_phase_displacement))
+
     print("cw_data", len(cw_data), cw_data)
     print("ccw_data", len(ccw_data), ccw_data)
 
     plot_title = 'Fit parameters:\n cw angular_disp=%.2f phase_current_disp=%.2f\n' % (cw_zero_displacement, cw_phase_displacement)
     plot_title += 'ccw angular_disp=%.2f phase_current_disp=%.2f' % (ccw_zero_displacement, ccw_phase_displacement)
+    plot_title += 'Last plots mechanical displacements cw_disp=%.2f and ccw_disp=%.2f' % (electrical_deg_displacement_cw, electrical_deg_displacement_ccw)
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(240, 20))
+    fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(240, 20))
     fig.suptitle(plot_title,fontsize=20)
 
     create_voltage_scatter(ax[0],angular_position,cw_data.reshape(3, angular_position.shape[0])) 
     create_voltage_scatter(ax[1],angular_position,ccw_data.reshape(3, angular_position.shape[0])) 
+    create_voltage_scatter(ax[2],angular_position,cw_displaced_data.reshape(3, angular_position.shape[0])) 
+    create_voltage_scatter(ax[3],angular_position,ccw_displaced_data.reshape(3, angular_position.shape[0])) 
 
-    fig.savefig("discretiser-test2.png", pad_inches=0, bbox_inches='tight')
+    fig.savefig("discretiser-test5.png", pad_inches=0, bbox_inches='tight')
 
     print("max cw_data", np.max(cw_data))
     print("max ccw_data", np.max(ccw_data))
