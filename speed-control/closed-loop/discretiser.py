@@ -87,8 +87,8 @@ def get_voltage_bins(duty_max, encoder_divisions, number_of_poles, encoder_compr
     print("ccw_data", len(ccw_data), ccw_data)
 
     plot_title = 'Fit parameters:\n cw angular_disp=%.2f phase_current_disp=%.2f\n' % (cw_zero_displacement, cw_phase_displacement)
-    plot_title += 'ccw angular_disp=%.2f phase_current_disp=%.2f' % (ccw_zero_displacement, ccw_phase_displacement)
-    plot_title += 'Last plots mechanical displacements cw_disp=%.2f and ccw_disp=%.2f' % (electrical_deg_displacement_cw, electrical_deg_displacement_ccw)
+    plot_title += 'ccw angular_disp=%.2f phase_current_disp=%.2f\n' % (ccw_zero_displacement, ccw_phase_displacement)
+    plot_title += 'Last two plots electrical displacements in deg cw_disp=%.2f and ccw_disp=%.2f' % (electrical_deg_displacement_cw, electrical_deg_displacement_ccw)
 
     fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(240, 20))
     fig.suptitle(plot_title,fontsize=20)
