@@ -5,6 +5,13 @@
 using namespace TeensyTimerTool;
 PeriodicTimer logging_timer(GPT2);
 
+// Logging timer
+const std::size_t LOGGING_MICROS = 10000;
+
+#ifndef DISABLE_LOGGING_CTRS
+#define DISABLE_LOGGING_CTRS true
+#endif
+
 // Encoder sampler config
 const std::size_t ENCODER_DIVISIONS = 16384;
 const std::size_t ENCODER_VALUE_COMPRESSION = 8;
@@ -67,8 +74,27 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
-void logIt() {
-  ESC.log();
+void logIt()
+{
+  if (ESC.get_fault_status() == false)
+  {
+    cli();
+#if !DISABLE_LOGGING_CTRS
+    double seconds_elapsed = (double)LOGGING_MICROS * 1e-6;
+    Serial.print(((double)ESC.loop_ctr) / seconds_elapsed);
+    Serial.print(",");
+    Serial.print(((double)ESC.sample_ctr) / seconds_elapsed);
+    Serial.print(",");
+#endif
+    sei();
+    ESC.log();
+    ESC.loop_ctr = 0;
+    ESC.sample_ctr = 0;
+  }
+  else
+  {
+    logging_timer.stop();
+  }
 }
 
 void setup()
@@ -102,7 +128,7 @@ void setup()
   ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
   // Initalise the encoder ESC.
-  ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC,2.0, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period
+  ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 2.92, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(4.0);
@@ -124,7 +150,7 @@ void setup()
   // Start sampling.
   ESC.start();
 
-  logging_timer.begin(logIt, 6000);
+  logging_timer.begin(logIt, LOGGING_MICROS);
 }
 
 void loop()

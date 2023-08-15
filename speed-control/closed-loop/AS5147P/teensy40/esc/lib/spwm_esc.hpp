@@ -39,7 +39,7 @@ namespace kaepek
 
   /**
    * Struct to hold a bldc bemf voltage model.
-  */
+   */
   struct SPWMMotorConfig
   {
     double cw_zero_displacement_deg;
@@ -51,7 +51,7 @@ namespace kaepek
 
   /**
    * Struct to hold the config for the 4 state Kalman filter. Allows for measuring velocity / acceleration / jerk of the motor.
-  */
+   */
   struct KalmanConfig
   {
     double alpha;
@@ -61,7 +61,7 @@ namespace kaepek
 
   /**
    * Stuct to hold the pin outs for the L6234 SPWM motor driver.
-  */
+   */
   struct SPWML6234PinConfig
   {
     uint32_t phase_a;
@@ -70,7 +70,6 @@ namespace kaepek
     uint32_t en;
     uint32_t frequency;
   };
-
 
   /**
    * EscL6234Teensy40AS5147P
@@ -87,6 +86,7 @@ namespace kaepek
     static constexpr float log_frequency_micros = 5000;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     static const int size_of_host_profile = 3;
+    static const int led_pin = 13;
     // discretiser
     typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
@@ -108,9 +108,11 @@ namespace kaepek
     char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
     int host_profile_buffer_ctr = 0;
     // host communication variables
-    volatile uint16_t com_torque_value = 0;        // UInt16LE
+    // volatile uint16_t com_torque_value = 0; // UInt16LE
     volatile double com_torque_percentage = 0.0;
     volatile byte com_direction_value = 0; // UInt8
+    // esc state variable
+    volatile bool fault = false;
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
@@ -120,6 +122,8 @@ namespace kaepek
 
   public:
     bool started_ok = false;
+    volatile uint32_t loop_ctr = 0;
+    volatile uint32_t sample_ctr = 0;
 
     /**
      * EscL6234Teensy40AS5147P default constructor.
@@ -178,6 +182,11 @@ namespace kaepek
      * Method to read the serial port for changes in the host control profile. Profile encodes the direction of the motor and the torque value.
      */
     bool read_host_control_profile();
+
+    /**
+     * Method to get the fault status
+     */
+    bool get_fault_status();
   };
 #endif
 }

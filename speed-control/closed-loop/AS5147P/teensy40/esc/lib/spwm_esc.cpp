@@ -78,11 +78,11 @@ namespace kaepek
             {
                 // Serial.println("reading from serial has full buffer");
                 // when we have the right number of bytes for the whole input profile
-                this->com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
+                uint16_t com_torque_value = (host_profile_buffer[1] << 8) | host_profile_buffer[0];
                 // clamp value to max
-                this->com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
+                com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
                 // calculate torque percentage
-                this->com_torque_percentage = (double)com_torque_value / (double)MAX_DUTY;
+                this->com_torque_percentage = ((double)com_torque_value / (double)MAX_DUTY) * 0.2; // cap at 20%
                 // clamp to max 0.7
                 // com_torque_percentage = min(com_torque_percentage, 0.7); //todo
                 // extract direction from buffer (0 is cw 1 is ccw)
@@ -121,6 +121,8 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
+        sample_ctr++;
+        
         // take encoder value
         this->current_encoder_displacement = encoder_value;
         // apply displacement
@@ -148,6 +150,8 @@ namespace kaepek
         analogWrite(spwm_pin_config.phase_b, current_triplet.phase_b);
         analogWrite(spwm_pin_config.phase_c, current_triplet.phase_c);
 #endif
+
+        
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -157,6 +161,8 @@ namespace kaepek
         // shut off motor pins
         // disable logging
         // print debug message
+        this->fault = true;
+        digitalWrite(led_pin, HIGH);
         stop();
         Serial.print("Error SkippedSteps: ");
         Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps);
@@ -174,6 +180,8 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
+        pinMode(led_pin, OUTPUT);
+
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // set pwm pins for output
         pinMode(spwm_pin_config.phase_a, OUTPUT);
@@ -237,6 +245,7 @@ namespace kaepek
                 eular_vec_store[2] = eular_vec[2];
                 eular_vec_store[3] = eular_vec[3];
                 eular_vec_store[4] = eular_vec[4];
+                loop_ctr++;
                 sei();
             }
         }
@@ -288,10 +297,9 @@ namespace kaepek
         Serial.print(",");
         Serial.print(this->com_torque_percentage);
         Serial.print(",");
-        Serial.print((double) this->current_encoder_displacement / (double) ENCODER_COMPRESSION_FACTOR);
+        Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
         Serial.print(",");
-
-        Serial.print(kalman_vec_store[1] / (double) ENCODER_COMPRESSION_FACTOR);
+        Serial.print(kalman_vec_store[1] / (double)ENCODER_COMPRESSION_FACTOR);
         Serial.print(",");
 
         /*Serial.print(eular_vec_store[0]);
@@ -321,10 +329,17 @@ namespace kaepek
         Serial.print(current_triplet.phase_c);
 
         Serial.print("\n");
+
         sei();
         /*
 
         sei();*/
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    bool EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_fault_status()
+    {
+        return this->fault;
     }
 
 }
