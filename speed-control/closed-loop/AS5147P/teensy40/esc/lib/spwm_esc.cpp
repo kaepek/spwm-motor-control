@@ -82,7 +82,7 @@ namespace kaepek
                 // clamp value to max
                 com_torque_value = com_torque_value > MAX_DUTY ? MAX_DUTY : com_torque_value;
                 // calculate torque percentage
-                this->com_torque_percentage = ((double)com_torque_value / (double)MAX_DUTY) * 0.2; // cap at 20%
+                this->com_torque_percentage = ((double)com_torque_value / (double)MAX_DUTY) * 0.4; // cap at 20%
                 // clamp to max 0.7
                 // com_torque_percentage = min(com_torque_percentage, 0.7); //todo
                 // extract direction from buffer (0 is cw 1 is ccw)
@@ -299,7 +299,7 @@ namespace kaepek
         Serial.print(",");
         Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
         Serial.print(",");
-        Serial.print(kalman_vec_store[1] / (double)ENCODER_COMPRESSION_FACTOR);
+        Serial.print(kalman_vec_store[1]);
         Serial.print(",");
 
         /*Serial.print(eular_vec_store[0]);
