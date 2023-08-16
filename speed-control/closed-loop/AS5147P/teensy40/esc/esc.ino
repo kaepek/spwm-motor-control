@@ -53,7 +53,7 @@ bits,value     ,freq
 10   0 - 1023  146484.38 Hz
 9    0 - 511   292968.75 Hz
 */
-const std::size_t PWM_WRITE_RESOLUTION = 8;
+const std::size_t PWM_WRITE_RESOLUTION = 11;
 uint32_t SPWM_PIN_PWM_FREQUENCY = 36000;
 
 // Define encoder pin config struct.
