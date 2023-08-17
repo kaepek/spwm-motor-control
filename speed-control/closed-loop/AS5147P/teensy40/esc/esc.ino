@@ -6,10 +6,10 @@ using namespace TeensyTimerTool;
 PeriodicTimer logging_timer(GPT2);
 
 // Logging timer
-const std::size_t LOGGING_MICROS = 20000;
+const std::size_t LOGGING_MICROS = 10000; // 40000
 
 #ifndef DISABLE_LOGGING_CTRS
-#define DISABLE_LOGGING_CTRS true
+#define DISABLE_LOGGING_CTRS false
 #endif
 
 // Encoder sampler config
@@ -128,12 +128,12 @@ void setup()
   ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
   // Initalise the encoder ESC.
-  ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 2.4, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period
+  ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 2.6, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period 2.8
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(4.0);
   // Only allow skipping ahead twice before faulting.
-  ESC.set_skip_threshold(2);
+  ESC.set_skip_threshold(3);
 
   // To disable direction enforcement.
   ESC.set_direction_enforcement(false);
