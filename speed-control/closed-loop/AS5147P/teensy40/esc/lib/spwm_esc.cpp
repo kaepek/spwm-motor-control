@@ -293,14 +293,15 @@ namespace kaepek
     {
         cli();
         // Serial.println("log");
+        Serial.print((double) kalman_vec_store[1] / (double) ENCODER_DIVISIONS);
+        Serial.print(",");
         Serial.print(this->com_direction_value);
         Serial.print(",");
         Serial.print(this->com_torque_percentage);
-        Serial.print(",");
-        Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
-        Serial.print(",");
-        Serial.print(kalman_vec_store[1]);
-        Serial.print(",");
+        // Serial.print(",");
+        // Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
+        // Serial.print(",");
+        
 
         /*Serial.print(eular_vec_store[0]);
         Serial.print(",");
@@ -322,11 +323,11 @@ namespace kaepek
         Serial.print(",");
         Serial.print(kalman_vec_store[3]);
         Serial.print(",");*/
-        Serial.print(current_triplet.phase_a);
+        /*Serial.print(current_triplet.phase_a);
         Serial.print(",");
         Serial.print(current_triplet.phase_b);
         Serial.print(",");
-        Serial.print(current_triplet.phase_c);
+        Serial.print(current_triplet.phase_c);*/
 
         Serial.print("\n");
 
