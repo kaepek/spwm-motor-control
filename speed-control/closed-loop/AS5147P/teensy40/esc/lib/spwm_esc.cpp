@@ -307,10 +307,9 @@ namespace kaepek
         */
         cli();
         // Serial.println("log");
-
-        Serial.print(this->com_direction_value);
-        Serial.print(",");
         Serial.print(this->com_torque_percentage);
+        Serial.print(",");
+        Serial.print(this->com_direction_value);
         Serial.print(",");
         Serial.print(eular_vec_store[0]);
         Serial.print(",");
