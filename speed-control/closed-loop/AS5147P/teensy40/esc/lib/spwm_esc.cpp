@@ -122,7 +122,7 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
         sample_ctr++;
-        
+
         // take encoder value
         this->current_encoder_displacement = encoder_value;
         // apply displacement
@@ -150,8 +150,6 @@ namespace kaepek
         analogWrite(spwm_pin_config.phase_b, current_triplet.phase_b);
         analogWrite(spwm_pin_config.phase_c, current_triplet.phase_c);
 #endif
-
-        
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -293,7 +291,9 @@ namespace kaepek
     {
         cli();
         // Serial.println("log");
-        Serial.print((double) kalman_vec_store[1] / (double) ENCODER_DIVISIONS);
+        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+        Serial.print(((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS));
         Serial.print(",");
         Serial.print(this->com_direction_value);
         Serial.print(",");
@@ -301,7 +301,6 @@ namespace kaepek
         // Serial.print(",");
         // Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
         // Serial.print(",");
-        
 
         /*Serial.print(eular_vec_store[0]);
         Serial.print(",");
