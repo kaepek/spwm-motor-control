@@ -6,7 +6,7 @@ using namespace TeensyTimerTool;
 PeriodicTimer logging_timer(GPT2);
 
 // Logging timer
-const std::size_t LOGGING_MICROS = 10000; // 40000
+const std::size_t LOGGING_MICROS = 20000; // 40000
 
 #ifndef DISABLE_LOGGING_CTRS
 #define DISABLE_LOGGING_CTRS false
