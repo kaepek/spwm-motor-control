@@ -114,6 +114,8 @@ namespace kaepek
     // esc state variable
     volatile bool fault = false;
 
+    elapsedMicros micros_since_last_log;
+
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
      * the motor and rotor magnetic fields ~90 degrees seperated, thus allowing for peak efficiency.

@@ -9,6 +9,10 @@ using namespace TeensyTimerTool;
 #define DISABLE_SPWM_PIN_MODIFICATION false
 #endif
 
+#ifndef ENABLE_VERBOSE_LOGGING
+#define ENABLE_VERBOSE_LOGGING true
+#endif
+
 // PeriodicTimer logging_timer(GPT2);
 
 namespace kaepek
@@ -306,12 +310,19 @@ namespace kaepek
         {"name": "voltage_phase_c", "position": 13}
         */
         cli();
-        // Serial.println("log");
+        double seconds_elapsed = (double) this->micros_since_last_log * 1e-6;
+        Serial.print(((double)this->loop_ctr) / seconds_elapsed);
+        Serial.print(",");
+        Serial.print(((double)this->sample_ctr) / seconds_elapsed);
+        Serial.print(",");
+        Serial.print(eular_vec_store[0]);
+
+#if ENABLE_VERBOSE_LOGGING
+        Serial.print(",");
         Serial.print(this->com_torque_percentage);
         Serial.print(",");
         Serial.print(this->com_direction_value);
-        Serial.print(",");
-        Serial.print(eular_vec_store[0]);
+
         Serial.print(",");
         Serial.print(eular_vec_store[1]);
         Serial.print(",");
@@ -334,32 +345,12 @@ namespace kaepek
         Serial.print(current_triplet.phase_b);
         Serial.print(",");
         Serial.print(current_triplet.phase_c);
-
-        // Serial.print(",");
-        // Serial.print((double)this->current_encoder_displacement / (double)ENCODER_COMPRESSION_FACTOR);
-        // Serial.print(",");
-
-        /**/
-        /*Serial.print(kalman_vec_store[0]);
-        Serial.print(",");
-        Serial.print(kalman_vec_store[1]);
-        Serial.print(",");
-        Serial.print(kalman_vec_store[2]);
-        Serial.print(",");
-        Serial.print(kalman_vec_store[3]);
-        Serial.print(",");*/
-        /*Serial.print(current_triplet.phase_a);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_b);
-        Serial.print(",");
-        Serial.print(current_triplet.phase_c);*/
-
+#endif
         Serial.print("\n");
-
+        this->loop_ctr = 0;
+        this->sample_ctr = 0;
+        this->micros_since_last_log = 0;
         sei();
-        /*
-
-        sei();*/
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
