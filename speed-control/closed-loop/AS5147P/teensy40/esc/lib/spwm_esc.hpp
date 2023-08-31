@@ -77,7 +77,7 @@ namespace kaepek
    * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
    */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator
+  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator, public SerialInputControl<2>
   {
   private:
     // constants
@@ -125,7 +125,7 @@ namespace kaepek
     volatile uint32_t sample_ctr = 0;
 
     // serial input instance with max buffer length of 2 bytes
-    SerialInputControl<EscL6234Teensy40AS5147P, 2> serial_input_control;
+    // SerialInputControl<EscL6234Teensy40AS5147P, 2> serial_input_control;
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
