@@ -214,11 +214,8 @@ namespace kaepek
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
 
-        this->started_ok = false;
 
-
-        bool _started_ok = RotaryEncoderSampleValidator::start();
-        this->started_ok = _started_ok;
+        started_ok = RotaryEncoderSampleValidator::start();
 
         start_attempted = true;
         if (started_ok == false)
@@ -226,19 +223,6 @@ namespace kaepek
             this->fault = true;
             stop();
         }
-
-        Serial.println("333333333333333333333333");
-        Serial.println("this->started_ok");
-        Serial.println(this->started_ok);
-        Serial.println("_started_ok");
-        Serial.println(_started_ok);
-
-
-
-
-        // Serial.println("direction_enforcement_set");
-        // Serial.println(direction_enforcement_set);
-        print_configuration_issues();
 
         return started_ok;
     }
