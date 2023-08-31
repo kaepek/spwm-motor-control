@@ -74,6 +74,8 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
+bool logging_timer_started = false;
+
 void logIt()
 {
   if (ESC.get_fault_status() == false)
@@ -83,6 +85,7 @@ void logIt()
   else
   {
     logging_timer.stop();
+    logging_timer_started = false;
   }
 }
 
@@ -131,24 +134,19 @@ void setup()
   ESC.setup();
 
   // Delay serial read as too early and it gets junk noise data
-  while (!Serial.available())
+  /*while (!Serial.available())
   {
     delay(300);
-  }
-
-  // Start sampling.
-  ESC.start();
-
-  logging_timer.begin(logIt, LOGGING_MICROS);
+  }*/
 }
 
 void loop()
 {
   // Perform the ESC loop tick function.
   ESC.loop();
-  if (ESC.started_ok == true)
-  {
-    // Read from the serial port to see if the control profile has changed (direction or torque value)
-    ESC.read_host_control_profile();
+
+  if (logging_timer_started == false && ESC.started_ok == true) {
+    logging_timer.begin(logIt, LOGGING_MICROS);
+    logging_timer_started = true;
   }
 }

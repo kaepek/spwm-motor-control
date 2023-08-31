@@ -5,7 +5,7 @@
 #include "../encoder/generic/rotary_encoder_sample_validator.hpp"
 #include "TeensyTimerTool.h"
 #include "spwm_voltage_model_discretiser.hpp"
-
+#include "../com/comlib.hpp"
 /*
 
 Brief:
@@ -113,8 +113,9 @@ namespace kaepek
     volatile byte com_direction_value = 0; // UInt8
     // esc state variable
     volatile bool fault = false;
-
     elapsedMicros micros_since_last_log;
+    // serial input instance with max buffer length of 2 bytes
+    SerialInputControl<EscL6234Teensy40AS5147P, 2> serial_input_control;
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
@@ -123,7 +124,11 @@ namespace kaepek
     uint32_t apply_phase_displacement(double encoder_value);
 
   public:
+    // variable to indicate that after a start was attempted did the validator actually start or not
     bool started_ok = false;
+    // variable to indicate that a start was attempted.
+    bool start_attempted = false;
+    // variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
 
@@ -183,7 +188,12 @@ namespace kaepek
     /**
      * Method to read the serial port for changes in the host control profile. Profile encodes the direction of the motor and the torque value.
      */
-    bool read_host_control_profile();
+    // bool read_host_control_profile();
+
+    /**
+     * Method to deal with control word input via the serial port.
+     */
+    void process_host_control_word(uint32_t control_word, uint32_t *data_buffer);
 
     /**
      * Method to get the fault status
