@@ -145,7 +145,7 @@ void loop()
   // Perform the ESC loop tick function.
   ESC.loop();
 
-  if (logging_timer_started == false && ESC.started_ok == true) {
+  if (logging_timer_started == false && ESC.get_started_ok_status() == true) {
     logging_timer.begin(logIt, LOGGING_MICROS);
     logging_timer_started = true;
   }

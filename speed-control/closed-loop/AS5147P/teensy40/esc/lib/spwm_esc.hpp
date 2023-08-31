@@ -111,9 +111,19 @@ namespace kaepek
     // volatile uint16_t com_torque_value = 0; // UInt16LE
     volatile double com_torque_percentage = 0.0;
     volatile byte com_direction_value = 0; // UInt8
-    // esc state variable
+    // esc state variables
+    // variable to indicate fault status
     volatile bool fault = false;
+    // variable to indicate  time since last log
     elapsedMicros micros_since_last_log;
+    // variable to indicate that after a start was attempted did the validator actually start or not
+    volatile bool started_ok = false;
+    // variable to indicate that a start was attempted.
+    volatile bool start_attempted = false;
+    // variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
+    volatile uint32_t loop_ctr = 0;
+    volatile uint32_t sample_ctr = 0;
+
     // serial input instance with max buffer length of 2 bytes
     SerialInputControl<EscL6234Teensy40AS5147P, 2> serial_input_control;
 
@@ -124,14 +134,6 @@ namespace kaepek
     uint32_t apply_phase_displacement(double encoder_value);
 
   public:
-    // variable to indicate that after a start was attempted did the validator actually start or not
-    bool started_ok = false;
-    // variable to indicate that a start was attempted.
-    bool start_attempted = false;
-    // variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
-    volatile uint32_t loop_ctr = 0;
-    volatile uint32_t sample_ctr = 0;
-
     /**
      * EscL6234Teensy40AS5147P default constructor.
      */
@@ -186,11 +188,6 @@ namespace kaepek
     void log();
 
     /**
-     * Method to read the serial port for changes in the host control profile. Profile encodes the direction of the motor and the torque value.
-     */
-    // bool read_host_control_profile();
-
-    /**
      * Method to deal with control word input via the serial port.
      */
     void process_host_control_word(uint32_t control_word, uint32_t *data_buffer);
@@ -199,6 +196,11 @@ namespace kaepek
      * Method to get the fault status
      */
     bool get_fault_status();
+
+    /**
+     * Method to get started_ok status
+     */
+    bool get_started_ok_status();
   };
 #endif
 }
