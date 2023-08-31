@@ -20,18 +20,19 @@ namespace kaepek
 {
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P() : RotaryEncoderSampleValidator(), serial_input_control(this)
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P() : RotaryEncoderSampleValidator()
     {
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), serial_input_control(this)
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), serial_input_control(this) 
     {
         this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
         this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
+        serial_input_control = SerialInputControl<EscL6234Teensy40AS5147P, 2>(this);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -213,13 +214,31 @@ namespace kaepek
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
 
-        started_ok = RotaryEncoderSampleValidator::start();
+        this->started_ok = false;
+
+
+        bool _started_ok = RotaryEncoderSampleValidator::start();
+        this->started_ok = _started_ok;
+
         start_attempted = true;
         if (started_ok == false)
         {
             this->fault = true;
             stop();
         }
+
+        Serial.println("333333333333333333333333");
+        Serial.println("this->started_ok");
+        Serial.println(this->started_ok);
+        Serial.println("_started_ok");
+        Serial.println(_started_ok);
+
+
+
+
+        // Serial.println("direction_enforcement_set");
+        // Serial.println(direction_enforcement_set);
+        print_configuration_issues();
 
         return started_ok;
     }
@@ -326,6 +345,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Start:
             start();
+            Serial.println("starting");
             break;
         case SerialInputCommandWord::Stop:
             stop();
@@ -340,16 +360,19 @@ namespace kaepek
             com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 20%
             break;
         case SerialInputCommandWord::Direction1UI8:
-            com_direction_value = data_buffer[0];
-            if (com_direction_value == 0)
+            if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero
             {
-                discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
-                set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
-            }
-            else if (com_direction_value == 1)
-            {
-                discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
-                set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
+                com_direction_value = data_buffer[0];
+                if (com_direction_value == 0)
+                {
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
+                    set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
+                }
+                else if (com_direction_value == 1)
+                {
+                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
+                    set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
+                }
             }
             break;
         default:

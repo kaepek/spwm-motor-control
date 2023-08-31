@@ -117,7 +117,7 @@ namespace kaepek
     // variable to indicate  time since last log
     elapsedMicros micros_since_last_log;
     // variable to indicate that after a start was attempted did the validator actually start or not
-    volatile bool started_ok = false;
+    bool started_ok = false;
     // variable to indicate that a start was attempted.
     volatile bool start_attempted = false;
     // variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.

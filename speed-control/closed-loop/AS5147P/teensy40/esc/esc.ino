@@ -31,7 +31,7 @@ uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 14;
 
 // Kalman config
 double KALMAN_ALPHA = 40000000000.0;
-double KALMAN_X_RESOLUTION_ERROR = 4.0; // 0.00001; // 4.0; // 0.00001;
+double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
 double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 1000.0; // 10.0; // 0.000000000001;
 
 // spwm pin config
@@ -122,22 +122,25 @@ void setup()
   // Initalise the encoder ESC.
   ESC = kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.8, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG); // 3us (micro) sample period 2.8 2.6
 
-  // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
-  ESC.set_skip_tolerance(8.0);
-  // Only allow skipping ahead twice before faulting.
-  ESC.set_skip_threshold(3);
 
   // To disable direction enforcement.
-  ESC.set_direction_enforcement(false);
+  // ESC.set_direction_enforcement(false);
 
   // Run setup procedure of the ESC. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
   ESC.setup();
 
   // Delay serial read as too early and it gets junk noise data
-  /*while (!Serial.available())
+  while (!Serial.available())
   {
     delay(300);
-  }*/
+  }
+
+  // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
+  ESC.set_skip_tolerance(8.0);
+  // Only allow skipping ahead twice before faulting.
+  ESC.set_skip_threshold(3);
+  // To disable direction enforcement.
+  ESC.set_direction_enforcement(false);
 }
 
 void loop()
@@ -145,7 +148,8 @@ void loop()
   // Perform the ESC loop tick function.
   ESC.loop();
 
-  if (logging_timer_started == false && ESC.get_started_ok_status() == true) {
+  if (logging_timer_started == false && ESC.get_started_ok_status() == true)
+  {
     logging_timer.begin(logIt, LOGGING_MICROS);
     logging_timer_started = true;
   }
