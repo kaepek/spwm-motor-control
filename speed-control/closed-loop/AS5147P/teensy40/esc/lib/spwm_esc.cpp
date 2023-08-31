@@ -3,6 +3,7 @@
 #include "../encoder/digital_rotary_encoder.cpp"
 #include "../encoder/generic/rotary_encoder_sample_validator.cpp"
 #include "spwm_voltage_model_discretiser.cpp"
+#include "../com/comlib.cpp"
 using namespace TeensyTimerTool;
 
 #ifndef DISABLE_SPWM_PIN_MODIFICATION
