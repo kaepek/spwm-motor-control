@@ -23,16 +23,16 @@ git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 
 - [Teensy40 Code](./speed-control/closed-loop/AS5147P/teensy40/esc/esc.ino)
 
-### Control-Console
+### Director usage
 
 ```
-kaepek-ThrustU16LEDirectionU8Model-dualshock-console
+kaepek-io-director -i keyboard dualshock -c stop start null thrustui16 directionui8 -p console serial -o network=localhost,9000,udp
 ```
 
-### Control-Serial
+### Graphing state
 
 ```
-kaepek-ThrustU16LEDirectionU8Model-dualshock-serial
+kaepek-io-graph --address localhost --port 9000 --config ./spwm-dir/speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json
 ```
 
 # Position control:
@@ -48,18 +48,6 @@ kaepek-ThrustU16LEDirectionU8Model-dualshock-serial
 - cd external/kaepek-io
 - npm install
 - npm link
-
-# IO Controller usage
-
-## Run dualshock to serialport with torque-delay-direction profile (for testing with hardware).
-```
-kaepek-torque-delay-direction-dualshock-serial
-```
-
-## Run dualshock to console with torque-delay-direction profile (for testing without hardware).
-```
-kaepek-torque-delay-direction-dualshock-console
-```
 
 # Credits/Useful links:
 - EE design and software enginnering - Jonathan Kelsey
