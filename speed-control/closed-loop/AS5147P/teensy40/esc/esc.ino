@@ -3,10 +3,15 @@
 #include "lib/spwm_esc.cpp"
 #include "TeensyTimerTool.h"
 using namespace TeensyTimerTool;
-PeriodicTimer logging_timer(GPT2);
 
-// Logging timer
+// Define timers.
+PeriodicTimer logging_timer(GPT2), fault_flash_timer(PIT);
+
+// Logging timer interval.
 const std::size_t LOGGING_MICROS = 9111; // 40000
+
+// LED flash timer interval.
+const std::size_t FLASH_MICROS = 100000;
 
 #ifndef DISABLE_LOGGING_CTRS
 #define DISABLE_LOGGING_CTRS false
@@ -21,6 +26,9 @@ uint32_t ENC_PIN_CSN = 10;
 uint32_t ENC_PIN_MISO = 12;
 uint32_t enc_pin_MOSI = 11;
 uint32_t enc_pin_SCK = 22;
+
+// Device status LED pin
+const int LED_PIN = 13;
 
 // Motor constants
 double MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG = -1.8;
@@ -74,9 +82,23 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
-bool logging_timer_started = false;
 
-void logIt()
+// Define routine to turn status led pin on and off.
+bool LED_STATUS_ON = false;
+void fault_flash() {
+  if (LED_STATUS_ON == true) {
+    digitalWrite(LED_PIN, LOW);
+    LED_STATUS_ON = false;
+  }
+  else {
+    digitalWrite(LED_PIN, HIGH);
+    LED_STATUS_ON = true;
+  }
+}
+
+// define a routine to log out ESC data
+bool logging_timer_started = false;
+void log_data()
 {
   // If we started and did not have a fault then log.
   if (ESC.get_fault_status() == false && ESC.get_started_status() == true)
@@ -87,11 +109,23 @@ void logIt()
   {
     logging_timer.stop();
     logging_timer_started = false;
+    if (ESC.get_fault_status() == true) {
+      // Enable fault state for status led
+      fault_flash_timer.begin(fault_flash, FLASH_MICROS);
+    }
+    else if (ESC.get_started_status() == false) {
+      // Turn off status led
+      digitalWrite(LED_PIN, LOW);
+      fault_flash_timer.stop();
+    }
   }
 }
 
 void setup()
 {
+  // Setup status LED pin
+  pinMode(LED_PIN, OUTPUT);
+
   // KALMAN_CONFIG
   KALMAN_CONFIG.alpha = KALMAN_ALPHA;
   KALMAN_CONFIG.x_resolution_error = KALMAN_X_RESOLUTION_ERROR;
@@ -143,7 +177,11 @@ void loop()
   // If we have started but not started the logging timer then start it.
   if (logging_timer_started == false && ESC.get_started_status() == true)
   {
-    logging_timer.begin(logIt, LOGGING_MICROS);
+    // start logging
+    logging_timer.begin(log_data, LOGGING_MICROS);
     logging_timer_started = true;
+    // Turn on status LED pin
+    fault_flash_timer.stop();
+    digitalWrite(LED_PIN, HIGH);
   }
 }

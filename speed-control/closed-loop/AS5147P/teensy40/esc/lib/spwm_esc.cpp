@@ -108,7 +108,7 @@ namespace kaepek
         // disable logging
         // print debug message
         this->fault = true;
-        digitalWrite(led_pin, HIGH);
+        // digitalWrite(led_pin, HIGH);
         stop();
         Serial.print("Error SkippedSteps: ");
         Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps);
@@ -126,7 +126,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
-        pinMode(led_pin, OUTPUT);
+        // pinMode(led_pin, OUTPUT);
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // set pwm pins for output
