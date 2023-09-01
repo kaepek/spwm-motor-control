@@ -31,7 +31,7 @@ uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 14;
 
 // Kalman config
 double KALMAN_ALPHA = 40000000000.0;
-double KALMAN_X_RESOLUTION_ERROR = 4.0; // 0.00001; // 4.0; // 0.00001;
+double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
 double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 1000.0; // 10.0; // 0.000000000001;
 
 // spwm pin config
@@ -78,11 +78,12 @@ bool logging_timer_started = false;
 
 void logIt()
 {
-  if (ESC.get_fault_status() == false && ESC.get_started_ok_status() == true)
+  // If we started and did not have a fault then log.
+  if (ESC.get_fault_status() == false && ESC.get_started_status() == true)
   {
     ESC.log();
   }
-  else
+  else // If we have not started or have a fault then stop logging.
   {
     logging_timer.stop();
     logging_timer_started = false;
@@ -132,12 +133,6 @@ void setup()
 
   // Run setup procedure of the ESC. Note this will invoke the encoder's setup method and therefore it is unnecessary to do it explicitly on the encoder instance.
   ESC.setup();
-
-  // Delay serial read as too early and it gets junk noise data
-  /*while (!Serial.available())
-  {
-    delay(300);
-  }*/
 }
 
 void loop()
@@ -145,7 +140,9 @@ void loop()
   // Perform the ESC loop tick function.
   ESC.loop();
 
-  if (logging_timer_started == false && ESC.get_started_ok_status() == true) {
+  // If we have started but not started the logging timer then start it.
+  if (logging_timer_started == false && ESC.get_started_status() == true)
+  {
     logging_timer.begin(logIt, LOGGING_MICROS);
     logging_timer_started = true;
   }

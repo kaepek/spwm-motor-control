@@ -163,7 +163,7 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop()
     {
 
-        if (started_ok == true)
+        if (started == true)
         {
             // Check the encoder has a new sample.
             if (has_new_sample() == true)
@@ -214,23 +214,23 @@ namespace kaepek
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
 
-        started_ok = RotaryEncoderSampleValidator::start();
+        started = RotaryEncoderSampleValidator::start();
 
         start_attempted = true;
-        if (started_ok == false)
+        if (started == false)
         {
             this->fault = true;
             stop();
         }
 
-        return started_ok;
+        return started;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop()
     {
         start_attempted = false;
-        started_ok = false;
+        started = false;
         RotaryEncoderSampleValidator::stop();
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
@@ -315,9 +315,9 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    bool EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_started_ok_status()
+    bool EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_started_status()
     {
-        return this->started_ok;
+        return this->started;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
