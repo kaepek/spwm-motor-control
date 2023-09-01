@@ -312,10 +312,16 @@ namespace kaepek
         case SerialInputCommandWord::Null:
             break;
         case SerialInputCommandWord::Start:
-            start();
+            if (fault == false)
+            {
+                start();
+            }
             break;
         case SerialInputCommandWord::Stop:
-            stop();
+            if (fault == false)
+            {
+                stop();
+            }
             break;
         case SerialInputCommandWord::Reset:
             stop();
