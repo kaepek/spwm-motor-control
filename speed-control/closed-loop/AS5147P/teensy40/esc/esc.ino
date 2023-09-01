@@ -17,38 +17,38 @@ const std::size_t FLASH_MICROS = 100000;
 #define DISABLE_LOGGING_CTRS false
 #endif
 
-// Encoder sampler config
+// Encoder sampler config.
 const std::size_t ENCODER_DIVISIONS = 16384;
 const std::size_t ENCODER_VALUE_COMPRESSION = 8;
 
-// Encoder pin config
+// Encoder pin config.
 uint32_t ENC_PIN_CSN = 10;
 uint32_t ENC_PIN_MISO = 12;
 uint32_t enc_pin_MOSI = 11;
 uint32_t enc_pin_SCK = 22;
 
-// Device status LED pin
+// Device status LED pin.
 const int LED_PIN = 13;
 
-// Motor constants
+// Motor constants.
 double MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG = -1.8;
 double MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG = 240.0;
 double MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG = 23.9;
 double MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG = 240.0;
 uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 14;
 
-// Kalman config
+// Kalman config.
 double KALMAN_ALPHA = 40000000000.0;
 double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
 double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 1000.0; // 10.0; // 0.000000000001;
 
-// spwm pin config
+// spwm pin config.
 uint32_t SPWM_PIN_PHASE_A = 1;
 uint32_t SPWM_PIN_PHASE_B = 0;
 uint32_t SPWM_PIN_PHASE_C = 7;
 uint32_t SPWM_PIN_EN = 8;
 
-/* Frequency / pwm write resolution selection
+/* Frequency / pwm write resolution selection.
 info from:
 https://www.pjrc.com/teensy/td_pulse.html
 
@@ -70,13 +70,13 @@ kaepek::DigitalEncoderPinsSPI ENC_PINS = kaepek::DigitalEncoderPinsSPI();
 // Define the encoder.
 kaepek::DigitalRotaryEncoderSPI ENC;
 
-// kalman config struct
+// kalman config struct.
 kaepek::KalmanConfig KALMAN_CONFIG = kaepek::KalmanConfig();
 
-// Motor calibration struct
+// Motor calibration struct.
 kaepek::SPWMMotorConfig MOTOR_CALIBRATION_CONFIG = kaepek::SPWMMotorConfig();
 
-// SPWM pin config struct
+// SPWM pin config struct.
 kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 
 // Define the encoder ESC.
@@ -96,7 +96,7 @@ void fault_flash() {
   }
 }
 
-// define a routine to log out ESC data
+// Define a routine to log out ESC data.
 bool logging_timer_started = false;
 void log_data()
 {
@@ -110,11 +110,11 @@ void log_data()
     logging_timer.stop();
     logging_timer_started = false;
     if (ESC.get_fault_status() == true) {
-      // Enable fault state for status led
+      // Enable fault state for status led.
       fault_flash_timer.begin(fault_flash, FLASH_MICROS);
     }
     else if (ESC.get_started_status() == false) {
-      // Turn off status led
+      // Turn off status led.
       digitalWrite(LED_PIN, LOW);
       fault_flash_timer.stop();
     }
@@ -123,22 +123,22 @@ void log_data()
 
 void setup()
 {
-  // Setup status LED pin
+  // Setup status LED pin.
   pinMode(LED_PIN, OUTPUT);
 
-  // KALMAN_CONFIG
+  // KALMAN_CONFIG.
   KALMAN_CONFIG.alpha = KALMAN_ALPHA;
   KALMAN_CONFIG.x_resolution_error = KALMAN_X_RESOLUTION_ERROR;
   KALMAN_CONFIG.process_noise = KALMAN_PROCESS_NOISE;
 
-  // MOTOR_CALIBRATION_CONFIG
+  // MOTOR_CALIBRATION_CONFIG.
   MOTOR_CALIBRATION_CONFIG.cw_zero_displacement_deg = MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG;
   MOTOR_CALIBRATION_CONFIG.cw_phase_displacement_deg = MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG;
   MOTOR_CALIBRATION_CONFIG.ccw_zero_displacement_deg = MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG;
   MOTOR_CALIBRATION_CONFIG.ccw_phase_displacement_deg = MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG;
   MOTOR_CALIBRATION_CONFIG.number_of_poles = MOTOR_CONFIG_NUMBER_OF_POLES;
 
-  // SPWM_PIN_CONFIG
+  // SPWM_PIN_CONFIG.
   SPWM_PIN_CONFIG.phase_a = SPWM_PIN_PHASE_A;
   SPWM_PIN_CONFIG.phase_b = SPWM_PIN_PHASE_B;
   SPWM_PIN_CONFIG.phase_c = SPWM_PIN_PHASE_C;
@@ -160,7 +160,7 @@ void setup()
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(8.0);
   // Only allow skipping ahead twice before faulting.
-  ESC.set_skip_threshold(3);
+  ESC.set_skip_threshold(2);
 
   // To disable direction enforcement.
   ESC.set_direction_enforcement(false);
@@ -177,10 +177,10 @@ void loop()
   // If we have started but not started the logging timer then start it.
   if (logging_timer_started == false && ESC.get_started_status() == true)
   {
-    // start logging
+    // Start logging.
     logging_timer.begin(log_data, LOGGING_MICROS);
     logging_timer_started = true;
-    // Turn on status LED pin
+    // Turn on status LED pin.
     fault_flash_timer.stop();
     digitalWrite(LED_PIN, HIGH);
   }
