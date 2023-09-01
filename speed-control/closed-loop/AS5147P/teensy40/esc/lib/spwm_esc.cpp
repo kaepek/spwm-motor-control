@@ -214,7 +214,6 @@ namespace kaepek
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
 
-
         started_ok = RotaryEncoderSampleValidator::start();
 
         start_attempted = true;
@@ -299,6 +298,8 @@ namespace kaepek
         Serial.print(current_triplet.phase_b);
         Serial.print(",");
         Serial.print(current_triplet.phase_c);
+        Serial.print(",");
+        Serial.print(current_encoder_displacement);
 #endif
         Serial.print("\n");
         this->loop_ctr = 0;
