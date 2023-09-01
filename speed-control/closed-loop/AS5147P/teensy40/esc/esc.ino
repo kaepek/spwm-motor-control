@@ -82,15 +82,17 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
-
 // Define routine to turn status led pin on and off.
 bool LED_STATUS_ON = false;
-void fault_flash() {
-  if (LED_STATUS_ON == true) {
+void fault_flash()
+{
+  if (LED_STATUS_ON == true)
+  {
     digitalWrite(LED_PIN, LOW);
     LED_STATUS_ON = false;
   }
-  else {
+  else
+  {
     digitalWrite(LED_PIN, HIGH);
     LED_STATUS_ON = true;
   }
@@ -109,11 +111,13 @@ void log_data()
   {
     logging_timer.stop();
     logging_timer_started = false;
-    if (ESC.get_fault_status() == true) {
+    if (ESC.get_fault_status() == true)
+    {
       // Enable fault state for status led.
       fault_flash_timer.begin(fault_flash, FLASH_MICROS);
     }
-    else if (ESC.get_started_status() == false) {
+    else if (ESC.get_started_status() == false)
+    {
       // Turn off status led.
       digitalWrite(LED_PIN, LOW);
       fault_flash_timer.stop();
@@ -183,5 +187,12 @@ void loop()
     // Turn on status LED pin.
     fault_flash_timer.stop();
     digitalWrite(LED_PIN, HIGH);
+  }
+
+  if (ESC.get_started_status() == false && ESC.get_fault_status() == false)
+  {
+    // Turn off status LED pin.
+    fault_flash_timer.stop();
+    digitalWrite(LED_PIN, LOW);
   }
 }
