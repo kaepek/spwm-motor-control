@@ -10,28 +10,17 @@
 
 Brief:
 
-ESC with SPWM commutations
+ESC with SPWM commutations.
 
-esc needs to take encoder config and PWM config
-it needs to be able to calculate the displacement needed for cw ccw translation of bemf signals
+ESC needs to take encoder config and PWM config.
 
-it needs to be able to start and stop
-needs a pwm disable feature.
-
-take and print kalman vectors
-
-read coms from serial port
-
+- It needs to be able to calculate the displacement needed for cw ccw translation of bemf signals
+- It needs to be able to start and stop
+- It needs a pwm disable feature.
+- It needs to take and print kalman vectors
+- It needs to read coms from serial port
 */
 
-/**
- * double cw_zero_displacement_deg = -1.86;
-double cw_phase_displacement_deg = 240.01;
-double ccw_zero_displacement_deg = 15.31;
-double ccw_phase_displacement_deg = 119.99;
-uint32_t number_of_poles = 14;
-
-*/
 namespace kaepek
 {
 #ifndef KAEPEK_L6234_TEENSY40_AS5147P_ESC
@@ -86,7 +75,6 @@ namespace kaepek
     static constexpr float log_frequency_micros = 5000;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     static const int size_of_host_profile = 3;
-    // static const int led_pin = 13;
     // discretiser
     typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
@@ -104,28 +92,24 @@ namespace kaepek
     KalmanConfig kalman_config;
     // kalman filter instance
     KalmanJerk1D kalman_filter;
-    // host communication buffer to store the thrust/direction profile (3 bytes in total) from the serial stream
+    // Host communication buffer to store the thrust/direction profile (3 bytes in total) from the serial stream
     char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
     int host_profile_buffer_ctr = 0;
-    // host communication variables
-    // volatile uint16_t com_torque_value = 0; // UInt16LE
+    // Host communication variables
     volatile double com_torque_percentage = 0.0;
     volatile byte com_direction_value = 0; // UInt8
-    // esc state variables
-    // variable to indicate fault status
+    // ESC state variables
+    // Variable to indicate fault status
     volatile bool fault = false;
-    // variable to indicate  time since last log
+    // Variable to indicate  time since last log
     elapsedMicros micros_since_last_log;
-    // variable to indicate that after a start was attempted did the validator actually start or not
+    // Variable to indicate that after a start was attempted did the validator actually start or not
     bool started = false;
-    // variable to indicate that a start was attempted.
+    // Variable to indicate that a start was attempted.
     volatile bool start_attempted = false;
-    // variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
+    // Variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
-
-    // serial input instance with max buffer length of 2 bytes
-    // SerialInputControl<EscL6234Teensy40AS5147P, 2> serial_input_control;
 
     /**
      * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
