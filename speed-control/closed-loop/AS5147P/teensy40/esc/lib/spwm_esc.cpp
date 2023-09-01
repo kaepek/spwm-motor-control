@@ -202,6 +202,19 @@ namespace kaepek
             this->fault = true;
             stop();
         }
+
+        // Set initial direction.
+        if (com_direction_value == 0)
+        {
+            discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise;
+            set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
+        }
+        else if (com_direction_value == 1)
+        {
+            discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
+            set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
+        }
+
         // Return the started status.
         return started;
     }
