@@ -7,7 +7,7 @@
 using namespace TeensyTimerTool;
 
 #ifndef DISABLE_SPWM_PIN_MODIFICATION
-#define DISABLE_SPWM_PIN_MODIFICATION true
+#define DISABLE_SPWM_PIN_MODIFICATION false
 #endif
 
 #ifndef ENABLE_VERBOSE_LOGGING
