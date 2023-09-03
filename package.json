@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "smoother": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 89"
   },
   "repository": {
     "type": "git",

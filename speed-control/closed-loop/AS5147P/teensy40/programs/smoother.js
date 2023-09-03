@@ -11,9 +11,14 @@ class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
     buffer = [];
     window_length = 10;
 
+    set_window_length (window_length) {
+        this.window_length = window_length;
+    }
+
     async ready () {
-        this.outgoing_data_config = [ ...this.incoming_data_config, {name:"smoothed_future_kalman_acceleration", position: 17 }, {name:"smoothed_future_kalman_jerk", position: 18 } ];
+        this.outgoing_data_config = [ ...this.incoming_data_config, {name:"smoothed_future_kalman_acceleration", position: 17 }, {name:"smoothed_future_kalman_jerk", position: 18 }, {name:"smoothed_prior_kalman_acceleration", position: 19 }, {name:"smoothed_prior_kalman_jerk", position: 20 } ];
         await super.ready();
+        return "KalmanHigerDerivativesSmoother ready."
     }
     incoming_data_callback(message_obj, info) {
 
@@ -72,6 +77,10 @@ const parse_options = {
         outgoing_protocol: {
             type: "string",
             short: "v"
+        },
+        window_length: {
+            type: "string",
+            short: "w"
         }
     }
 };
@@ -103,10 +112,6 @@ if (missing_options.length !== 0) {
 
 const values = parsed_options.values;
 
-// construct
-
-const smoother = new KalmanHigerDerivativesSmoother(values["incoming_address"], values["incoming_port"], values["incoming_protocol"], values["outgoing_address"], values["outgoing_port"], values["outgoing_protocol"], values["incoming_config"], ",");
-
-smoother.then(console.log).error(console.error);
-
-console.log("KalmanHigerDerivativesSmoother", KalmanHigerDerivativesSmoother);
+const smoother = new KalmanHigerDerivativesSmoother(values["incoming_address"], parseFloat(values["incoming_port"]), values["incoming_protocol"], values["outgoing_address"], parseFloat(values["outgoing_port"]), values["outgoing_protocol"], values["incoming_config"], ",");
+smoother.set_window_length(parseFloat(values["window_length"]));
+smoother.ready().then(console.log).catch(console.error);
