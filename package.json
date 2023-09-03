@@ -1,0 +1,20 @@
+{
+  "name": "spwm-motor-control",
+  "version": "1.0.0",
+  "description": "Smooth FOC like control with torque and speed control.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaepek/spwm-motor-control.git"
+  },
+  "author": "",
+  "license": "AGPL3",
+  "bugs": {
+    "url": "https://github.com/kaepek/spwm-motor-control/issues"
+  },
+  "homepage": "https://github.com/kaepek/spwm-motor-control#readme"
+}

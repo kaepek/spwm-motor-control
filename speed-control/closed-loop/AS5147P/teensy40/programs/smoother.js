@@ -1,0 +1,112 @@
+import NetworkAdaptor from "../../../../../external/kaepek-io/lib/host/adaptors/network.js";
+import { parseArgs } from "node:util";
+
+/**
+ * class KalmanHigerDerivativesSmoother
+ * Class to take incoming network data from a sink and to process it.
+ * Smoothing consists of a set of window frames, with the current target as the start or end item within the frame.
+ * The idea is to take average before and after the point in question allowing one to work out deviations from average behaviour.
+ */
+class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
+    buffer = [];
+    window_length = 10;
+
+    async ready () {
+        this.outgoing_data_config = [ ...this.incoming_data_config, {name:"smoothed_future_kalman_acceleration", position: 17 }, {name:"smoothed_future_kalman_jerk", position: 18 } ];
+        await super.ready();
+    }
+    incoming_data_callback(message_obj, info) {
+
+        // kalman_acceleration and kalman_jerk are the targets for smoothing.
+
+        // deal with priors;
+        const data_before = this.buffer.slice(this.buffer.length - this.window_length, this.buffer.length);
+        const acceleration_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
+        const jerk_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
+        message_obj["smoothed_prior_kalman_acceleration"] = acceleration_prior_avg;
+        message_obj["smoothed_prior_kalman_jerk"] = jerk_prior_avg;
+        this.buffer.push(message_obj);
+
+        // deal with futures;
+
+        if (this.buffer.length >= this.window_length) {
+            const index_to_update = this.buffer.length - this.window_length;
+            const data_after = this.buffer.slice(index_to_update);
+            const acceleration_future_avg = data_after.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
+            const jerk_future_avg = data_after.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
+            this.buffer[index_to_update]["smoothed_future_kalman_acceleration"] = acceleration_future_avg;
+            this.buffer[index_to_update]["smoothed_future_kalman_jerk"] = jerk_future_avg;
+            // this buffer index value is no ready for emissions.
+            this.transmit_outgoing_data(this.buffer[index_to_update]);
+        }
+    }
+}
+
+
+const parse_options = {
+    options: {
+        incoming_address: {
+            type: "string",
+            short: "a"
+        },
+        incoming_port: {
+            type: "string",
+            short: "p",
+        },
+        incoming_protocol: {
+            type: "string",
+            short: "n"
+        },
+        incoming_config: {
+            type: "string",
+            short: "c"
+        },
+        outgoing_address: {
+            type: "string",
+            short: "o",
+        },
+        outgoing_port: {
+            type: "string",
+            short: "x"
+        },
+        outgoing_protocol: {
+            type: "string",
+            short: "v"
+        }
+    }
+};
+
+let parsed_options = { values: {}, positionals: [] };
+
+try {
+    parsed_options = parseArgs(parse_options);
+}
+catch (e) {
+    console.error(`KalmanHigerDerivativesSmoother: ${e.message}`);
+    process.exit(1);
+}
+
+const missing_options = [];
+Object.keys(parse_options.options).forEach((option_name) => {
+    if (!parsed_options.values[option_name] && option_name !== "data") {
+        missing_options.push(option_name);
+    }
+});
+
+if (missing_options.length !== 0) {
+    console.error(`KalmanHigerDerivativesSmoother: Missing the following arguments ${missing_options.map(option_str => {
+        const option = (parse_options.options)[option_str];
+        return `--${option_str} or -${option.short}`
+    }).join(", ")}`);
+    process.exit(1);
+}
+
+const values = parsed_options.values;
+
+// construct
+
+const smoother = new KalmanHigerDerivativesSmoother(values["incoming_address"], values["incoming_port"], values["incoming_protocol"], values["outgoing_address"], values["outgoing_port"], values["outgoing_protocol"], values["incoming_config"], ",");
+
+smoother.then(console.log).error(console.error);
+
+console.log("KalmanHigerDerivativesSmoother", KalmanHigerDerivativesSmoother);
