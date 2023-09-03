@@ -8,7 +8,7 @@ using namespace TeensyTimerTool;
 PeriodicTimer logging_timer(GPT2), fault_flash_timer(PIT);
 
 // Logging timer interval.
-const std::size_t LOGGING_MICROS = 9111; // 40000
+const std::size_t LOGGING_MICROS = 9111; // 40000 // 9111
 
 // LED flash timer interval.
 const std::size_t FLASH_MICROS = 100000;
