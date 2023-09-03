@@ -20,7 +20,9 @@
         {"name":"smoothed_future_kalman_acceleration", "position": 17 },
         {"name":"smoothed_future_kalman_jerk", "position": 18 },
         {"name":"smoothed_prior_kalman_acceleration", "position": 19 },
-        {"name":"smoothed_prior_kalman_jerk", "position": 20 }
+        {"name":"smoothed_prior_kalman_jerk", "position": 20 },
+        {"name": "smoothed_central_kalman_acceleration", "position": 21},
+        {"name": "smoothed_central_kalman_jerk", "position": 22}
     ],
     "buffer_length": 1600,
     "plots": [
@@ -33,52 +35,23 @@
             ]
         },
         {
-            "name": "kalman_velocity",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red"}
-            ]
-        },
-        {
-            "name": "smoothed_prior_kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"smoothed_prior_kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
             "name": "kalman_acceleration",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
-            "name": "smoothed_future_kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"smoothed_future_kalman_acceleration", "color": "purple"}
+                {"name":"smoothed_prior_kalman_acceleration", "color": "red"},
+                {"name":"smoothed_central_kalman_acceleration", "color": "black"},
+                {"name":"smoothed_future_kalman_acceleration", "color": "blue"},
+                {"name":"kalman_velocity", "color": "green"}
             ]
         },
         {
             "name": "smoothed_prior_kalman_jerk",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"smoothed_prior_kalman_jerk", "color": "blue"}
-            ]
-        },
-        {
-            "name": "kalman_jerk",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_jerk", "color": "blue"}
-            ]
-        },
-        {
-            "name": "smoothed_future_kalman_jerk",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"smoothed_future_kalman_jerk", "color": "blue"}
+                {"name":"smoothed_prior_kalman_jerk", "color": "red"},
+                {"name":"smoothed_central_kalman_jerk", "color": "black"},
+                {"name":"smoothed_future_kalman_jerk", "color": "blue"},
+                {"name":"kalman_velocity", "color": "green"}
             ]
         },
         {

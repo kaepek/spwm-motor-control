@@ -40,27 +40,6 @@
             ]
         },
         {
-            "name": "smoothed_prior_kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"smoothed_prior_kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
-            "name": "kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
-            "name": "smoothed_future_kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"smoothed_future_kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
             "name": "smoothed_prior_kalman_jerk",
             "independant_column": "time",
             "dependant_columns": [
@@ -79,6 +58,27 @@
             "independant_column": "time",
             "dependant_columns": [
                 {"name":"smoothed_future_kalman_jerk", "color": "blue"}
+            ]
+        },
+        {
+            "name": "smoothed_prior_kalman_acceleration",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"smoothed_prior_kalman_acceleration", "color": "purple"}
+            ]
+        },
+        {
+            "name": "kalman_acceleration",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_acceleration", "color": "purple"}
+            ]
+        },
+        {
+            "name": "smoothed_future_kalman_acceleration",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"smoothed_future_kalman_acceleration", "color": "purple"}
             ]
         },
         {
