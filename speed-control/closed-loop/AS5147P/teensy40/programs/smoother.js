@@ -11,12 +11,26 @@ class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
     buffer = [];
     window_length = 10;
 
-    set_window_length (window_length) {
+    set_window_length(window_length) {
         this.window_length = window_length;
     }
 
-    async ready () {
-        this.outgoing_data_config = [ ...this.incoming_data_config, {name:"smoothed_future_kalman_acceleration", position: 17 }, {name:"smoothed_future_kalman_jerk", position: 18 }, {name:"smoothed_prior_kalman_acceleration", position: 19 }, {name:"smoothed_prior_kalman_jerk", position: 20 }, {"name": "smoothed_central_kalman_acceleration", "position": 21}, {"name": "smoothed_central_kalman_jerk", "position": 22} ];
+    async ready() {
+        this.outgoing_data_config = [
+            ...this.incoming_data_config,
+            { name: "smoothed_future_kalman_acceleration", position: 17 },
+            { name: "smoothed_future_kalman_jerk", position: 18 },
+            { name: "smoothed_prior_kalman_acceleration", position: 19 },
+            { name: "smoothed_prior_kalman_jerk", position: 20 },
+            { "name": "smoothed_central_kalman_acceleration", "position": 21 },
+            { "name": "smoothed_central_kalman_jerk", "position": 22 },
+            {"name": "smoothed_prior_kalman_acceleration_std", "position": 23},
+            {"name": "smoothed_prior_kalman_jerk_std", "position": 24},
+            {"name": "smoothed_future_kalman_acceleration_std", "position": 25},
+            {"name": "smoothed_future_kalman_jerk_std", "position": 26},
+            {"name": "smoothed_central_kalman_acceleration_std", "position": 27},
+            {"name": "smoothed_central_kalman_jerk_std", "position": 28},
+        ];
         await super.ready();
         return "KalmanHigerDerivativesSmoother ready."
     }
@@ -30,6 +44,11 @@ class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
         const jerk_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
         message_obj["smoothed_prior_kalman_acceleration"] = acceleration_prior_avg;
         message_obj["smoothed_prior_kalman_jerk"] = jerk_prior_avg;
+        // stdev
+        const acceleration_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_prior_avg, 2), 0) / this.window_length);
+        const jerk_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_prior_avg, 2), 0) / this.window_length);
+        message_obj["smoothed_prior_kalman_acceleration_std"] = acceleration_prior_std;
+        message_obj["smoothed_prior_kalman_jerk_std"] = jerk_prior_std;
         this.buffer.push(message_obj);
 
         // deal with futures;
@@ -41,17 +60,25 @@ class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
             const jerk_future_avg = data_after.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
             this.buffer[index_to_update]["smoothed_future_kalman_acceleration"] = acceleration_future_avg;
             this.buffer[index_to_update]["smoothed_future_kalman_jerk"] = jerk_future_avg;
+            // std
+            const acceleration_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_future_avg, 2), 0) / this.window_length);
+            const jerk_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_future_avg, 2), 0) / this.window_length);
+            this.buffer[index_to_update]["smoothed_future_kalman_acceleration_std"] = acceleration_future_std;
+            this.buffer[index_to_update]["smoothed_future_kalman_jerk_std"] = jerk_future_std;
 
             // create central smoothing
-            const half_data_after = this.buffer.slice(index_to_update, index_to_update + ((this.window_length - 1)/2));
-            const half_data_before = this.buffer.slice(index_to_update - ((this.window_length - 1)/2), index_to_update);
+            const half_data_after = this.buffer.slice(index_to_update, index_to_update + ((this.window_length - 1) / 2));
+            const half_data_before = this.buffer.slice(index_to_update - ((this.window_length - 1) / 2), index_to_update);
             const central_data = half_data_before.concat(half_data_after);
             const acceleration_central_avg = central_data.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
             const jerk_central_avg = central_data.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
             this.buffer[index_to_update]["smoothed_central_kalman_acceleration"] = acceleration_central_avg;
             this.buffer[index_to_update]["smoothed_central_kalman_jerk"] = jerk_central_avg;
-
-            // todo standard deviation
+            // std
+            const acceleration_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_central_avg, 2), 0) / this.window_length);
+            const jerk_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_central_avg, 2), 0) / this.window_length);
+            this.buffer[index_to_update]["smoothed_central_kalman_acceleration_std"] = acceleration_central_std;
+            this.buffer[index_to_update]["smoothed_central_kalman_jerk_std"] = jerk_central_std;
 
             // this buffer index value is no ready for emissions.
             this.transmit_outgoing_data(this.buffer[index_to_update]);
