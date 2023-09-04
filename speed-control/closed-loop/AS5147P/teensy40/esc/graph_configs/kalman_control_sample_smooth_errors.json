@@ -64,19 +64,19 @@
             "name": "kalman_smoothed_jerk_error",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"smoothed_prior_kalman_acceleration_std", "color": "red"},
-                {"name":"smoothed_central_kalman_acceleration_std", "color": "black"},
-                {"name":"smoothed_future_kalman_acceleration_std", "color": "blue"},
+                {"name":"smoothed_prior_kalman_jerk_std", "color": "red"},
+                {"name":"smoothed_central_kalman_jerk_std", "color": "black"},
+                {"name":"smoothed_future_kalman_jerk_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"}
             ]
         },
         {
-            "name": "smoothed_prior_kalman_jerk",
+            "name": "smoothed_prior_kalman",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"smoothed_prior_kalman_jerk_std", "color": "red"},
-                {"name":"smoothed_central_kalman_jerk_std", "color": "black"},
-                {"name":"smoothed_future_kalman_jerk_std", "color": "blue"},
+                {"name":"smoothed_prior_kalman_jerk", "color": "red"},
+                {"name":"smoothed_central_kalman_jerk", "color": "black"},
+                {"name":"smoothed_future_kalman_jerk", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"}
             ]
         },
