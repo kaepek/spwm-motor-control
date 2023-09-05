@@ -18,7 +18,7 @@
         {"name": "voltage_phase_c", "position": 15},
         {"name": "encoder_raw_displacement", "position":16}
     ],
-    "buffer_length": 800,
+    "buffer_length": 400,
     "plots": [
         {
             "name": "control",
