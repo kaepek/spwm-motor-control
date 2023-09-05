@@ -1,5 +1,6 @@
 import NetworkAdaptor from "../../../../../external/kaepek-io/lib/host/adaptors/network.js";
 import { parseArgs } from "node:util";
+import fs from "fs";
 
 /**
  * class KalmanHigerDerivativesSmoother
@@ -236,7 +237,7 @@ if (missing_options.length !== 0) {
 const values = parsed_options.values;
 
 const smoother = new KalmanHigerDerivativesSmoother(values["incoming_address"], parseFloat(values["incoming_port"]), values["incoming_protocol"], values["outgoing_address"], parseFloat(values["outgoing_port"]), values["outgoing_protocol"], values["incoming_config"], ",");
-if (values.hasOwnproperty("output_file")) {
+if (values["output_file"]) {
     // check if file exists
     const cwd = process.cwd();
     const full_incoming_data_config_path = `${cwd}/${values["output_file"]}`;
