@@ -111,7 +111,9 @@ class KalmanHigerDerivativesSmoother extends NetworkAdaptor {
             // this buffer2 index value is no ready for emissions.
             this.transmit_outgoing_data(this.buffer2[index_to_update]);
             // write to file
-            this.append_to_output_file(`${this.outgoing_data_serialiser(this.buffer2[index_to_update])}\n`);
+            if ( this.output_file_path !== null) {
+                this.append_to_output_file(`${this.outgoing_data_serialiser(this.buffer2[index_to_update])}\n`);
+            }
         }
     }
 

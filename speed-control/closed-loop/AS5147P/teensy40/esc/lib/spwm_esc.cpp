@@ -248,7 +248,7 @@ namespace kaepek
         Serial.print(",");
         Serial.print(((double)this->sample_ctr) / seconds_elapsed);
         Serial.print(",");
-        Serial.print(eular_vec_store[0]);
+        Serial.print(eular_vec_store[0], 4);
 
 #if ENABLE_VERBOSE_LOGGING
         Serial.print(",");
