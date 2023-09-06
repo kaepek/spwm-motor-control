@@ -53,7 +53,7 @@ const cwd = process.cwd();
 const full_output_data_path = `${cwd}/${values["output_data_file"]}`;
 const output_data_path_exists = fs.existsSync(full_output_data_path);
 if (output_data_path_exists) {
-    console.error(`StepChangeDetector: output_data_file ${full_input_config_path} exists already.`);
+    console.error(`StepChangeDetector: output_data_file ${full_output_data_path} exists already.`);
     process.exit(1);
 }
 
@@ -219,10 +219,15 @@ console.log("highest_velocity", highest_velocity);
 
 // ok so now rebuild data and when we are exactly at a transition then set a transition value of maximum velocity
 let output_lines = [];
+let was_in_transition = false;
 
 segments.forEach((segment) => {
     const type = segment.type;
     if (type === "steady") {
+        if (was_in_transition == true) {
+            was_in_transition = false;
+            segment.data[0]["transition_p"] = highest_velocity;
+        }
         output_lines = output_lines.concat(segment.data);
     }
     else {
@@ -231,6 +236,7 @@ segments.forEach((segment) => {
         if (segment.data.length) {
             segment.data[0]["transition_p"] = highest_velocity;
             output_lines = output_lines.concat(segment.data);
+            was_in_transition = true;
         }
         // console.log("segment.data[0]", segment.data[0]);
     }
