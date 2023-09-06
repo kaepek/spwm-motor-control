@@ -246,7 +246,10 @@ output_lines.forEach((line) => {
     if (!line.hasOwnProperty("transition_p")) {
         line["transition_p"] = 0;
     }
-})
+});
+
+
+// ok now need to do this all over again but use 2nd strategy..... define min and max from stable region and extend 
 
 // console.log("output_lines", JSON.stringify(output_lines));
 

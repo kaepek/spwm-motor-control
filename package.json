@@ -6,7 +6,14 @@
   "type": "module",
   "scripts": {
     "smoother": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109",
-    "smoother2": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother_error_ception.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109"
+    "smoother2": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother_error_ception.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109",
+    "smoother-file": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother_error_ception.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109 -f step-collect-${npm_config_run_id}.csv",
+    "step-collect-detector": "node speed-control/closed-loop/AS5147P/teensy40/programs/step-change-detector.js -f ./step-collect-${npm_config_run_id}.csv -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample_smooth_errors_ception.json -o step-collect-${npm_config_run_id}.detections.csv",
+    "step-collect-file-graph": "kaepek-io-graph-file -i step-collect-${npm_config_run_id}.detections.csv -c speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample_smooth_errors_ception_transitionp.json",
+    "step-collect-director": "kaepek-io-director -i keyboard network=localhost,9001,udp -c stop start reset thrustui16 directionui8 -p console serial --sink network=localhost,9000,udp",
+    "step-collect-program": "kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 0  && kaepek-io-netsend -h localhost -p 9001 -n udp -w start && sleep 10 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 20000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 30000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 40000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 50000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 60000 && sleep 3 && kaepek-io-netsend -h localhost -p 9001 -n udp -w stop",
+    "step-collect-realtime-graph": "kaepek-io-graph --address localhost --port 9002 --config ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample_smooth_errors_ception.json",
+    "step-collect-analyse": "npm run step-collect-detector --run_id=${npm_config_run_id} && npm run step-collect-file-graph --run_id=${npm_config_run_id}"
   },
   "repository": {
     "type": "git",
