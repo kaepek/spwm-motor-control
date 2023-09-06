@@ -99,9 +99,9 @@ const data_lines = file_input_data_str.split("\n");
 
 let com_thrust = -1;
 
-[{type: "steady"}, {type:"transition"}, {type: "steady"}];
+[{ type: "steady" }, { type: "transition" }, { type: "steady" }];
 
-const segments = [];
+let segments = [];
 
 let e2v_std_min = Number.POSITIVE_INFINITY;
 let first_e2v_value_for_transition = Number.POSITIVE_INFINITY;
@@ -117,15 +117,15 @@ data_lines.forEach((line) => {
     const velocity = line_data["kalman_velocity"];
     if (velocity > highest_velocity) highest_velocity = velocity;
     if (com_thrust === -1) { // first stage (assume 0)
-        console.log("here steady start");
+        // console.log("here steady start");
         // create first segment
-        segments.push({type:"steady", data:[line_data]});
+        segments.push({ type: "steady", data: [line_data] });
         com_thrust = thrust;
     }
     else if (com_thrust != thrust) { // we have a signal indicating the start of the transition
-        console.log("here transition start", thrust);
+        // console.log("here transition start", thrust);
         // create transition segment
-        segments.push({type: "transition", data: []});
+        segments.push({ type: "transition", data: [] });
         e2v_std_min = line_data["smoothed2_future_kalman_acceleration_std"];
         first_e2v_value_for_transition = line_data["smoothed2_future_kalman_acceleration_std"];
         tmp_buffer = [line_data];
@@ -137,11 +137,11 @@ data_lines.forEach((line) => {
         const latest_segment_index = segments.length - 1;
         const latest_segment = segments[latest_segment_index];
         if (latest_segment.type === "steady") {
-            console.log("here steady continue");
+            // console.log("here steady continue");
             latest_segment.data.push(line_data);
         }
         else if (latest_segment.type === "transition") {
-            console.log("here transition continue");
+            // console.log("here transition continue");
             /*
             Here we need some careful logic...
             We need to travel down the first hump finding the first minimum value as we go.
@@ -168,17 +168,17 @@ data_lines.forEach((line) => {
 
             index++;
             const e2v_std = line_data["smoothed2_future_kalman_acceleration_std"];
-            if (e2v_std < e2v_std_min ) {
-                console.log("New transition minumum discovered");
+            if (e2v_std < e2v_std_min) {
+                // console.log("New transition minumum discovered");
                 // we have a new minimum
                 e2v_std_min = e2v_std;
                 min_index = index;
             }
-            
+
             tmp_buffer.push(line_data);
 
-            if (check_for_escape && (e2v_std > (first_e2v_value_for_transition/2))) {
-                console.log("ESCAPE transition", e2v_std, first_e2v_value_for_transition/2);
+            if (check_for_escape && (e2v_std > (first_e2v_value_for_transition / 2))) {
+                // console.log("ESCAPE transition", e2v_std, first_e2v_value_for_transition / 2);
                 // escape 
                 // take buffer from start to where min_index is.... this defines the transition segment
                 // the remaining section of the buffer is steady state
@@ -190,15 +190,23 @@ data_lines.forEach((line) => {
                 const steady_state_data = tmp_buffer.slice(min_index); // to end
 
                 latest_segment.data = transition_data;
-                segments.push({type:"steady", data:steady_state_data});
+                segments.push({ type: "steady", data: steady_state_data });
             }
 
-            if (e2v_std < (first_e2v_value_for_transition/2)) {
+            if (e2v_std < (first_e2v_value_for_transition / 2)) {
                 check_for_escape = true;
             }
         }
     }
 });
+
+console.log("remaining buffer", tmp_buffer);
+
+segments = segments.filter((seg) => {
+    return seg.data.length;
+});
+console.log("segments...",segments.map(seg => seg));
+
 
 // there is the remaining transition / steady state data as the escape condition does not work for the last transition
 /*const latest_segment_index = segments.length - 1;
@@ -211,11 +219,6 @@ const transition_data = tmp_buffer.slice(0, min_index);
 const steady_state_data = tmp_buffer.slice(min_index); // to end
 latest_segment.data = transition_data;
 segments.push({type:"steady", data:[steady_state_data]});*/
-
-
-console.log("segments", segments);
-console.log("tmp_buffer", tmp_buffer);
-console.log("highest_velocity", highest_velocity);
 
 // ok so now rebuild data and when we are exactly at a transition then set a transition value of maximum velocity
 let output_lines = [];
@@ -248,34 +251,93 @@ output_lines.forEach((line) => {
     }
 });
 
+/* 
+
+segments... [
+  'steady',     'transition',
+  'steady',     'transition',
+  'steady',     'transition',
+  'steady',     'transition',
+  'steady',     'transition',
+  'transition'
+]
+*/
 
 // ok now need to do this all over again but use 2nd strategy..... define min and max from stable region and extend 
 
 // reverse output lines.
 // assume steady state.
+const reversed_lines = output_lines.reverse();
+let min_velocity = Number.POSITIVE_INFINITY;
+let max_velocity = 0;
 
-// collect max and min from array up until non zero transition_p.
-// continue going until an outlier is found
+const output2_segments = [{ type: "steady", data: [] }]; // {type:"steady", data:steady_state_data}
 
-// end the steady state region. enter into a transition region.
+reversed_lines.forEach((line, idx) => {
+    const latest_segment_index = output2_segments.length - 1;
+    const latest_segment = output2_segments[latest_segment_index];
+    const velocity = line["kalman_velocity"];
 
-// continue the transition period until the next non zero transition_p revert to steady state logic
+    if (latest_segment.type === "steady") {
+        
+        if (line["transition_p"] == 0) { // no transition yet
+            // console.log("continuing in stready region");
+            // collect max and min from array up until non zero transition_p.
+            if (velocity < min_velocity) {
+                min_velocity = velocity;
+            }
+            if (velocity > max_velocity) {
+                max_velocity = velocity;
+            }
+            latest_segment.data.push(line);
+        }
+        else {
+            // we have reached the minimum e2v we now could check the contraints before continuing
+            if (velocity >= min_velocity && velocity <= max_velocity) {
+                latest_segment.data.push(line);
+            }
+            else { // violated a constraint we have exited the steady region
+                console.log("exiting steady region vel,min,max,time", velocity, min_velocity, max_velocity, line["time"]);
+                min_velocity = Number.POSITIVE_INFINITY;
+                max_velocity = 0;
+                line["transition_q"] = highest_velocity;
+                output2_segments.push({ "type": "transition", data: [line] });
+            }
 
+        }
+    }
+    else { // within a transition
+        // console.log("continuing with transition region");
+        if (line["transition_p"] == 0) { // continuing the transition
+            latest_segment.data.push(line);
+        }
+        else {
+            console.log("exiting transition region vel,time", velocity, line["time"]);
+            line["transition_q"] = highest_velocity;
+            output2_segments.push({ "type": "steady", data: [line] }); // transition_p is non zero we have exited the transition
+        }
+    }
+
+});
+
+console.log("output2_segments", output2_segments);
 // reverse and reconstruct
+const output2 = output2_segments.reduce((acc, segment) => {
+    acc = acc.concat(segment.data);
+    return acc;
+}, []).reverse();
 
+output2.forEach((line) => {
+    if (!line.hasOwnProperty("transition_q")) {
+        line["transition_q"] = 0;
+    }
+});
 
 // console.log("output_lines", JSON.stringify(output_lines));
 
-const out_config = [...file_input_config_json.inputs, {"name": "transition_p", "position": 39}];
-
-console.log("out_config", out_config);
-
+const out_config = [...file_input_config_json.inputs, { "name": "transition_p", "position": 39 }, { "name": "transition_q", "position": 40 }];
 const serialiser = new ASCIIParser(out_config, ",");
-
-const output_str = output_lines.map(line=>serialiser.serialise(line)).join("\n");
-
-console.log("output_str", output_str);
-
+const output_str = output2.map(line => serialiser.serialise(line)).join("\n");
 fs.writeFileSync(full_output_data_path, output_str);
 
 
@@ -285,7 +347,7 @@ Perhaps an easier detector would be red smoothed 2 prior. which seems to peak wh
 trouble is there is quite a bit of up and down until red starts to rise property.... so perhaps create a cap so we dont start looking
 for the peak until the red line has exceeded the blue lines first value.
 
-// depends on window size too much... cannot tell if this is really a detector.... 
+// depends on window size too much... cannot tell if this is really a detector....
 
 future error 2 minimum seems better but trouble is finding when to actually pick, falls to minimum region fairly quickly but then
 osciallateds near zero (but positive) for a while

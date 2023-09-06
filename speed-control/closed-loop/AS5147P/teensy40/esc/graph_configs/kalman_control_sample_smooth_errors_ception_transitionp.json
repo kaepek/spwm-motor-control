@@ -41,7 +41,8 @@
         {"name": "smoothed2_future_kalman_jerk_std", "position": 36},
         {"name": "smoothed2_central_kalman_acceleration_std", "position": 37},
         {"name": "smoothed2_central_kalman_jerk_std", "position": 38},
-        {"name": "transition_p", "position": 39}
+        {"name": "transition_p", "position": 39},
+        { "name": "transition_q", "position": 40 }
     ],
     "buffer_length": 1600,
     "plots": [
@@ -61,7 +62,8 @@
                 {"name":"smoothed_central_kalman_acceleration_std", "color": "black"},
                 {"name":"smoothed_future_kalman_acceleration_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
@@ -72,7 +74,8 @@
                 {"name":"smoothed2_central_kalman_acceleration_std", "color": "black"},
                 {"name":"smoothed2_future_kalman_acceleration_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
@@ -83,7 +86,8 @@
                 {"name":"smoothed_central_kalman_acceleration", "color": "black"},
                 {"name":"smoothed_future_kalman_acceleration", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
@@ -94,7 +98,8 @@
                 {"name":"smoothed_central_kalman_jerk_std", "color": "black"},
                 {"name":"smoothed_future_kalman_jerk_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
@@ -105,7 +110,8 @@
                 {"name":"smoothed2_central_kalman_jerk_std", "color": "black"},
                 {"name":"smoothed2_future_kalman_jerk_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
@@ -116,7 +122,8 @@
                 {"name":"smoothed_central_kalman_jerk", "color": "black"},
                 {"name":"smoothed_future_kalman_jerk", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"},
-                {"name": "transition_p", "color": "pink"}
+                {"name": "transition_p", "color": "pink"},
+                { "name": "transition_q", "color": "magenta" }
             ]
         },
         {
