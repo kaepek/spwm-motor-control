@@ -251,6 +251,19 @@ output_lines.forEach((line) => {
 
 // ok now need to do this all over again but use 2nd strategy..... define min and max from stable region and extend 
 
+// reverse output lines.
+// assume steady state.
+
+// collect max and min from array up until non zero transition_p.
+// continue going until an outlier is found
+
+// end the steady state region. enter into a transition region.
+
+// continue the transition period until the next non zero transition_p revert to steady state logic
+
+// reverse and reconstruct
+
+
 // console.log("output_lines", JSON.stringify(output_lines));
 
 const out_config = [...file_input_config_json.inputs, {"name": "transition_p", "position": 39}];
