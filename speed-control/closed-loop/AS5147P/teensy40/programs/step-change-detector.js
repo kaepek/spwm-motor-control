@@ -297,7 +297,8 @@ reversed_lines.forEach((line, idx) => {
         else {
             passed_transition = true;
             // we have reached the minimum e2v we now could check the contraints before continuing
-            if (velocity >= min_velocity && velocity <= max_velocity) {
+            //             if (velocity >= (min_velocity * 0.995) && velocity <= (max_velocity * 1.005)) {
+            if (velocity >= (min_velocity * 1) && velocity <= (max_velocity * 1)) {
                 console.log("continuing in transition");
                 latest_segment.data.push(line);
             }
@@ -338,6 +339,66 @@ output2.forEach((line) => {
         line["transition_q"] = 0;
     }
 });
+
+// finally need to create std and mean of the stable section, and find time delta of transitions
+
+const stats = output2_segments.reduce((acc, segment) => {
+    console.log("segment--------------", segment);
+
+    if (segment.type === "steady") {
+        // find mean and standard deviation / duty
+        const mean_velocity = segment.data.reduce((acc, segment_data) => {
+            acc += segment_data["kalman_velocity"];
+            return acc;
+        }, 0) / segment.data.length;
+
+        const std_velocity = Math.sqrt(segment.data.reduce((acc, segment_data) => {
+            acc += Math.pow(segment_data["kalman_velocity"] - mean_velocity, 2);
+            return acc;
+        }, 0) / segment.data.length);
+
+        const duty = segment.data[segment.data.length - 1]["com_thrust_percentage"];
+
+        acc.push({type:"steady", duty, mean_velocity, std_velocity });
+        
+    }
+    else { // within a transition
+        const duty = segment.data[segment.data.length - 1]["com_thrust_percentage"];
+        const min_time = segment.data[segment.data.length - 1]["time"];
+        const max_time = segment.data[0]["time"];
+        const transition_time = Math.abs(max_time - min_time);
+        acc.push({type: "transition", duty, min_time, max_time, transition_time});
+    }
+    return acc;
+}, []);
+
+console.log("stats -------------------------");
+console.log(stats);
+
+// ok so now outputs csvs of the following
+
+const steady_format = [
+    {"name": "duty", "position": 0},
+    {"name": "mean_velocity", "position": 1},
+    {"name": "std_velocity", "position": 2}
+
+];
+// steady duty vs mean_velocity, std_velocity
+const steady_serialiser = new ASCIIParser(steady_format, ",");
+const steady_out = stats.filter((stat) => stat.type == "steady").map(line => steady_serialiser.serialise(line)).join("\n");
+const full_steady_output_data_path = full_output_data_path + ".steady.csv"
+fs.writeFileSync(full_steady_output_data_path, steady_out);
+
+const transition_format = [
+    {"name": "duty", "position": 0},
+    {"name": "transition_time", "position": 1}
+];
+// transition duty vs transition_time
+const transition_serialiser = new ASCIIParser(transition_format, ",");
+const transition_out = stats.filter((stat) => stat.type == "transition").map(line => transition_serialiser.serialise(line)).join("\n");
+const full_transition_output_data_path = full_output_data_path + ".transition.csv"
+fs.writeFileSync(full_transition_output_data_path, transition_out);
+
 
 // console.log("output_lines", JSON.stringify(output_lines));
 
