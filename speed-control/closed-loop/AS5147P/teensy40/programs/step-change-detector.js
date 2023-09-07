@@ -273,15 +273,18 @@ let max_velocity = 0;
 
 const output2_segments = [{ type: "steady", data: [] }]; // {type:"steady", data:steady_state_data}
 
+let passed_transition = false;
+
 reversed_lines.forEach((line, idx) => {
+    console.log("line time, transition_p", line["time"], line["transition_p"]);
     const latest_segment_index = output2_segments.length - 1;
     const latest_segment = output2_segments[latest_segment_index];
     const velocity = line["kalman_velocity"];
 
     if (latest_segment.type === "steady") {
         
-        if (line["transition_p"] == 0) { // no transition yet
-            // console.log("continuing in stready region");
+        if (line["transition_p"] == 0 && passed_transition == false ) { // no transition yet
+            console.log("continuing in stready region");
             // collect max and min from array up until non zero transition_p.
             if (velocity < min_velocity) {
                 min_velocity = velocity;
@@ -292,8 +295,10 @@ reversed_lines.forEach((line, idx) => {
             latest_segment.data.push(line);
         }
         else {
+            passed_transition = true;
             // we have reached the minimum e2v we now could check the contraints before continuing
             if (velocity >= min_velocity && velocity <= max_velocity) {
+                console.log("continuing in transition");
                 latest_segment.data.push(line);
             }
             else { // violated a constraint we have exited the steady region
@@ -301,6 +306,7 @@ reversed_lines.forEach((line, idx) => {
                 min_velocity = Number.POSITIVE_INFINITY;
                 max_velocity = 0;
                 line["transition_q"] = highest_velocity;
+                passed_transition = false;
                 output2_segments.push({ "type": "transition", data: [line] });
             }
 
