@@ -327,19 +327,6 @@ reversed_lines.forEach((line, idx) => {
 
 });
 
-console.log("output2_segments", output2_segments);
-// reverse and reconstruct
-const output2 = output2_segments.reduce((acc, segment) => {
-    acc = acc.concat(segment.data);
-    return acc;
-}, []).reverse();
-
-output2.forEach((line) => {
-    if (!line.hasOwnProperty("transition_q")) {
-        line["transition_q"] = 0;
-    }
-});
-
 // finally need to create std and mean of the stable section, and find time delta of transitions
 
 const stats = output2_segments.reduce((acc, segment) => {
@@ -347,7 +334,15 @@ const stats = output2_segments.reduce((acc, segment) => {
 
     if (segment.type === "steady") {
         // find mean and standard deviation / duty
+        let min_velocity = Number.POSITIVE_INFINITY;
+        let max_velocity = 0;
         const mean_velocity = segment.data.reduce((acc, segment_data) => {
+            if (min_velocity > segment_data["kalman_velocity"]) {
+                min_velocity = segment_data["kalman_velocity"];
+            }
+            if (max_velocity < segment_data["kalman_velocity"]) {
+                max_velocity = segment_data["kalman_velocity"];
+            }
             acc += segment_data["kalman_velocity"];
             return acc;
         }, 0) / segment.data.length;
@@ -359,7 +354,7 @@ const stats = output2_segments.reduce((acc, segment) => {
 
         const duty = segment.data[segment.data.length - 1]["com_thrust_percentage"];
 
-        acc.push({type:"steady", duty, mean_velocity, std_velocity });
+        acc.push({type:"steady", duty, mean_velocity, std_velocity, min_velocity, max_velocity });
         
     }
     else { // within a transition
@@ -399,10 +394,64 @@ const transition_out = stats.filter((stat) => stat.type == "transition").map(lin
 const full_transition_output_data_path = full_output_data_path + ".transition.csv"
 fs.writeFileSync(full_transition_output_data_path, transition_out);
 
+// so for each segment. for the transition, look at the <next> section mean and std find when do we exit the stable region.
+
+output2_segments.forEach((segment, idx) => {
+    if (segment.type === "transition") {
+        console.log("transition idx", idx);
+        let escaped_region = false;
+        const next_stable_idx = idx + 1;
+        const next_segment_stats = stats[next_stable_idx];
+        const next_min_vel = next_segment_stats.min_velocity;
+        const next_max_vel = next_segment_stats.max_velocity;
+        console.log("next min max", next_min_vel, next_max_vel);
+        const data_reversed = segment.data.reverse();
+        data_reversed.forEach((line) => {
+            const velocity = line["kalman_velocity"];
+            console.log("velocity", velocity);
+            if (next_segment_stats.duty != 0) 
+            {
+                if ((velocity > next_max_vel || velocity < next_min_vel) && escaped_region == false) {
+                    // we have left the previous stable regions constraints.
+                    console.log("escape");
+                    line["transition_s"] = highest_velocity;
+                    escaped_region = true
+                }
+            }
+            else {
+                if ((velocity > (next_segment_stats.mean_velocity + next_segment_stats.std_velocity) || velocity < (next_segment_stats.mean_velocity - next_segment_stats.std_velocity)) && escaped_region == false) {
+                    // we have left the previous stable regions constraints.
+                    console.log("escape");
+                    line["transition_s"] = highest_velocity;
+                    escaped_region = true
+                } 
+            }
+
+        });
+        segment.data = data_reversed.reverse();
+    }
+});
+
+
+console.log("output2_segments", output2_segments);
+// reverse and reconstruct
+const output2 = output2_segments.reduce((acc, segment) => {
+    acc = acc.concat(segment.data);
+    return acc;
+}, []).reverse();
+
+output2.forEach((line) => {
+    if (!line.hasOwnProperty("transition_q")) {
+        line["transition_q"] = 0;
+    }
+    if (!line.hasOwnProperty("transition_s")) {
+        line["transition_s"] = 0;
+    }
+});
 
 // console.log("output_lines", JSON.stringify(output_lines));
 
-const out_config = [...file_input_config_json.inputs, { "name": "transition_p", "position": 39 }, { "name": "transition_q", "position": 40 }];
+const out_config = [...file_input_config_json.inputs, { "name": "transition_p", "position": 39 }, { "name": "transition_q", "position": 40 }, { "name": "transition_s", "position": 41 }];
 const serialiser = new ASCIIParser(out_config, ",");
 const output_str = output2.map(line => serialiser.serialise(line)).join("\n");
 fs.writeFileSync(full_output_data_path, output_str);
