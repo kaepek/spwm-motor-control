@@ -66,15 +66,15 @@ namespace kaepek
    * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
    */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator, public SerialInputControl<2>
+  class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator, public SerialInputControl<4>
   {
-  private:
+  protected:
     // constants
-    static constexpr double cw_displacement_deg = 0.0;
-    static constexpr double ccw_displacement_deg = 0.0;
-    static constexpr float log_frequency_micros = 5000;
+    // static constexpr double cw_displacement_deg = 0.0;
+    // static constexpr double ccw_displacement_deg = 0.0;
+    // static constexpr float log_frequency_micros = 5000;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
-    static const int size_of_host_profile = 3;
+    // static const int size_of_host_profile = 3;
     // discretiser
     typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
@@ -93,8 +93,8 @@ namespace kaepek
     // kalman filter instance
     KalmanJerk1D kalman_filter;
     // Host communication buffer to store the thrust/direction profile (3 bytes in total) from the serial stream
-    char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
-    int host_profile_buffer_ctr = 0;
+    // char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
+    // int host_profile_buffer_ctr = 0;
     // Host communication variables
     volatile double com_torque_percentage = 0.0;
     volatile byte com_direction_value = 0; // UInt8
@@ -124,7 +124,7 @@ namespace kaepek
      * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      */
-    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config); // : RotaryEncoderSampleValidator(encoder, sample_period_microseconds);
+    EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config);
 
     /**
      * Method set the SPWM pin voltages from the SPWMVoltageModelDiscretiser when a successful encoder sample is taken and is determined to be a plausible value and the value indicates motion which obeys the direction constraint (if direction enforcement has been enabled).
@@ -147,7 +147,7 @@ namespace kaepek
     /**
      * Method to read the sampler each microcontroller tick and update the physical jerk model via the Kalman filter with the new measurement sample.
      */
-    void loop();
+    virtual void loop();
 
     /**
      * Method to start the ESC via starting the RotaryEncoderSampleValidator via its start method (therefore encoder readings will start being read and internal voltage and physical models will start updating) and starting the logging timer to print diagnostics of the voltage and physical models.
@@ -162,12 +162,12 @@ namespace kaepek
     /**
      * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double com_torque_percentage), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
      */
-    void log();
+    virtual void log();
 
     /**
      * Method to deal with control word input via the serial port.
      */
-    void process_host_control_word(uint32_t control_word, uint32_t *data_buffer);
+    virtual void process_host_control_word(uint32_t control_word, uint32_t *data_buffer);
 
     /**
      * Method to get the fault status
