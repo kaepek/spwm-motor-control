@@ -411,9 +411,9 @@ output2_segments.forEach((segment, idx) => {
             console.log("velocity", velocity);
             if (next_segment_stats.duty != 0) 
             {
-                if ((velocity > next_max_vel || velocity < next_min_vel) && escaped_region == false) {
+                if ((velocity > (next_max_vel * 1.01) || velocity < (next_min_vel * 0.99)) && escaped_region == false) {
                     // we have left the previous stable regions constraints.
-                    console.log("escape");
+                    console.log("escape", velocity > next_max_vel, velocity < next_min_vel);
                     line["transition_s"] = highest_velocity;
                     escaped_region = true
                 }
