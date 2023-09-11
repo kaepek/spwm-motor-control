@@ -34,6 +34,11 @@ namespace kaepek
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
         double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
         double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
+        uint32_t number_of_poles;
+        double cw_zero_displacement_deg;
+        double cw_phase_displacement_deg;
+        double ccw_zero_displacement_deg;
+        double ccw_phase_displacement_deg;
 
     public:
         /**
@@ -52,6 +57,35 @@ namespace kaepek
          * @return instance of SPWMVoltageModelDiscretiser class
          */
         SPWMVoltageModelDiscretiser(double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, double ccw_phase_displacement_deg, uint32_t number_of_poles);
+
+        /**
+         * Method to update cw_zero_displacement_deg.
+         * @param value The value to update.
+         */
+        void set_cw_zero_displacement_deg(float value);
+
+        /**
+         * Method to update ccw_zero_displacement_deg.
+         * @param value The value to update.
+         */
+        void set_ccw_zero_displacement_deg(float value);
+
+        /**
+         * Method to update cw_phase_displacement_deg.
+         * @param value The value to update.
+         */
+        void set_cw_phase_displacement_deg(float value);
+
+        /**
+         * Method to update ccw_phase_displacement_deg.
+         * @param value The value to update.
+         */
+        void set_ccw_phase_displacement_deg(float value);
+
+        /**
+         * Method to update the trig tables when a phase or zero displacement has been changed.
+         */
+        void update_lookup_tables();
 
         /**
          * raw_encoder_value_to_compressed_encoder_value default constructor.
@@ -103,8 +137,3 @@ namespace kaepek
     };
 #endif
 }
-
-/**
- * @param encoder_divisions The number of encoder divisions around a whole circle.
- * @param encoder_compression_factor The compressed number of angular divisions around a whole circle.
- */

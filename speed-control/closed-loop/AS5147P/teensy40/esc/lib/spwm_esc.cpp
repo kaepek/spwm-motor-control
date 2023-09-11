@@ -35,48 +35,14 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    uint32_t EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::apply_phase_displacement(double encoder_value)
-    {
-        double electrical_displacement_deg = 0.0;
-        if (this->discretiser_direction == SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::Clockwise)
-        {
-            // clockwise
-            electrical_displacement_deg = cw_displacement_deg;
-        }
-        else
-        {
-            // counter clockwise
-            electrical_displacement_deg = ccw_displacement_deg;
-        }
-
-        // Translating between electrical and mechanical degrees
-        // Electrical angle = P\2 (mechanical angle)
-        // So (2 * Electrical angle) / P = mechanical angle
-        // P is poles (NOT POLE PAIRS)
-
-        double mechanical_displacement_deg = (2.0 * electrical_displacement_deg) / (double)motor_config.number_of_poles;
-        double mechanical_displacement_steps = (mechanical_displacement_deg / 360.0) * (double)ENCODER_DIVISIONS;
-        double translated_mechanical_steps = encoder_value + mechanical_displacement_steps;
-
-        // dont forget you can transition over 0 or 16384 so need to fnmod this value before returning.
-
-        uint32_t final_encoder_value = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::fnmod(translated_mechanical_steps, ENCODER_DIVISIONS);
-
-        return final_encoder_value;
-        return 0;
-    }
-
-    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
         sample_ctr++;
 
         // Take encoder value.
         this->current_encoder_displacement = encoder_value;
-        // Apply displacement.
-        uint32_t displaced_encoder_value = apply_phase_displacement(encoder_value);
         // Convert to compressed.
-        uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(displaced_encoder_value);
+        uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
         current_triplet = discretiser.get_pwm_triplet(com_torque_percentage * (double)MAX_DUTY, compressed_encoder_value, discretiser_direction);
         // Set pin values.
@@ -308,6 +274,7 @@ namespace kaepek
     {
         // Handle serial word input.
         uint16_t com_torque_value = 0;
+        float float_value = 0;
         switch (control_word)
         {
         case SerialInputCommandWord::Null:
@@ -347,6 +314,50 @@ namespace kaepek
                     discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction::CounterClockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
+            }
+            break;
+        case SerialInputCommandWord::Phase1F32:
+            if (started == false)
+            {
+                *((unsigned char *)&float_value + 0) = data_buffer[0];
+                *((unsigned char *)&float_value + 1) = data_buffer[1];
+                *((unsigned char *)&float_value + 2) = data_buffer[2];
+                *((unsigned char *)&float_value + 3) = data_buffer[3];
+                discretiser.set_cw_phase_displacement_deg(float_value);
+                discretiser.update_lookup_tables();
+            }
+            break;
+        case SerialInputCommandWord::Phase2F32:
+            if (started == false)
+            {
+                *((unsigned char *)&float_value + 0) = data_buffer[0];
+                *((unsigned char *)&float_value + 1) = data_buffer[1];
+                *((unsigned char *)&float_value + 2) = data_buffer[2];
+                *((unsigned char *)&float_value + 3) = data_buffer[3];
+                discretiser.set_ccw_phase_displacement_deg(float_value);
+                discretiser.update_lookup_tables();
+            }
+            break;
+        case SerialInputCommandWord::Offset1F32:
+            if (started == false)
+            {
+                *((unsigned char *)&float_value + 0) = data_buffer[0];
+                *((unsigned char *)&float_value + 1) = data_buffer[1];
+                *((unsigned char *)&float_value + 2) = data_buffer[2];
+                *((unsigned char *)&float_value + 3) = data_buffer[3];
+                discretiser.set_cw_zero_displacement_deg(float_value);
+                discretiser.update_lookup_tables();
+            }
+            break;
+        case SerialInputCommandWord::Offset2F32:
+            if (started == false)
+            {
+                *((unsigned char *)&float_value + 0) = data_buffer[0];
+                *((unsigned char *)&float_value + 1) = data_buffer[1];
+                *((unsigned char *)&float_value + 2) = data_buffer[2];
+                *((unsigned char *)&float_value + 3) = data_buffer[3];
+                discretiser.set_ccw_zero_displacement_deg(float_value);
+                discretiser.update_lookup_tables();
             }
             break;
         default:

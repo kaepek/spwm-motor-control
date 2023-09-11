@@ -29,11 +29,22 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
     SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser(double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, double ccw_phase_displacement_deg, uint32_t number_of_poles)
     {
-        double cw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(cw_zero_displacement_deg);
-        double cw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(cw_phase_displacement_deg);
-        double ccw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_zero_displacement_deg);
-        double ccw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(ccw_phase_displacement_deg);
-        double sin_period_coeff = ((double)number_of_poles ) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
+        this->number_of_poles = number_of_poles;
+        this->cw_zero_displacement_deg = cw_zero_displacement_deg;
+        this->cw_phase_displacement_deg = cw_phase_displacement_deg;
+        this->ccw_zero_displacement_deg = ccw_zero_displacement_deg;
+        this->ccw_phase_displacement_deg = ccw_phase_displacement_deg;
+        update_lookup_tables();
+    };
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    void SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::update_lookup_tables()
+    {
+        double cw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(this->cw_zero_displacement_deg);
+        double cw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(this->cw_phase_displacement_deg);
+        double ccw_zero_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(this->ccw_zero_displacement_deg);
+        double ccw_phase_displacement_rad = SPWMVoltageModelDiscretiser::deg_to_rad(this->ccw_phase_displacement_deg);
+        double sin_period_coeff = ((double)this->number_of_poles) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
 
         for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
         {
@@ -49,7 +60,31 @@ namespace kaepek
             ccw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + ccw_phase_displacement_rad));
             ccw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + (2.0 * ccw_phase_displacement_rad)));
         }
-    };
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    void SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::set_cw_zero_displacement_deg(float value)
+    {
+        this->cw_zero_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    void SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::set_ccw_zero_displacement_deg(float value)
+    {
+        this->ccw_zero_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    void SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::set_cw_phase_displacement_deg(float value)
+    {
+        this->cw_phase_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
+    void SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::set_ccw_phase_displacement_deg(float value)
+    {
+        this->ccw_phase_displacement_deg = value;
+    }
 
     // raw_encoder_value_to_compressed_encoder_value
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t MAX_DUTY>
@@ -57,13 +92,8 @@ namespace kaepek
     {
         // compress the encoder displacement to the new range.
         double compressed_encoder_displacement_value_raw = (raw_encoder_value / encoder_compression_factor_dbl);
-        
-        // Serial.println(raw_encoder_value); // Serial.print("\t");
-        // Serial.println(compressed_encoder_displacement_value_raw);
-
         // could have rounded up and therefore gone > spwm_angular_resolution_dbl, so perform mod to bring back to zero if needed.
         uint32_t compressed_encoder_value_mod = (uint32_t)round(compressed_encoder_displacement_value_raw) % spwm_angular_resolution_uint32;
-        // Serial.println(compressed_encoder_value_mod);
         return compressed_encoder_value_mod;
     };
 

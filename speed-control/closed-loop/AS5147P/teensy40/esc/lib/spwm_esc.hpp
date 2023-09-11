@@ -110,13 +110,6 @@ namespace kaepek
     // Variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
-
-    /**
-     * Method to calculate the required displacement of the encoder value such that the encoder value is displaced from the calibration models bemf recording such that
-     * the motor and rotor magnetic fields ~90 degrees seperated, thus allowing for peak efficiency.
-     */
-    uint32_t apply_phase_displacement(double encoder_value);
-
   public:
     /**
      * EscL6234Teensy40AS5147P default constructor.
