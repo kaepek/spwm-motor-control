@@ -32,7 +32,8 @@
             "name": "kalman_velocity",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red", "line": false}
+                {"name":"kalman_velocity", "color": "red", "line": false},
+                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
         },
         {

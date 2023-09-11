@@ -3,6 +3,10 @@
 
 namespace kaepek
 {
+#ifndef ENABLE_RK4
+#define ENABLE_RK4 true
+#endif
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
     {
@@ -14,6 +18,12 @@ namespace kaepek
         proportional_coefficient = pid_config.proportional;
         differential_coefficient = pid_config.differential;
         integral_coefficient = pid_config.integral;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    double PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::calculate_eular_derivative(double value, double dt, double previous_value)
+    {
+        return (value - previous_value) / dt;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -48,6 +58,30 @@ namespace kaepek
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[2] = eular_vec[2];
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[3] = eular_vec[3];
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[4] = eular_vec[4];
+
+                // Calculate errors
+                proportional_error = set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+                integral_error += proportional_error * seconds_since_last;
+#if ENABLE_RK4
+                // RK4
+                double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
+                double k2 = calculate_eular_derivative(proportional_error + 0.5 * k1 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                double k3 = calculate_eular_derivative(proportional_error + 0.5 * k2 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                double k4 = calculate_eular_derivative(proportional_error + k3 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                differential_error = (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+#else
+                // Eular
+                differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
+#endif
+
+                // Calculate duty percentage
+                double duty = 0.0;
+
+                duty = proportional_coefficient * proportional_error + integral_coefficient * integral_error + differential_coefficient * differential_error;
+                duty = min(duty, 0.5); // cap at 50%
+
+                previous_proportional_error = proportional_error;
+
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop_ctr++;
                 sei();
             }
@@ -88,10 +122,6 @@ namespace kaepek
             EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
             EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::RotaryEncoderSampleValidator::reset();
             EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault = false;
-            break;
-        case SerialInputCommandWord::Thrust1UI16:
-            com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 20%
             break;
         case SerialInputCommandWord::Direction1UI8:
             if (EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage == 0.0) // dont reverse unless thrust is zero
@@ -153,6 +183,38 @@ namespace kaepek
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.update_lookup_tables();
             }
             break;
+        case SerialInputCommandWord::Thrust1UI16:
+            com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
+            EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 50%
+            break;
+        case SerialInputCommandWord::SetPointF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            set_point = float_value;
+            break;
+        case SerialInputCommandWord::ProportionalF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            proportional_coefficient = float_value;
+            break;
+        case SerialInputCommandWord::IntegralF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            integral_coefficient = float_value;
+            break;
+        case SerialInputCommandWord::DerivativeF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            differential_coefficient = float_value;
+            break;
         default:
             // unknown word
             break;
@@ -174,7 +236,7 @@ namespace kaepek
 
 #if ENABLE_VERBOSE_LOGGING
         Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage);
+        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage, 4);
         Serial.print(",");
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value);
         Serial.print(",");

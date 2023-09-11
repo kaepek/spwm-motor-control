@@ -25,11 +25,23 @@ namespace kaepek
   {
   private:
     float proportional_coefficient = 0.0;
-    float differential_coefficient = 0.0;
     float integral_coefficient = 0.0;
+    float differential_coefficient = 0.0;
+
     double proportional_error = 0.0;
+    double previous_proportional_error = 0.0;
     double differential_error = 0.0;
     double integral_error = 0.0;
+
+    float set_point = 0.0;
+
+    /**
+     * Method to calculate the temporal numerical derivative.
+     * @param value The value to differentiate using the eular method.
+     * @param dt The time elapsed.
+     * @param previous_value The last value
+     */
+    double calculate_eular_derivative(double value, double dt, double previous_value);
 
   public:
     /**
