@@ -110,6 +110,10 @@ namespace kaepek
     // Variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
+
+    float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // this works!
+    float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
   public:
     /**
      * EscL6234Teensy40AS5147P default constructor.

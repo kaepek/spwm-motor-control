@@ -31,6 +31,10 @@ namespace kaepek
         float ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         float ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
         float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
+        // char cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // wanted float but wont compile
+        // char ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
         uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
         double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
         double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
