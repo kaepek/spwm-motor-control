@@ -1,0 +1,91 @@
+{
+    "inputs": [
+        {"name":"kalman_hz", "position": 0},
+        {"name":"sample_hz", "position": 1},
+        {"name":"time", "position": 2},
+        {"name":"com_thrust_percentage", "position": 3},
+        {"name":"com_direction", "position": 4},
+        {"name":"kalman_displacement", "position": 5},
+        {"name":"kalman_velocity", "position": 6},
+        {"name": "kalman_acceleration", "position": 7, "scale": 1.0},
+        {"name": "kalman_jerk", "position": 8},
+        {"name":"voltage_phase_a", "position": 9},
+        {"name":"voltage_phase_b", "position": 10},
+        {"name": "voltage_phase_c", "position": 11},
+        {"name": "encoder_raw_displacement", "position":12},
+        {"name": "proportional_coefficient", "position": 13},
+        {"name": "integral_coefficient", "position": 14},
+        {"name": "differential_coefficient", "position": 15},
+        {"name": "proportional_error", "position": 16},
+        {"name": "integral_error", "position": 17},
+        {"name": "differential_error", "position": 18},
+        {"name": "pid_duty_percentage", "position": 19},
+        {"name": "setpoint", "position": 20}
+    ],
+    "buffer_length": 100,
+    "plots": [
+        {
+            "name": "control",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"com_thrust_percentage", "color": "black"},
+                {"name":"com_direction", "color": "blue"}
+            ]
+        },
+        {
+            "name": "pid_coefficients",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name": "proportional_coefficient", "color": "black"},
+                {"name": "integral_coefficient", "color": "gray"},
+                {"name": "differential_coefficient", "color": "blue"}
+            ]
+        },
+        {
+            "name": "pid_errors",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name": "proportional_error", "color": "black"},
+                {"name": "integral_error", "color": "gray"},
+                {"name": "differential_error", "color": "blue"}
+            ]
+        },
+        {
+            "name": "kalman_velocity",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_velocity", "color": "red"},
+                {"name": "setpoint", "color": "black"},
+                {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
+            ]
+        },
+        {
+            "name": "kalman_acceleration",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_acceleration", "color": "purple"}
+            ]
+        },
+        {
+            "name": "kalman_jerk",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_jerk", "color": "blue"}
+            ]
+        },
+        {
+            "name": "sample_hz",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"sample_hz", "color": "black"}
+            ]
+        },
+        {
+            "name": "kalman_hz",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_hz", "color": "black"}
+            ]
+        }
+    ]
+}

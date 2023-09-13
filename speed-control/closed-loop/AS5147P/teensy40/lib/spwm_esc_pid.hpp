@@ -35,6 +35,8 @@ namespace kaepek
 
     float set_point = 0.0;
 
+    float pid_duty = 0.0;
+
     /**
      * Method to calculate the temporal numerical derivative.
      * @param value The value to differentiate using the eular method.
@@ -73,6 +75,11 @@ namespace kaepek
      * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double com_torque_percentage), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
      */
     void log();
+
+    /**
+     * Method to stop the ESC via stopping the RotaryEncoderSampleValidator, disabling the SPWM pins and stopping the debug logging timer;
+     */
+    void stop();
   };
 #endif
 }

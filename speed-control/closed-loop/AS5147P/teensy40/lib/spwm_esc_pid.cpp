@@ -27,6 +27,16 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop()
+    {
+        proportional_error = 0.0;
+        integral_error = 0.0;
+        differential_error = 0.0;
+        previous_proportional_error = 0.0;
+        EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop()
     {
 
@@ -62,6 +72,12 @@ namespace kaepek
                 // Calculate errors
                 proportional_error = set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
                 integral_error += proportional_error * seconds_since_last;
+
+                // Watch out for the integral_error saturating
+                if (integral_error >= 100000.0) {
+                    integral_error = 0.0;
+                }
+
 #if ENABLE_RK4
                 // RK4
                 double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
@@ -79,6 +95,8 @@ namespace kaepek
 
                 duty = proportional_coefficient * proportional_error + integral_coefficient * integral_error + differential_coefficient * differential_error;
                 duty = min(duty, 0.5); // cap at 50%
+
+                pid_duty = duty;
 
                 previous_proportional_error = proportional_error;
 
@@ -115,11 +133,11 @@ namespace kaepek
         case SerialInputCommandWord::Stop:
             if (EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault == false)
             {
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
+                this->stop();
             }
             break;
         case SerialInputCommandWord::Reset:
-            EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
+            this->stop();
             EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::RotaryEncoderSampleValidator::reset();
             EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault = false;
             break;
@@ -226,28 +244,50 @@ namespace kaepek
     {
         // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
+
+
+        /*
+        What do we reall want to print
+        loop_ctr
+        sample_ctr
+        time
+        torque percentage
+        direction
+
+        kalman_disp
+        kalman_v
+        kalman_a
+        kalman_j
+
+        current_triplet_a
+        _b
+        _c
+
+        encoder disp
+
+        prop error
+        integral error
+        derivat error
+
+        prop coeff
+        integral coeff
+        derivat coeff
+
+        */
         cli();
         double seconds_elapsed = (double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::micros_since_last_log * 1e-6;
         Serial.print(((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop_ctr) / seconds_elapsed);
         Serial.print(",");
         Serial.print(((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::sample_ctr) / seconds_elapsed);
         Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[0], 4);
 
-#if ENABLE_VERBOSE_LOGGING
+        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[0], 4);
         Serial.print(",");
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage, 4);
         Serial.print(",");
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value);
         Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[1]);
-        Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[2]);
-        Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[3]);
-        Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[4]);
-        Serial.print(",");
+
         Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[0] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
         Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
@@ -256,14 +296,36 @@ namespace kaepek
         Serial.print(",");
         Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
+
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_a);
         Serial.print(",");
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_b);
         Serial.print(",");
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_c);
         Serial.print(",");
+
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_encoder_displacement);
-#endif
+        Serial.print(",");
+
+        Serial.print(proportional_coefficient);
+        Serial.print(",");
+        Serial.print(integral_coefficient);
+        Serial.print(",");
+        Serial.print(differential_coefficient);
+
+        Serial.print(",");
+        Serial.print(proportional_error);
+        Serial.print(",");
+        Serial.print(integral_error);
+        Serial.print(",");
+        Serial.print(differential_error);
+
+        Serial.print(",");
+        Serial.print(pid_duty);
+
+        Serial.print(",");
+        Serial.print(set_point);
+
         Serial.print("\n");
 
         // Reset loop counter and time since last log.
