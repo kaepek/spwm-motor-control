@@ -18,7 +18,7 @@
         {"name": "pid_duty_percentage", "position": 15},
         {"name": "setpoint", "position": 16}
     ],
-    "buffer_length": 10,
+    "buffer_length": 40,
     "plots": [
         {
             "name": "pid_coefficients",
