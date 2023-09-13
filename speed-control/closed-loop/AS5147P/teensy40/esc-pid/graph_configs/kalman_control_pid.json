@@ -6,26 +6,20 @@
         {"name":"com_thrust_percentage", "position": 3},
         {"name":"com_direction", "position": 4},
         {"name":"kalman_velocity", "position": 5},
-        {"name": "encoder_raw_displacement", "position":6},
-        {"name": "proportional_coefficient", "position": 7},
-        {"name": "integral_coefficient", "position": 8},
-        {"name": "differential_coefficient", "position": 9},
-        {"name": "proportional_error", "position": 10},
-        {"name": "integral_error", "position": 11},
-        {"name": "differential_error", "position": 12},
-        {"name": "pid_duty_percentage", "position": 13},
-        {"name": "setpoint", "position": 14}
+        {"name":"kalman_acceleration", "position": 6},
+        {"name":"kalman_jerk", "position": 7},
+        {"name": "encoder_raw_displacement", "position":8},
+        {"name": "proportional_coefficient", "position": 9},
+        {"name": "integral_coefficient", "position": 10},
+        {"name": "differential_coefficient", "position": 11},
+        {"name": "proportional_error", "position": 12},
+        {"name": "integral_error", "position": 13},
+        {"name": "differential_error", "position": 14},
+        {"name": "pid_duty_percentage", "position": 15},
+        {"name": "setpoint", "position": 16}
     ],
-    "buffer_length": 50,
+    "buffer_length": 10,
     "plots": [
-        {
-            "name": "control",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black"},
-                {"name":"com_direction", "color": "blue"}
-            ]
-        },
         {
             "name": "pid_coefficients",
             "independant_column": "time",
@@ -33,15 +27,6 @@
                 {"name": "proportional_coefficient", "color": "black"},
                 {"name": "integral_coefficient", "color": "gray"},
                 {"name": "differential_coefficient", "color": "blue"}
-            ]
-        },
-        {
-            "name": "pid_errors",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name": "proportional_error", "color": "black"},
-                {"name": "integral_error", "color": "gray"},
-                {"name": "differential_error", "color": "blue"}
             ]
         },
         {
@@ -54,17 +39,38 @@
             ]
         },
         {
-            "name": "sample_hz",
+            "name": "proportional_errors",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"sample_hz", "color": "black"}
+                {"name": "proportional_error", "color": "black"}
             ]
         },
         {
-            "name": "kalman_hz",
+            "name": "integral_errors",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"kalman_hz", "color": "black"}
+                {"name": "integral_error", "color": "gray"}
+            ]
+        },
+        {
+            "name": "differential_errors",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name": "differential_error", "color": "blue"}
+            ]
+        },
+        {
+            "name": "kalman_acceleration",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_acceleration", "color": "purple", "line": true}
+            ]
+        },
+        {
+            "name": "kalman_jerk",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_jerk", "color": "blue", "line": true}
             ]
         }
     ]

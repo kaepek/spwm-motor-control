@@ -33,6 +33,7 @@ namespace kaepek
         integral_error = 0.0;
         differential_error = 0.0;
         previous_proportional_error = 0.0;
+        EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = 0.0;
         EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
     }
 
@@ -70,11 +71,13 @@ namespace kaepek
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[4] = eular_vec[4];
 
                 // Calculate errors
-                proportional_error = set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+                // set_point = cache_set_point;
+                proportional_error = cache_set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
                 integral_error += proportional_error * seconds_since_last;
 
                 // Watch out for the integral_error saturating
-                if (integral_error >= 100000.0) {
+                if (integral_error >= 100000.0)
+                {
                     integral_error = 0.0;
                 }
 
@@ -93,10 +96,17 @@ namespace kaepek
                 // Calculate duty percentage
                 double duty = 0.0;
 
-                duty = proportional_coefficient * proportional_error + integral_coefficient * integral_error + differential_coefficient * differential_error;
-                duty = min(duty, 0.5); // cap at 50%
-
+                duty = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
+                // duty = abs(duty);
+                // duty = min(abs(duty), 0.5); // cap at 50%
+                if (duty < 0.0)
+                {
+                    duty = 0.0;
+                }
+                duty = min(duty, 0.5);
                 pid_duty = duty;
+
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = pid_duty;
 
                 previous_proportional_error = proportional_error;
 
@@ -210,7 +220,7 @@ namespace kaepek
             *((unsigned char *)&float_value + 1) = data_buffer[1];
             *((unsigned char *)&float_value + 2) = data_buffer[2];
             *((unsigned char *)&float_value + 3) = data_buffer[3];
-            set_point = float_value;
+            cache_set_point = float_value;
             break;
         case SerialInputCommandWord::ProportionalF32:
             *((unsigned char *)&float_value + 0) = data_buffer[0];
@@ -244,7 +254,6 @@ namespace kaepek
     {
         // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
-
 
         /*
         What do we reall want to print
@@ -291,6 +300,12 @@ namespace kaepek
         Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
 
+        Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+
+        Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_encoder_displacement);
         Serial.print(",");
 
@@ -311,7 +326,7 @@ namespace kaepek
         Serial.print(pid_duty);
 
         Serial.print(",");
-        Serial.print(set_point);
+        Serial.print(cache_set_point * 1.0);
 
         Serial.print("\n");
 

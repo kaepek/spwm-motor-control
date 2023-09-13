@@ -111,8 +111,9 @@ namespace kaepek
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
 
-    float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // this works!
-    float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
+    // float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // this works!
+    // float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
 
   public:
     /**

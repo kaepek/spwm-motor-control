@@ -24,19 +24,21 @@ namespace kaepek
   class PidEscL6234Teensy40AS5147P : public EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>
   {
   private:
-    float proportional_coefficient = 0.0;
-    float integral_coefficient = 0.0;
-    float differential_coefficient = 0.0;
+    volatile float proportional_coefficient = 0.0;
+    volatile float integral_coefficient = 0.0;
+    volatile float differential_coefficient = 0.0;
 
-    double proportional_error = 0.0;
-    double previous_proportional_error = 0.0;
-    double differential_error = 0.0;
-    double integral_error = 0.0;
+    volatile double proportional_error = 0.0;
+    volatile double previous_proportional_error = 0.0;
+    volatile double differential_error = 0.0;
+    volatile double integral_error = 0.0;
 
-    float set_point = 0.0;
+    volatile float set_point = 0.0;
 
-    float pid_duty = 0.0;
+    volatile float pid_duty = 0.0;
 
+    volatile float cache_set_point = 0.0;
+    
     /**
      * Method to calculate the temporal numerical derivative.
      * @param value The value to differentiate using the eular method.
