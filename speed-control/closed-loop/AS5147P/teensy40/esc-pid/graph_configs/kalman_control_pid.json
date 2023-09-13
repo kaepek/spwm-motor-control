@@ -5,24 +5,18 @@
         {"name":"time", "position": 2},
         {"name":"com_thrust_percentage", "position": 3},
         {"name":"com_direction", "position": 4},
-        {"name":"kalman_displacement", "position": 5},
-        {"name":"kalman_velocity", "position": 6},
-        {"name": "kalman_acceleration", "position": 7, "scale": 1.0},
-        {"name": "kalman_jerk", "position": 8},
-        {"name":"voltage_phase_a", "position": 9},
-        {"name":"voltage_phase_b", "position": 10},
-        {"name": "voltage_phase_c", "position": 11},
-        {"name": "encoder_raw_displacement", "position":12},
-        {"name": "proportional_coefficient", "position": 13},
-        {"name": "integral_coefficient", "position": 14},
-        {"name": "differential_coefficient", "position": 15},
-        {"name": "proportional_error", "position": 16},
-        {"name": "integral_error", "position": 17},
-        {"name": "differential_error", "position": 18},
-        {"name": "pid_duty_percentage", "position": 19},
-        {"name": "setpoint", "position": 20}
+        {"name":"kalman_velocity", "position": 5},
+        {"name": "encoder_raw_displacement", "position":6},
+        {"name": "proportional_coefficient", "position": 7},
+        {"name": "integral_coefficient", "position": 8},
+        {"name": "differential_coefficient", "position": 9},
+        {"name": "proportional_error", "position": 10},
+        {"name": "integral_error", "position": 11},
+        {"name": "differential_error", "position": 12},
+        {"name": "pid_duty_percentage", "position": 13},
+        {"name": "setpoint", "position": 14}
     ],
-    "buffer_length": 100,
+    "buffer_length": 50,
     "plots": [
         {
             "name": "control",
@@ -57,20 +51,6 @@
                 {"name":"kalman_velocity", "color": "red"},
                 {"name": "setpoint", "color": "black"},
                 {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
-            ]
-        },
-        {
-            "name": "kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_acceleration", "color": "purple"}
-            ]
-        },
-        {
-            "name": "kalman_jerk",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_jerk", "color": "blue"}
             ]
         },
         {

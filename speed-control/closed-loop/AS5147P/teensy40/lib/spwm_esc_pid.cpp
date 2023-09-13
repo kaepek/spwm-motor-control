@@ -288,20 +288,7 @@ namespace kaepek
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value);
         Serial.print(",");
 
-        Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[0] / (double)ENCODER_DIVISIONS);
-        Serial.print(",");
         Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
-        Serial.print(",");
-        Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
-        Serial.print(",");
-        Serial.print((double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
-        Serial.print(",");
-
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_a);
-        Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_b);
-        Serial.print(",");
-        Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_triplet.phase_c);
         Serial.print(",");
 
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_encoder_displacement);
