@@ -26,8 +26,7 @@ p guess 0.022727273
 kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 0.022727273
 
 
-
- 2175  kaepek-io-netsend -h localhost -p 9000 -n udp -w setpointf32 -d 1.0
- 2176  kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d 0.011
- 2177  kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 0.4
- 2178  kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 3.6
+kaepek-io-netsend -h localhost -p 9000 -n udp -w setpointf32 -d 1.0 &&
+kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d 0.011 &&
+kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 0.4 &&
+kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 3.6

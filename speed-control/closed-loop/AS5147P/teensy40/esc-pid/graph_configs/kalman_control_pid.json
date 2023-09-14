@@ -18,17 +18,8 @@
         {"name": "pid_duty_percentage", "position": 15},
         {"name": "setpoint", "position": 16}
     ],
-    "buffer_length": 40,
+    "buffer_length": 400,
     "plots": [
-        {
-            "name": "pid_coefficients",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name": "proportional_coefficient", "color": "black"},
-                {"name": "integral_coefficient", "color": "gray"},
-                {"name": "differential_coefficient", "color": "blue"}
-            ]
-        },
         {
             "name": "kalman_velocity",
             "independant_column": "time",
