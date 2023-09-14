@@ -49,20 +49,6 @@
             "dependant_columns": [
                 {"name": "differential_error", "color": "blue"}
             ]
-        },
-        {
-            "name": "kalman_acceleration",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_acceleration", "color": "purple", "line": true}
-            ]
-        },
-        {
-            "name": "kalman_jerk",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_jerk", "color": "blue", "line": true}
-            ]
         }
     ]
 }

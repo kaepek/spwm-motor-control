@@ -38,7 +38,12 @@ namespace kaepek
     volatile float pid_duty = 0.0;
 
     volatile float cache_set_point = 0.0;
-    
+
+    volatile double derivative_error_filtered_1 = 0.0;
+    volatile double derivative_error_filtered_2 = 0.0;
+
+    double desired_derivative_cutoff_frequency = 2200.0;
+
     /**
      * Method to calculate the temporal numerical derivative.
      * @param value The value to differentiate using the eular method.

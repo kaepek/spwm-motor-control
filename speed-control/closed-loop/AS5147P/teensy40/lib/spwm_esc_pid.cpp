@@ -93,6 +93,25 @@ namespace kaepek
                 differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
 #endif
 
+                /*double alpha = 1 / (1 + 2 * M_PI * seconds_since_last * desired_derivative_cutoff_frequency);
+                derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
+                differential_error = derivative_error_filtered;*/
+
+                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency;
+                double alpha = omega * seconds_since_last;
+
+                // Apply a second-order low-pass filter
+                double derivative_error_filtered = (1.0 / (alpha * alpha + 2.0 * alpha + 1.0)) * (alpha * alpha * differential_error + 2.0 * alpha * derivative_error_filtered_1 - (alpha * alpha - 2.0 * alpha + 1.0) * derivative_error_filtered_2);
+
+                // Update previous filtered error values
+                derivative_error_filtered_2 = derivative_error_filtered_1;
+                derivative_error_filtered_1 = derivative_error_filtered;
+                differential_error = derivative_error_filtered;
+
+
+
+                // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
+
                 // Calculate duty percentage
                 double duty = 0.0;
 
