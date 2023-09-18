@@ -42,7 +42,7 @@ namespace kaepek
     volatile double derivative_error_filtered_1 = 0.0;
     volatile double derivative_error_filtered_2 = 0.0;
 
-    double desired_derivative_cutoff_frequency = 2200.0;
+    double desired_derivative_cutoff_frequency = 1500.0;
 
     /**
      * Method to calculate the temporal numerical derivative.

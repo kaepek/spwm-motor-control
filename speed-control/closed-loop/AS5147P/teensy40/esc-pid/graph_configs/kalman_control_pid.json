@@ -8,17 +8,14 @@
         {"name":"kalman_velocity", "position": 5},
         {"name":"kalman_acceleration", "position": 6},
         {"name":"kalman_jerk", "position": 7},
-        {"name": "encoder_raw_displacement", "position":8},
-        {"name": "proportional_coefficient", "position": 9},
-        {"name": "integral_coefficient", "position": 10},
-        {"name": "differential_coefficient", "position": 11},
-        {"name": "proportional_error", "position": 12},
-        {"name": "integral_error", "position": 13},
-        {"name": "differential_error", "position": 14},
-        {"name": "pid_duty_percentage", "position": 15},
-        {"name": "setpoint", "position": 16}
+        {"name":"encoder_raw_displacement", "position": 8},
+        {"name": "proportional_error", "position": 9},
+        {"name": "integral_error", "position": 10},
+        {"name": "differential_error", "position": 11},
+        {"name": "pid_duty_percentage", "position": 12},
+        {"name": "setpoint", "position": 13}
     ],
-    "buffer_length": 400,
+    "buffer_length": 390,
     "plots": [
         {
             "name": "kalman_velocity",
@@ -30,16 +27,10 @@
             ]
         },
         {
-            "name": "proportional_errors",
+            "name": "proportional_integral_errors",
             "independant_column": "time",
             "dependant_columns": [
-                {"name": "proportional_error", "color": "black"}
-            ]
-        },
-        {
-            "name": "integral_errors",
-            "independant_column": "time",
-            "dependant_columns": [
+                {"name": "proportional_error", "color": "black"},
                 {"name": "integral_error", "color": "gray"}
             ]
         },
@@ -48,6 +39,13 @@
             "independant_column": "time",
             "dependant_columns": [
                 {"name": "differential_error", "color": "blue"}
+            ]
+        },
+        {
+            "name": "kalman_acceleration",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name":"kalman_acceleration", "color": "purple", "line": false}
             ]
         }
     ]

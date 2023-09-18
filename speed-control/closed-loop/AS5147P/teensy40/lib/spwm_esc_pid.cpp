@@ -328,13 +328,13 @@ namespace kaepek
         Serial.print(EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_encoder_displacement);
         Serial.print(",");
 
-        Serial.print(proportional_coefficient);
+        /*Serial.print(proportional_coefficient);
         Serial.print(",");
         Serial.print(integral_coefficient);
         Serial.print(",");
         Serial.print(differential_coefficient);
+        Serial.print(",");*/
 
-        Serial.print(",");
         Serial.print(proportional_error);
         Serial.print(",");
         Serial.print(integral_error);

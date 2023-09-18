@@ -50,3 +50,6 @@ kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 0.0
 
 
 kaepek-io-netsend -h localhost -p 9000 -n udp -w setpointf32 -d 0.555 && kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d 0.02 && kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 0.4 && kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 3.6
+
+
+kaepek-io-netsend -h localhost -p 9000 -n udp -w setpointf32 -d 0.555 && kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d 0.03 && kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 0.4 && kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 3.6
