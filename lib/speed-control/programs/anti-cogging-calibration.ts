@@ -153,9 +153,10 @@ class GetStartDuty extends Task {
             finished = true;
         }
 
-        const mapped_word = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
-        console2.info("Sending word thrustui16", mapped_word);
-        this.word_sender.send_word("thrustui16", mapped_word);
+        const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
+        console2.info("Sending word thrustui16", mapped_duty);
+        this.word_sender.send_word("thrustui16", mapped_duty);
+        this.start_duty = mapped_duty;
         return finished;
     }
 
@@ -184,7 +185,10 @@ class GetStartDuty extends Task {
         return super.run();
     }
 
-    tick(incoming_data: any) {
+    all_finished = false;
+
+    async tick(incoming_data: any) {
+        if (this.all_finished) return;
         // console.log("called tick");
         this.incoming_data = incoming_data;
 
@@ -193,8 +197,10 @@ class GetStartDuty extends Task {
         }
         else if (this.escape_duty === true) {
             if (this.current_duty === this.max_duty) {
-                this.word_sender.send_word("thrustui16", 0);
-                this.word_sender.send_word("stop");
+                this.all_finished = true;
+                // await new Promise((resolve) => setTimeout(resolve, 1000));
+                await this.word_sender.send_word("thrustui16", 0);
+                await this.word_sender.send_word("stop");
                 return this.return_promise_rejector("Reached max duty an rotation was not detected");
             }
             // timeout detect lack of motion move on
@@ -211,7 +217,6 @@ class GetStartDuty extends Task {
                 // we still have motion
                 if (incoming_data["rotations"] > 5) {
                     // we have 5 complete rotations
-                    this.start_duty = this.current_duty;
                     return this.return_promise_resolver();
                 }
             }
