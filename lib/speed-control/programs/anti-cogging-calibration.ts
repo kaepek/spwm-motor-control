@@ -133,7 +133,7 @@ const adaptor = new NetworkAdaptor(values["incoming_address"], parseFloat(values
 class GetStartDuty extends Task {
     max_duty: number;
     initial_duty = 0;
-    wait_time = 10;
+    wait_time = 6;
     current_duty: number | null = null;
     word_sender: SendWord;
 
@@ -144,30 +144,42 @@ class GetStartDuty extends Task {
     start_duty: number | null = null;
 
 // ((double)com_torque_value / (double)65535) * 0.5;
+    resolver = Promise.resolve();
 
     async send_next_word() {
-        (this.current_duty as number)++;
-        let finished = false;
-        if (this.current_duty as number > this.max_duty) {
-            this.current_duty = this.max_duty;
-            finished = true;
-        }
+        this.resolver = this.resolver.then(() => {
 
-        const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
-        console2.info("Sending word thrustui16", mapped_duty);
-        this.word_sender.send_word("thrustui16", mapped_duty);
-        this.start_duty = mapped_duty;
-        return finished;
+            return new Promise((resolve, reject) => {
+                (this.current_duty as number)++;
+                let finished = false;
+                if (this.current_duty as number > this.max_duty) {
+                    this.current_duty = this.max_duty;
+                    finished = true;
+                }
+        
+                const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
+                console2.info("Sending word thrustui16", mapped_duty);
+                this.word_sender.send_word("thrustui16", mapped_duty);
+                this.start_duty = mapped_duty;
+                this.create_wait_logic(resolve);
+                return finished;
+            });
+
+        });
     }
 
-    create_wait_logic() {
+    create_wait_logic(resolver?: any) {
         this.escape_duty = false;
         this.timeout_run = false;
+        clearTimeout(this.wait_timeout);
         this.wait_timeout = setTimeout(() => {
             // incoming data should have motion
             if (this.incoming_data.motion == false) {
                 // escape to next duty
                 this.escape_duty = true;
+            }
+            if (resolver) {
+                resolver();
             }
             this.timeout_run = true;
         }, this.wait_time);
@@ -205,13 +217,13 @@ class GetStartDuty extends Task {
             }
             // timeout detect lack of motion move on
             this.send_next_word();
-            this.create_wait_logic();
+            // this.create_wait_logic();
         }
         else if (this.escape_duty === false) {
             if (incoming_data["motion"] === false) {
                 // stop motion
                 this.send_next_word();
-                this.create_wait_logic();
+                // this.create_wait_logic();
             }
             else {
                 // we still have motion
