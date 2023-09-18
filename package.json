@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc --project tsconfig.json",
     "smoother": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109",
     "smoother2": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother_error_ception.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109",
     "smoother-file": "node ./speed-control/closed-loop/AS5147P/teensy40/programs/smoother_error_ception.js -a localhost -p 9000 -n udp -c ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control.json -o localhost -x 9002 -v udp -w 109 -f step-collect-${npm_config_run_id}.csv",
@@ -19,10 +20,17 @@
     "type": "git",
     "url": "git+https://github.com/kaepek/spwm-motor-control.git"
   },
+  "dependencies": {
+    "rxjs": "^7.8.1",
+    "ts-node": "^10.9.1"
+  },
   "author": "",
   "license": "AGPL3",
   "bugs": {
     "url": "https://github.com/kaepek/spwm-motor-control/issues"
   },
-  "homepage": "https://github.com/kaepek/spwm-motor-control#readme"
+  "homepage": "https://github.com/kaepek/spwm-motor-control#readme",
+  "devDependencies": {
+    "chalk": "^5.3.0"
+  }
 }
