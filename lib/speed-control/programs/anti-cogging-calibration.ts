@@ -167,7 +167,7 @@ class GetStartDuty extends Task {
 
     timeout_run = false;
     escape_duty = false;
-    async run() {
+    async run(state: any) {
         this.current_duty = 0;
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
         await this.word_sender.send_word("start");
@@ -227,15 +227,21 @@ const get_start_duty_task = new GetStartDuty(rotation$, word_sender);
 
 const tasks = [get_start_duty_task];
 
+// need to parse state to each task when we are running it
+
 async function main() {
+    let state = {};
 
     // should call run then call wait
     let resolver: Promise<any> = Promise.resolve();
 
     tasks.forEach((task) => {
         resolver = resolver.then(async () => {
-            const return_prom = task.wait();
-            await task.run();
+            const return_prom = task.wait().then((state_data_additions) => {
+                state = {...state_data_additions, ...state};
+                return state_data_additions;
+            });
+            await task.run(state);
             return return_prom;
         });
     });
