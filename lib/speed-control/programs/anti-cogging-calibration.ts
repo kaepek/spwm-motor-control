@@ -111,7 +111,6 @@ if (outgoing_port !== null) {
 }
 const outgoing_protocol = values["outgoing_protocol"];
 
-// (option_name !== "command_address") && (option_name !== "command_port") && (option_name !== "command_protocol")
 const command_address = values["command_address"];
 const command_port = parseFloat(values["command_port"]);
 const command_protocol = values["command_protocol"];
@@ -121,16 +120,20 @@ if (command_protocol !== "udp") {
     process.exit(1);
 }
 
+console.log("VALUEs", values);
+
+
 const word_sender = new SendWord(command_address, command_port, command_protocol);
 
-const adaptor = new NetworkAdaptor(values["incoming_address"], parseFloat(values["incoming_port"]), values["incoming_protocol"], values["incoming_config"], ",", outgoing_address, outgoing_port, outgoing_protocol);
+console.log("about to init network adaptor", values);
+const adaptor = new NetworkAdaptor(values["incoming_address"], parseFloat(values["incoming_port"]), values["incoming_protocol"], values["input_config_file"], ",", outgoing_address, outgoing_port, outgoing_protocol);
 
 // what tasks do we need for this program
 
 class GetStartDuty extends Task {
     max_duty: number;
     initial_duty = 0;
-    wait_time = 1;
+    wait_time = 10;
     current_duty: number | null = null;
     word_sender: SendWord;
 
@@ -140,6 +143,7 @@ class GetStartDuty extends Task {
 
     start_duty: number | null = null;
 
+// ((double)com_torque_value / (double)65535) * 0.5;
 
     async send_next_word() {
         (this.current_duty as number)++;
@@ -148,7 +152,10 @@ class GetStartDuty extends Task {
             this.current_duty = this.max_duty;
             finished = true;
         }
-        this.word_sender.send_word("thrustui16", this.current_duty as number);
+
+        const mapped_word = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
+        console2.info("Sending word thrustui16", mapped_word);
+        this.word_sender.send_word("thrustui16", mapped_word);
         return finished;
     }
 
@@ -170,18 +177,26 @@ class GetStartDuty extends Task {
     async run(state: any) {
         this.current_duty = 0;
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
+        await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
+        console2.info(`GetStartDuty program running`);
         this.create_wait_logic();
         return super.run();
     }
 
     tick(incoming_data: any) {
+        // console.log("called tick");
         this.incoming_data = incoming_data;
 
         if (this.timeout_run === false) {
             // wait for timout atleast.
         }
         else if (this.escape_duty === true) {
+            if (this.current_duty === this.max_duty) {
+                this.word_sender.send_word("thrustui16", 0);
+                this.word_sender.send_word("stop");
+                return this.return_promise_rejector("Reached max duty an rotation was not detected");
+            }
             // timeout detect lack of motion move on
             this.send_next_word();
             this.create_wait_logic();
@@ -197,7 +212,7 @@ class GetStartDuty extends Task {
                 if (incoming_data["rotations"] > 5) {
                     // we have 5 complete rotations
                     this.start_duty = this.current_duty;
-                    this.return_promise_resolver();
+                    return this.return_promise_resolver();
                 }
             }
         }
@@ -208,8 +223,10 @@ class GetStartDuty extends Task {
         // turn off motor
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
+        console2.info(`GetStartDuty program finished`);
+        console2.success(`Found start duty ${this.start_duty}`);
         // return found start duty.
-        return {"start_duty": this.start_duty}
+        return { "start_duty": this.start_duty }
     }
 
     constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047) {
@@ -235,10 +252,12 @@ async function main() {
     // should call run then call wait
     let resolver: Promise<any> = Promise.resolve();
 
+    await adaptor.ready();
+
     tasks.forEach((task) => {
         resolver = resolver.then(async () => {
             const return_prom = task.wait().then((state_data_additions) => {
-                state = {...state_data_additions, ...state};
+                state = { ...state_data_additions, ...state };
                 return state_data_additions;
             });
             await task.run(state);
@@ -249,6 +268,10 @@ async function main() {
     return resolver;
 }
 
-main().then(console2.info).catch(console2.error);
-
-console.log("NetworkAdaptor", NetworkAdaptor);
+main().then(output => {
+    console2.success("All finished, result:", JSON.stringify(output));
+    process.exit(0);
+}).catch((err) => {
+    console2.error(err);
+    process.exit(1);
+});
