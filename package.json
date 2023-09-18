@@ -14,7 +14,8 @@
     "step-collect-director": "kaepek-io-director -i keyboard network=localhost,9001,udp -c stop start reset thrustui16 directionui8 -p console serial --sink network=localhost,9000,udp",
     "step-collect-program": "kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 0  && kaepek-io-netsend -h localhost -p 9001 -n udp -w start && sleep 10 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 20000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 30000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 40000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 50000 && sleep 1 && kaepek-io-netsend -h localhost -p 9001 -n udp -w thrustui16 -d 60000 && sleep 3 && kaepek-io-netsend -h localhost -p 9001 -n udp -w stop",
     "step-collect-realtime-graph": "kaepek-io-graph --address localhost --port 9002 --config ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample_smooth_errors_ception.json",
-    "step-collect-analyse": "npm run step-collect-detector --run_id=${npm_config_run_id} > help && npm run step-collect-file-graph --run_id=${npm_config_run_id}"
+    "step-collect-analyse": "npm run step-collect-detector --run_id=${npm_config_run_id} > help && npm run step-collect-file-graph --run_id=${npm_config_run_id}",
+    "test-ac": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file=./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json --output_data_file=none.json --incoming_address=localhost --incoming_port=9001 --incoming_protocol=udp --command_address=localhost --command_port=9000 --command_protocol=udp"
   },
   "repository": {
     "type": "git",
