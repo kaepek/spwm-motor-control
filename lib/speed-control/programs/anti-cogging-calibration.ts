@@ -6,6 +6,85 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { GetStartDuty } from "../tasks/get-start-duty.js";
 import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
+import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
+
+const cli_args: Array<CliArg> = [
+    {
+        name: "input_config_file",
+        type: CliArgType.InputJSONFilePath, // InputJSONFilePathArgumentHandler
+        short: "c",
+        required: true
+    },
+    {
+        name: "output_data_file",
+        type: CliArgType.OutputFilePath,
+        short: "o",
+        required: false
+    },
+    {
+        name: "incoming_address",
+        type: CliArgType.String,
+        short: "a",
+        required: true,
+        group: "incoming"
+    },
+    {
+        name: "incoming_port",
+        type: CliArgType.Number,
+        short: "p",
+        required: true,
+        group: "incoming"
+    },
+    {
+        name: "incoming_protocol",
+        type: CliArgType.String,
+        short: "n",
+        required: true,
+        group: "incoming"
+    },
+    {
+        name: "outgoing_address",
+        type: CliArgType.String,
+        short: "s",
+        required: false,
+        group: "outgoing"
+    },
+    {
+        name: "outgoing_port",
+        type: CliArgType.Number,
+        short: "x",
+        required: false,
+        group: "outgoing"
+    },
+    {
+        name: "outgoing_protocol",
+        type: CliArgType.String,
+        short: "v",
+        required: false,
+        group: "outgoing"
+    },
+    {
+        name: "command_address",
+        type: CliArgType.String,
+        short: "y",
+        required: true,
+        group: "command"
+    },
+    {
+        name: "command_port",
+        type: CliArgType.Number,
+        short: "u",
+        required: true,
+        group: "command"
+    },
+    {
+        name: "command_protocol",
+        type: CliArgType.String,
+        short: "m",
+        required: true,
+        group: "command"
+    }
+];
 
 const parse_options: any = {
     options: {
@@ -55,6 +134,10 @@ const parse_options: any = {
         },
     }
 };
+
+const parsed_args_2 = parse_args("AntiCoggingCalibration", cli_args, ArgumentHandlers);
+console.log("parsed_args_2", parsed_args_2);
+process.exit(1);
 
 let parsed_options: any = { values: {}, positionals: [] };
 
