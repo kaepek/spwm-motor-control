@@ -4,10 +4,16 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 
-export class GetMinDuty extends Task {
+async function delay(ms: number) {
+    return new Promise<void>((resolve, reject) => {
+        setTimeout(resolve, ms);
+    })
+}
+
+export class GetIdleDuty extends Task {
     max_duty: number;
     initial_duty = 0;
-    wait_time = 6;
+    wait_time = 50;
     current_duty: number | null = null;
     word_sender: SendWord;
     incoming_data: any;
@@ -26,7 +32,6 @@ export class GetMinDuty extends Task {
         const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
         console2.info("Sending word thrustui16", mapped_duty);
         this.word_sender.send_word("thrustui16", mapped_duty);
-        this.start_duty = mapped_duty;
         this.create_wait_logic();
         return finished;
     }
@@ -63,9 +68,14 @@ export class GetMinDuty extends Task {
         // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
         // 20425 / 65534
         console2.info(`GetMinDuty program running`);
-        await this.word_sender.send_word("thrustui16", this.current_duty as number);
+        console2.info("Sending word thrustui16", this.start_duty);
+        await this.word_sender.send_word("thrustui16", 0);
+        await delay(100);
+        await this.word_sender.send_word("thrustui16", this.start_duty as number);
+        await delay(100);
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
+        await delay(1000);
         this.create_wait_logic();
         return super.run();
     }
@@ -90,13 +100,13 @@ export class GetMinDuty extends Task {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
-        this.idle_duty = this.current_duty;
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
+        const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) - 1)).toString());
         console2.info(`GetMinDuty program finished`);
-        console2.success(`Found idle duty ${this.idle_duty}`);
+        console2.success(`Found idle duty ${final_duty_before_stall}`);
         // return found start duty.
-        return { "idle_duty": this.idle_duty }
+        return { "idle_duty": final_duty_before_stall }
     }
 
     constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047) {
