@@ -13,31 +13,24 @@ export class GetStartDuty extends Task {
     incoming_data: any;
     wait_timeout: any;
     start_duty: number | null = null;
-    resolver = Promise.resolve();
 
     async send_next_word() {
-        this.resolver = this.resolver.then(() => {
+        (this.current_duty as number)++;
+        let finished = false;
+        if (this.current_duty as number > this.max_duty) {
+            this.current_duty = this.max_duty;
+            finished = true;
+        }
 
-            return new Promise((resolve, reject) => {
-                (this.current_duty as number)++;
-                let finished = false;
-                if (this.current_duty as number > this.max_duty) {
-                    this.current_duty = this.max_duty;
-                    finished = true;
-                }
-        
-                const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
-                console2.info("Sending word thrustui16", mapped_duty);
-                this.word_sender.send_word("thrustui16", mapped_duty);
-                this.start_duty = mapped_duty;
-                this.create_wait_logic(resolve);
-                return finished;
-            });
-
-        });
+        const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
+        console2.info("Sending word thrustui16", mapped_duty);
+        this.word_sender.send_word("thrustui16", mapped_duty);
+        this.start_duty = mapped_duty;
+        this.create_wait_logic();
+        return finished;
     }
 
-    create_wait_logic(resolver?: any) {
+    create_wait_logic() {
         this.escape_duty = false;
         this.timeout_run = false;
         clearTimeout(this.wait_timeout);
@@ -51,9 +44,6 @@ export class GetStartDuty extends Task {
                     // escape to next duty
                     this.escape_duty = true;
                 }
-                if (resolver) {
-                    resolver();
-                }
                 this.timeout_run = true;
             }
             this.timeout_run = true;
@@ -64,10 +54,10 @@ export class GetStartDuty extends Task {
     escape_duty = false;
     async run(state: any) {
         this.current_duty = 0;
+        console2.info(`GetStartDuty program running`);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
-        console2.info(`GetStartDuty program running`);
         this.create_wait_logic();
         return super.run();
     }
@@ -81,6 +71,7 @@ export class GetStartDuty extends Task {
 
         if (this.timeout_run === false) {
             // wait for timout atleast.
+            return;
         }
         else if (this.escape_duty === true) {
             if (this.current_duty === this.max_duty) {
