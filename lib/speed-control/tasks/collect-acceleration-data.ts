@@ -3,6 +3,7 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
+import { RotationDetector } from "../../rotation-detector.js";
 
 async function delay(ms: number) {
     return new Promise<void>((resolve, reject) => {
@@ -10,23 +11,18 @@ async function delay(ms: number) {
     })
 }
 
-export class CollectAccelerationData extends Task {
+export class CollectAccelerationData extends Task<RotationDetector> {
     max_duty: number;
     wait_time = 50;
-    current_duty: number | null = null;
     word_sender: SendWord;
     incoming_data: any;
     wait_timeout: any;
     start_duty: number | null = null;
     idle_duty: number | null = null;
 
-
-    timeout_run = false;
-    escape_duty = false;
     async run(state: any) {
         this.start_duty = state.start_duty;
         this.idle_duty = state.idle_duty;
-        this.current_duty = this.start_duty as number * (this.max_duty / 65534);
         // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
         // 20425 / 65534
         console2.info(`CollectAccelerationData program running`);
@@ -44,12 +40,12 @@ export class CollectAccelerationData extends Task {
         setTimeout(()=>{
             return this.return_promise_resolver();
         }, 10000);
-        return super.run();
+        return super.run(); // tick will now run every time the device outputs a line.
     }
 
     all_finished = false;
 
-    async tick(incoming_data: any) {
+    async tick(incoming_data: RotationDetector) {
 
     }
 

@@ -3,6 +3,7 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
+import { RotationDetector } from "../../rotation-detector.js";
 
 async function delay(ms: number) {
     return new Promise<void>((resolve, reject) => {
@@ -10,7 +11,7 @@ async function delay(ms: number) {
     })
 }
 
-export class GetIdleDuty extends Task {
+export class GetIdleDuty extends Task<RotationDetector> {
     max_duty: number;
     initial_duty = 0;
     wait_time = 6;
@@ -28,7 +29,6 @@ export class GetIdleDuty extends Task {
             this.current_duty = this.max_duty;
             finished = true;
         }
-
         const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
         console2.info("Sending word thrustui16", mapped_duty);
         this.word_sender.send_word("thrustui16", mapped_duty);
@@ -44,7 +44,7 @@ export class GetIdleDuty extends Task {
         this.wait_timeout = setTimeout(() => {
             // incoming data should have motion
             if (!this.incoming_data) {
-                return this.return_promise_rejector(`First message from peripheral device not received in ${this.wait_time} milliseconds`);
+                return this.return_promise_rejector(`First message from peripheral device not received in ${this.wait_time} milliseconds, sugest checking that a director is running or increase wait_time.`);
             }
             else {
                 if (this.incoming_data.motion == true) {
@@ -66,8 +66,6 @@ export class GetIdleDuty extends Task {
     async run(state: any) {
         this.start_duty = state.start_duty;
         this.current_duty = this.start_duty as number * (this.max_duty / 65534);
-        // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
-        // 20425 / 65534
         console2.info(`GetMinDuty program running`);
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", 0);
@@ -78,13 +76,13 @@ export class GetIdleDuty extends Task {
         await this.word_sender.send_word("start");
         await delay(1000);
         this.create_wait_logic();
-        return super.run();
+        return super.run(); // tick will now run every time the device outputs a line. 
     }
 
     all_finished = false;
     rotations_start = 0;
     
-    async tick(incoming_data: any) {
+    async tick(incoming_data: RotationDetector) {
         if (this.all_finished) return;
         // console.log("called tick");
         this.incoming_data = incoming_data;
@@ -99,7 +97,7 @@ export class GetIdleDuty extends Task {
                 this.all_finished = true;
                 return this.return_promise_resolver();
             }
-            if ((incoming_data["rotations"] - this.rotations_start) > 1.1) {
+            if ((incoming_data["rotations"] as number - this.rotations_start) > 1.1) {
                 // we have n complete rotations
                 // console.log("Rotations achieved", incoming_data["rotations"] - this.rotations_start);
                 this.send_next_word();

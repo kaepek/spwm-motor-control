@@ -1,6 +1,16 @@
 import { Observable, pipe } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
+export type RotationDetector = {
+    motion: boolean;
+    rotations: number;
+    line_data: any;
+} | {
+    motion: boolean;
+    line_data: any;
+    rotations?: undefined;
+};
+
 export function rotation_detector(data_line$: Observable<any>, direction = true, displacement_max = 1) { // false cw?
     let tracking = false;
     let initial_displacment: number = null as any;

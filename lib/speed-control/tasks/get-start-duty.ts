@@ -3,8 +3,9 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
+import { RotationDetector } from "../../rotation-detector.js";
 
-export class GetStartDuty extends Task {
+export class GetStartDuty extends Task<RotationDetector> {
     max_duty: number;
     initial_duty = 0;
     wait_time = 6;
@@ -21,7 +22,6 @@ export class GetStartDuty extends Task {
             this.current_duty = this.max_duty;
             finished = true;
         }
-
         const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
         console2.info("Sending word thrustui16", mapped_duty);
         this.word_sender.send_word("thrustui16", mapped_duty);
@@ -59,16 +59,14 @@ export class GetStartDuty extends Task {
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
         this.create_wait_logic();
-        return super.run();
+        return super.run(); // tick will now run every time the device outputs a line.
     }
 
     all_finished = false;
 
-    async tick(incoming_data: any) {
+    async tick(incoming_data: RotationDetector) {
         if (this.all_finished) return;
-        // console.log("called tick");
         this.incoming_data = incoming_data;
-
         if (this.timeout_run === false) {
             // wait for timout atleast.
             return;
@@ -83,17 +81,15 @@ export class GetStartDuty extends Task {
             }
             // timeout detect lack of motion move on
             this.send_next_word();
-            // this.create_wait_logic();
         }
         else if (this.escape_duty === false) {
             if (incoming_data["motion"] === false) {
                 // stop motion
                 this.send_next_word();
-                // this.create_wait_logic();
             }
             else {
                 // we still have motion
-                if (incoming_data["rotations"] > 5) {
+                if (incoming_data["rotations"] as number > 5) {
                     // we have 5 complete rotations
                     return this.return_promise_resolver();
                 }
