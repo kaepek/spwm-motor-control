@@ -13,7 +13,7 @@ async function delay(ms: number) {
 export class GetIdleDuty extends Task {
     max_duty: number;
     initial_duty = 0;
-    wait_time = 50;
+    wait_time = 6;
     current_duty: number | null = null;
     word_sender: SendWord;
     incoming_data: any;
@@ -33,6 +33,7 @@ export class GetIdleDuty extends Task {
         console2.info("Sending word thrustui16", mapped_duty);
         this.word_sender.send_word("thrustui16", mapped_duty);
         this.create_wait_logic();
+        this.rotations_start = this.incoming_data.rotations;
         return finished;
     }
 
@@ -81,7 +82,8 @@ export class GetIdleDuty extends Task {
     }
 
     all_finished = false;
-
+    rotations_start = 0;
+    
     async tick(incoming_data: any) {
         if (this.all_finished) return;
         // console.log("called tick");
@@ -93,7 +95,15 @@ export class GetIdleDuty extends Task {
         }
         else if (this.escape_duty === true) {
             // timeout detect motion move on
-            this.send_next_word();
+            if (this.incoming_data.motion == false) {
+                this.all_finished = true;
+                return this.return_promise_resolver();
+            }
+            if ((incoming_data["rotations"] - this.rotations_start) > 1.1) {
+                // we have n complete rotations
+                // console.log("Rotations achieved", incoming_data["rotations"] - this.rotations_start);
+                this.send_next_word();
+            }
         }
     }
 
@@ -102,7 +112,7 @@ export class GetIdleDuty extends Task {
         // turn off motor
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
-        const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) + 15)).toString());
+        const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) + 1)).toString());
         console2.info(`GetMinDuty program finished`);
         console2.success(`Found idle duty ${final_duty_before_stall}`);
         // return found start duty.
