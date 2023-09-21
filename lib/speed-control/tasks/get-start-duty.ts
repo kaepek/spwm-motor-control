@@ -1,5 +1,5 @@
 
-import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/tasks.js";
+import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
@@ -43,12 +43,18 @@ export class GetStartDuty extends Task {
         clearTimeout(this.wait_timeout);
         this.wait_timeout = setTimeout(() => {
             // incoming data should have motion
-            if (this.incoming_data.motion == false) {
-                // escape to next duty
-                this.escape_duty = true;
+            if (!this.incoming_data) {
+                return this.return_promise_rejector(`First message from peripheral device not received in ${this.wait_time} milliseconds`);
             }
-            if (resolver) {
-                resolver();
+            else {
+                if (this.incoming_data.motion == false) {
+                    // escape to next duty
+                    this.escape_duty = true;
+                }
+                if (resolver) {
+                    resolver();
+                }
+                this.timeout_run = true;
             }
             this.timeout_run = true;
         }, this.wait_time);
