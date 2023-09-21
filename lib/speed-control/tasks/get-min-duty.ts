@@ -102,7 +102,7 @@ export class GetIdleDuty extends Task {
         // turn off motor
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
-        const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) - 1)).toString());
+        const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) + 15)).toString());
         console2.info(`GetMinDuty program finished`);
         console2.success(`Found idle duty ${final_duty_before_stall}`);
         // return found start duty.

@@ -8,6 +8,7 @@ import { GetStartDuty } from "../tasks/get-start-duty.js";
 import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
 import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
+import { CollectAccelerationData } from "../tasks/collect-acceleration-data.js";
 
 const cli_args: Array<CliArg> = [
     {
@@ -100,8 +101,9 @@ const rotation$ = rotation_detector(adaptor.incoming_data$, true);
 // what tasks do we need for this program
 const get_start_duty_task = new GetStartDuty(rotation$, word_sender);
 const get_idle_duty_task = new GetIdleDuty(rotation$, word_sender);
+const collect_acceleration_data = new CollectAccelerationData(rotation$, word_sender);
 
-const tasks = [get_start_duty_task, get_idle_duty_task];
+const tasks = [get_start_duty_task, get_idle_duty_task, collect_acceleration_data];
 
 // need to parse state to each task when we are running it
 
