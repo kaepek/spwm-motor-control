@@ -3,10 +3,10 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
-import { RotationDetector } from "../../rotation-detector.js";
+import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
 import { delay } from "../utils/delay.js";
 
-export class CollectAccelerationData extends Task<RotationDetector> {
+export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLineData>> {
     max_duty: number;
     wait_time = 50;
     word_sender: SendWord;
@@ -32,7 +32,7 @@ export class CollectAccelerationData extends Task<RotationDetector> {
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
 
-        setTimeout(()=>{
+        setTimeout(() => {
             return this.return_promise_resolver();
         }, 30000);
         return super.run(); // tick will now run every time the device outputs a line.
@@ -40,8 +40,8 @@ export class CollectAccelerationData extends Task<RotationDetector> {
 
     all_finished = false;
 
-    async tick(incoming_data: RotationDetector) {
-
+    async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
+        incoming_data.line_data.parsed_data.kalman_acceleration;
     }
 
     async done() {
@@ -50,7 +50,7 @@ export class CollectAccelerationData extends Task<RotationDetector> {
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
         console2.info(`CollectAccelerationData program finished`);
-        return { }
+        return {}
     }
 
     constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047) {

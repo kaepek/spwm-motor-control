@@ -3,7 +3,7 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
-import { RotationDetector } from "../../rotation-detector.js";
+import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
 
 async function delay(ms: number) {
     return new Promise<void>((resolve, reject) => {
@@ -11,7 +11,7 @@ async function delay(ms: number) {
     })
 }
 
-export class GetIdleDuty extends Task<RotationDetector> {
+export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     max_duty: number;
     initial_duty = 0;
     wait_time = 6;
@@ -82,7 +82,7 @@ export class GetIdleDuty extends Task<RotationDetector> {
     all_finished = false;
     rotations_start = 0;
     
-    async tick(incoming_data: RotationDetector) {
+    async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
         if (this.all_finished) return;
         // console.log("called tick");
         this.incoming_data = incoming_data;
