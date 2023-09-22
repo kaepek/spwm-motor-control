@@ -96,6 +96,12 @@ const word_sender = new SendWord(parsed_args.command_address, parsed_args.comman
 // console.log("about to init network adaptor", values);
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
 
+adaptor.outgoing_data_config = adaptor.incoming_data_config;
+
+adaptor.incoming_data$.subscribe((line_data) => {
+    adaptor.transmit_outgoing_data(line_data.parsed_data);
+});
+
 const rotation$ = rotation_detector(adaptor.incoming_data$, true);
 
 // what tasks do we need for this program

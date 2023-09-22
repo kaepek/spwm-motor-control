@@ -37,13 +37,13 @@ export class CollectAccelerationData extends Task {
         await delay(100);
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
-        await delay(5000);
+        await delay(1000);
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
 
         setTimeout(()=>{
             return this.return_promise_resolver();
-        }, 10000);
+        }, 30000);
         return super.run();
     }
 
