@@ -115,6 +115,10 @@ const tasks = [get_start_duty_task, get_idle_duty_task, collect_acceleration_dat
 
 run_tasks(tasks, adaptor).then(output => {
     console2.success("All finished, result:", JSON.stringify(output));
+    // write file
+    if (parsed_args.hasOwnProperty("output_data_file")) {
+        fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
+    }
     process.exit(0);
 }).catch((err) => {
     console2.error(err);
