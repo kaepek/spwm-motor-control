@@ -4,12 +4,7 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { RotationDetector } from "../../rotation-detector.js";
-
-async function delay(ms: number) {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(resolve, ms);
-    })
-}
+import { delay } from "../utils/delay.js";
 
 export class CollectAccelerationData extends Task<RotationDetector> {
     max_duty: number;
