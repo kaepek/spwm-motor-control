@@ -78,6 +78,8 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         let smallest_mean = Infinity;
         let largest_mean = -Infinity;
 
+        const thrust_to_duty_factor = (this.max_duty / 65533);
+
         // compute stats for angular_bins
         const mean = Object.keys(this.angular_bins).reduce((acc: any, bin_angle) => {
             const values = this.angular_bins[bin_angle];
@@ -106,10 +108,41 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             const std = Math.sqrt(sum_values_neg_mean_square / values.length);
             acc[bin_angle] = std;
             return acc;
-        },{})
+        },{});
+
+        // calculate angular bins norm
+
+        // calculate mean of all means
+
+        const mean_of_means = Object.keys(mean).reduce((acc: number, angle) => {
+            acc += mean[angle];
+            return acc;
+        }, 0) / this.max_angular_bins;
+
+        const stdev_of_means = Math.sqrt(Object.keys(mean).reduce((acc: number, angle) => {
+            acc += Math.pow(mean[angle] - mean_of_means, 2);
+            return acc;
+        },0) / this.max_angular_bins);
+
+        const abs_small = Math.abs(smallest_mean);
+        const abs_max = Math.abs(largest_mean);
+
+        const largest_abs_mean = Math.max(...[abs_small, abs_max]);
+
+        const norm_idle_duty = Math.round(thrust_to_duty_factor*(this.idle_duty as any) as number);
+        const norm_start_duty = Math.round(thrust_to_duty_factor*(this.start_duty as any) as number);
+
+        // normalise the angular bins with the algorithm...
+
+        const transformed_angular_bins = Object.keys(mean).reduce((acc: any, angle) => {
+            const bin_value = mean[angle];
+            const modified_bin_value = bin_value / largest_abs_mean;
+            acc[angle] = Math.round(modified_bin_value * -1 * (norm_idle_duty as any) as number);
+            return acc;
+        }, {})
 
         console2.info(`CollectAccelerationData program finished`);
-        return {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean};
+        return {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_bins, norm_idle_duty, norm_start_duty};
     }
 
     angular_bins: {[angle_bin: string]: Array<number>} = {};
