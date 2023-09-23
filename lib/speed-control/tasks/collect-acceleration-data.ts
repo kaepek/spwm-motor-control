@@ -17,13 +17,14 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
     max_angular_bins: number;
 
     async run(state: any) {
-        this.start_duty = state.start_duty;
-        this.idle_duty = state.idle_duty;
+        this.start_duty = state[this.direction_str].start_duty;
+        this.idle_duty = state[this.direction_str].idle_duty;
         // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
         // 20425 / 65534
         console2.info(`CollectAccelerationData program running`);
         console2.info("Sending word thrustui16", 0);
         await this.word_sender.send_word("thrustui16", 0);
+        await this.word_sender.send_word("directionui8", this.direction);
         await delay(100);
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
@@ -142,7 +143,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         }, {})
 
         console2.info(`CollectAccelerationData program finished`);
-        return {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_bins, norm_idle_duty, norm_start_duty};
+        return { [this.direction_str]: {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_bins, norm_idle_duty, norm_start_duty}};
     }
 
     angular_bins: {[angle_bin: string]: Array<number>} = {};
@@ -167,7 +168,9 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         return [min_population as any as number, completed];
     }
     max_angular_steps: number;
-    constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 8, bin_population_threshold = 10) {
+    direction = 0;
+    direction_str = "cw";
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 8, bin_population_threshold = 10) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;
@@ -177,5 +180,12 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         }
         this.bin_population_threshold = bin_population_threshold;
         this.max_angular_steps = max_angular_steps;
+        this.direction_str = direction_str;
+        if (direction_str === "cw") {
+            this.direction = 0;
+        }
+        else if (direction_str === "ccw") {
+            this.direction = 1;
+        }
     }
 }

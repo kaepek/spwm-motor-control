@@ -55,6 +55,8 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     async run(state: any) {
         this.current_duty = 0;
         console2.info(`GetStartDuty program running`);
+        await this.word_sender.send_word("thrustui16", 0);
+        await this.word_sender.send_word("directionui8", this.direction);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
@@ -105,12 +107,21 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         console2.info(`GetStartDuty program finished`);
         console2.success(`Found start duty ${this.start_duty}`);
         // return found start duty.
-        return { "start_duty": this.start_duty }
+        return { [this.direction_str]: { "start_duty": this.start_duty} };
     }
 
-    constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047) {
+    direction = 0;
+    direction_str = "cw";
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;
+        this.direction_str = direction_str;
+        if (direction_str === "cw") {
+            this.direction = 0;
+        }
+        else if (direction_str === "ccw") {
+            this.direction = 1;
+        }
     }
 }

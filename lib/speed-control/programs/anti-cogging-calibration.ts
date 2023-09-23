@@ -102,14 +102,18 @@ adaptor.incoming_data$.subscribe((line_data) => {
     adaptor.transmit_outgoing_data(line_data.parsed_data);
 });
 
-const rotation$ = rotation_detector(adaptor.incoming_data$, true);
+const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
+const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
 // what tasks do we need for this program
-const get_start_duty_task = new GetStartDuty(rotation$, word_sender);
-const get_idle_duty_task = new GetIdleDuty(rotation$, word_sender);
-const collect_acceleration_data = new CollectAccelerationData(rotation$, word_sender);
+const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
+const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
+const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw");
+const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
+const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
+const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw");
 
-const tasks = [get_start_duty_task, get_idle_duty_task, collect_acceleration_data];
+const tasks = [ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_collect_acceleration_data, cw_get_start_duty_task, cw_get_idle_duty_task, cw_collect_acceleration_data];
 
 // need to parse state to each task when we are running it
 
@@ -122,5 +126,6 @@ run_tasks(tasks, adaptor).then(output => {
     process.exit(0);
 }).catch((err) => {
     console2.error(err);
+    console2.error(err.stack);
     process.exit(1);
 });

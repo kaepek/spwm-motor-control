@@ -64,11 +64,12 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     timeout_run = false;
     escape_duty = false;
     async run(state: any) {
-        this.start_duty = state.start_duty;
+        this.start_duty = state[this.direction_str].start_duty;
         this.current_duty = this.start_duty as number * (this.max_duty / 65534);
         console2.info(`GetMinDuty program running`);
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", 0);
+        await this.word_sender.send_word("directionui8", this.direction);
         await delay(100);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
         await delay(100);
@@ -114,12 +115,21 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         console2.info(`GetMinDuty program finished`);
         console2.success(`Found idle duty ${final_duty_before_stall}`);
         // return found start duty.
-        return { "idle_duty": final_duty_before_stall }
+        return { [this.direction_str]: { "idle_duty": final_duty_before_stall }};
     }
 
-    constructor(input$: Observable<any>, word_sender: SendWord, max_duty = 2047) {
+    direction = 0;
+    direction_str = "cw";
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;
+        this.direction_str = direction_str;
+        if (direction_str === "cw") {
+            this.direction = 0;
+        }
+        else if (direction_str === "ccw") {
+            this.direction = 1;
+        }
     }
 }
