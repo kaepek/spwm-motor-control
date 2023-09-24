@@ -8,7 +8,8 @@ import { GetStartDuty } from "../tasks/get-start-duty.js";
 import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
 import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
-import { CollectAccelerationData } from "../tasks/collect-acceleration-data.js";
+import { CollectAccelerationData, ACMap } from "../tasks/collect-acceleration-data.js";
+import { generate_ac_map_cpp } from "../utils/cpp-ac-state-map-generator.js";
 
 const cli_args: Array<CliArg> = [
     {
@@ -117,11 +118,13 @@ const tasks = [ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_collect_acce
 
 // need to parse state to each task when we are running it
 
-run_tasks(tasks, adaptor).then(output => {
+run_tasks(tasks, adaptor).then((output: ACMap) => {
+    const cpp_ac_map = generate_ac_map_cpp(output);
     console2.success("All finished, result:", JSON.stringify(output));
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
+        fs.writeFileSync(`${parsed_args.output_data_file}.cpp`, cpp_ac_map);
     }
     process.exit(0);
 }).catch((err) => {

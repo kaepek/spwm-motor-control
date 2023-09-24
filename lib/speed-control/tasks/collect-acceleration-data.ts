@@ -6,6 +6,41 @@ import { Observable } from "rxjs";
 import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
 import { delay } from "../utils/delay.js";
 
+export interface AngularBins {
+    [angle_bin: string]: number[];
+}
+
+export interface AngularBinMeans {
+    [bin_angle: string]: number;
+}
+
+export interface AngularBinsStd {
+    [angle_bin: string]: number;
+}
+
+export interface TransformedAngularBins {
+    [angle_bin: string]: number;
+}
+
+export interface ACState {
+    angular_bins: AngularBins;
+    mean: AngularBinMeans;
+    stdev: AngularBinsStd;
+    smallest_mean: number;
+    largest_mean: number;
+    largest_abs_mean: number;
+    mean_of_means: number;
+    stdev_of_means: number;
+    transformed_angular_bins: TransformedAngularBins;
+    norm_idle_duty: number; 
+    norm_start_duty: number;
+}
+
+export interface ACMap {
+    cw: ACState;
+    ccw: ACState;
+}
+
 export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLineData>> {
     max_duty: number;
     wait_time = 50;
@@ -98,7 +133,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             return acc;
         }, {}) as {[bin_angle: string]: number};
 
-        const stdev = Object.keys(this.angular_bins).reduce((acc: any, bin_angle) => {
+        const stdev = Object.keys(this.angular_bins).reduce((acc: {[angle_bin: string]: number}, bin_angle) => {
             const values = this.angular_bins[bin_angle];
             const _mean = mean[bin_angle];
             const values_neg_mean_square = values.map((value) => Math.pow(value-_mean,2));
@@ -109,7 +144,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             const std = Math.sqrt(sum_values_neg_mean_square / values.length);
             acc[bin_angle] = std;
             return acc;
-        },{});
+        }, {});
 
         // calculate angular bins norm
 
@@ -135,7 +170,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
 
         // normalise the angular bins with the algorithm...
 
-        const transformed_angular_bins = Object.keys(mean).reduce((acc: any, angle) => {
+        const transformed_angular_bins = Object.keys(mean).reduce((acc: {[angle_bin: string]: number}, angle) => {
             const bin_value = mean[angle];
             const modified_bin_value = bin_value / largest_abs_mean;
             acc[angle] = Math.round(modified_bin_value * -1 * (norm_idle_duty as any) as number);
@@ -145,6 +180,8 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         console2.info(`CollectAccelerationData program finished`);
         return { [this.direction_str]: {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_bins, norm_idle_duty, norm_start_duty}};
     }
+
+
 
     angular_bins: {[angle_bin: string]: Array<number>} = {};
     bin_population_threshold: number;
