@@ -31,7 +31,7 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
-        
+
         this->number_of_poles = motor_config.number_of_poles;
         this->cw_zero_displacement_deg = motor_config.cw_zero_displacement_deg;
         this->cw_phase_displacement_deg = motor_config.cw_phase_displacement_deg;
@@ -39,9 +39,26 @@ namespace kaepek
         this->ccw_phase_displacement_deg = motor_config.ccw_phase_displacement_deg;
 
         update_lookup_tables();
-    
+    }
 
-        // this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*ac_map_ptr)[MAX_DUTY + 1]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    {
+        this->motor_config = motor_config;
+        this->spwm_pin_config = spwm_pin_config;
+        this->kalman_config = kalman_config;
+        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
+
+        this->number_of_poles = motor_config.number_of_poles;
+        this->cw_zero_displacement_deg = motor_config.cw_zero_displacement_deg;
+        this->cw_phase_displacement_deg = motor_config.cw_phase_displacement_deg;
+        this->ccw_zero_displacement_deg = motor_config.ccw_zero_displacement_deg;
+        this->ccw_phase_displacement_deg = motor_config.ccw_phase_displacement_deg;
+
+        this->ac_map_ptr = ac_map_ptr;
+        this->anti_cogging_enabled = true;
+
+        update_lookup_tables();
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -54,7 +71,7 @@ namespace kaepek
         // Convert to compressed.
         uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
-        current_triplet = get_pwm_triplet(com_torque_percentage * (double) MAX_DUTY, compressed_encoder_value, direction);
+        current_triplet = get_pwm_triplet(com_torque_percentage * (double)MAX_DUTY, compressed_encoder_value, direction);
         // Set pin values.
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
@@ -493,10 +510,44 @@ namespace kaepek
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
         // now modify based on lookup and duty
-        double current_duty_over_2 = (double)current_duty / 2.0;
-        triplet.phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-        triplet.phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-        triplet.phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+        
+
+        double phase_a = 0.0;
+        double phase_b = 0.0;
+        double phase_c = 0.0;
+
+        // find correction
+        if (anti_cogging_enabled == true)
+        {
+            // float value = (*ptr_to_AC_MAP)[1][100];
+            double modified_duty = (double) current_duty;
+            float correction = 0.0;
+            if (direction == RotationDirection::Clockwise) {
+                correction = (this->ac_map_ptr)[0][encoder_current_compressed_displacement];
+            }
+            else {
+                correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
+            }
+            modified_duty = modified_duty + (0.25 * correction);
+            if (modified_duty < 0) {
+                modified_duty = 0;
+            }
+            double current_duty_over_2 = (double)modified_duty / 2.0;
+            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+        }
+        else
+        {
+            double current_duty_over_2 = (double)current_duty / 2.0;
+            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+        }
+
+        triplet.phase_a = phase_a;
+        triplet.phase_b = phase_b;
+        triplet.phase_c = phase_c;
 
         triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
         triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
