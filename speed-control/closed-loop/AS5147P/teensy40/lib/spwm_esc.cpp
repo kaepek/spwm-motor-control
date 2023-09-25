@@ -528,7 +528,7 @@ namespace kaepek
             else {
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
-            modified_duty = modified_duty + (0.25 * correction);
+            modified_duty = modified_duty + (1.0 * correction);
             if (modified_duty < 0) {
                 modified_duty = 0;
             }
