@@ -32,14 +32,14 @@ export interface TransformedAccAngularBins {
 
 export interface ACState {
     angular_acc_bins: AngularAccBins;
-    mean: AngularAccBinMeans;
+    mean_acc: AngularAccBinMeans;
     mean_vel: AngularVelBinMeans;
-    stdev: AngularAccBinsStd;
-    smallest_mean: number;
-    largest_mean: number;
-    largest_abs_mean: number;
-    mean_of_means: number;
-    stdev_of_means: number;
+    stdev_acc: AngularAccBinsStd;
+    smallest_acc_mean: number;
+    largest_acc_mean: number;
+    largest_abs_acc_mean: number;
+    mean_of_acc_means: number;
+    stdev_of_acc_means: number;
     transformed_angular_acc_bins: TransformedAccAngularBins;
     norm_idle_duty: number; 
     norm_start_duty: number;
@@ -126,31 +126,31 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
 
-        let smallest_mean = Infinity;
-        let largest_mean = -Infinity;
+        let smallest_acc_mean = Infinity;
+        let largest_acc_mean = -Infinity;
 
         const thrust_to_duty_factor = (this.max_duty / 65533);
 
         // compute stats for angular_acc_bins
-        const mean = Object.keys(this.angular_acc_bins).reduce((acc: any, bin_angle) => {
+        const mean_acc = Object.keys(this.angular_acc_bins).reduce((acc: any, bin_angle) => {
             const values = this.angular_acc_bins[bin_angle];
-            const _mean = values.reduce((acc,value) => {
+            const mean = values.reduce((acc,value) => {
                 acc += value;
                 return acc;
             }, 0) / values.length;
-            acc[bin_angle] = _mean;
-            if (_mean > largest_mean) {
-                largest_mean = _mean;
+            acc[bin_angle] = mean;
+            if (mean > largest_acc_mean) {
+                largest_acc_mean = mean;
             }
-            if (_mean < smallest_mean) {
-                smallest_mean = _mean;
+            if (mean < smallest_acc_mean) {
+                smallest_acc_mean = mean;
             }
             return acc;
         }, {}) as AngularAccBinMeans;
 
-        const stdev = Object.keys(this.angular_acc_bins).reduce((acc: {[angle_bin: string]: number}, bin_angle) => {
+        const stdev_acc = Object.keys(this.angular_acc_bins).reduce((acc: {[angle_bin: string]: number}, bin_angle) => {
             const values = this.angular_acc_bins[bin_angle];
-            const _mean = mean[bin_angle];
+            const _mean = mean_acc[bin_angle];
             const values_neg_mean_square = values.map((value) => Math.pow(value-_mean,2));
             const sum_values_neg_mean_square = values_neg_mean_square.reduce((acc, it) => {
                 acc += it;
@@ -175,35 +175,35 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
 
         // calculate mean of all means
 
-        const mean_of_means = Object.keys(mean).reduce((acc: number, angle) => {
-            acc += mean[angle];
+        const mean_of_acc_means = Object.keys(mean_acc).reduce((acc: number, angle) => {
+            acc += mean_acc[angle];
             return acc;
         }, 0) / this.max_angular_acc_bins;
 
-        const stdev_of_means = Math.sqrt(Object.keys(mean).reduce((acc: number, angle) => {
-            acc += Math.pow(mean[angle] - mean_of_means, 2);
+        const stdev_of_acc_means = Math.sqrt(Object.keys(mean_acc).reduce((acc: number, angle) => {
+            acc += Math.pow(mean_acc[angle] - mean_of_acc_means, 2);
             return acc;
         },0) / this.max_angular_acc_bins);
 
-        const abs_small = Math.abs(smallest_mean);
-        const abs_max = Math.abs(largest_mean);
+        const abs_acc_small = Math.abs(smallest_acc_mean);
+        const abs_acc_max = Math.abs(largest_acc_mean);
 
-        const largest_abs_mean = Math.max(...[abs_small, abs_max]);
+        const largest_abs_acc_mean = Math.max(...[abs_acc_small, abs_acc_max]);
 
         const norm_idle_duty = Math.round(thrust_to_duty_factor*(this.idle_duty as any) as number);
         const norm_start_duty = Math.round(thrust_to_duty_factor*(this.start_duty as any) as number);
 
         // normalise the angular bins with the algorithm...
 
-        const transformed_angular_acc_bins = Object.keys(mean).reduce((acc: {[angle_bin: string]: number}, angle) => {
-            const bin_value = mean[angle];
-            const modified_bin_value = bin_value / largest_abs_mean;
+        const transformed_angular_acc_bins = Object.keys(mean_acc).reduce((acc: {[angle_bin: string]: number}, angle) => {
+            const bin_value = mean_acc[angle];
+            const modified_bin_value = bin_value / largest_abs_acc_mean;
             acc[angle] = Math.round(modified_bin_value * -1 * (norm_idle_duty as any) as number);
             return acc;
         }, {})
 
         console2.info(`CollectAccelerationData program finished`);
-        return { [this.direction_str]: {mean_vel, angular_acc_bins: this.angular_acc_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_acc_bins, norm_idle_duty, norm_start_duty}};
+        return { [this.direction_str]: {mean_vel, angular_acc_bins: this.angular_acc_bins, mean_acc, stdev_acc, smallest_acc_mean, largest_acc_mean, largest_abs_acc_mean, mean_of_acc_means, stdev_of_acc_means, transformed_angular_acc_bins, norm_idle_duty, norm_start_duty}};
     }
 
     bin_population_count() {

@@ -41,8 +41,8 @@ Object.keys(ac_map.cw.transformed_angular_acc_bins).forEach((angle_str, idx) => 
             ccw_duty_modifier: ac_map.ccw.transformed_angular_acc_bins[angle_str],
             cw_mean_vel: ac_map.cw.mean_vel[angle_str],
             ccw_mean_vel: ac_map.ccw.mean_vel[angle_str],
-            cw_mean_acc: ac_map.cw.mean[angle_str],
-            ccw_mean_acc: ac_map.ccw.mean[angle_str],
+            cw_mean_acc: ac_map.cw.mean_acc[angle_str],
+            ccw_mean_acc: ac_map.ccw.mean_acc[angle_str],
         }
     ));
 }); 
