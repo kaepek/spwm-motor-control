@@ -2,22 +2,54 @@
     "inputs": [
         {"name":"compressed_angle", "position": 0},
         {"name":"cw_duty_modifier", "position": 1},
-        {"name":"ccw_duty_modifier", "position": 2}
+        {"name":"ccw_duty_modifier", "position": 2},
+        {"name": "cw_mean_vel", "position": 3},
+        {"name": "ccw_mean_vel", "position": 4},
+        {"name": "cw_mean_acc", "position": 5},
+        {"name": "ccw_mean_acc", "position": 6}
     ],
     "buffer_length": 300,
     "plots": [
         {
-            "name": "cw ac map",
+            "name": "cw ac duty correction modifier",
             "independant_column": "compressed_angle",
             "dependant_columns": [
                 {"name":"cw_duty_modifier", "color": "blue"}
             ]
         },
         {
-            "name": "ccw ac map",
+            "name": "ccw ac duty correction modifier",
             "independant_column": "compressed_angle",
             "dependant_columns": [
                 {"name":"ccw_duty_modifier", "color": "red"}
+            ]
+        },
+        {
+            "name": "cw ac vel",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"cw_mean_vel", "color": "blue"}
+            ]
+        },
+        {
+            "name": "ccw ac vel",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"ccw_mean_vel", "color": "red"}
+            ]
+        },
+        {
+            "name": "cw ac acc",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"cw_mean_acc", "color": "blue"}
+            ]
+        },
+        {
+            "name": "ccw ac acc",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"ccw_mean_acc", "color": "red"}
             ]
         }
     ]
