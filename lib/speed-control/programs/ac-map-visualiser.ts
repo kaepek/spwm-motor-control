@@ -1,6 +1,8 @@
 import { ArgumentHandlers, CliArg, CliArgType, parse_args } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
 import { ASCIIParser } from "../../../external/kaepek-io/lib/host/ts-adaptors/ascii-parser.js"
 import { ACMap } from "../tasks/collect-acceleration-data";
+import fs from "fs";
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_file",
@@ -36,8 +38,6 @@ Object.keys(ac_map.cw.transformed_angular_bins).forEach((angle_str, idx) => {
 }); 
 
 const output = lines.join("\n");
-
-import fs from "fs";
 
 fs.writeFileSync(`${parsed_args.output_file}`, output);
 

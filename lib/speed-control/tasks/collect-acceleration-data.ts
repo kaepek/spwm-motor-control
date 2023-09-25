@@ -50,6 +50,14 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
     start_duty: number | null = null;
     idle_duty: number | null = null;
     max_angular_bins: number;
+    all_finished = false;
+    percentage_minimum: number = -1;
+    percentage_filled: number = -1;
+    angular_bins: {[angle_bin: string]: Array<number>} = {};
+    bin_population_threshold: number;
+    max_angular_steps: number;
+    direction = 0;
+    direction_str = "cw";
 
     async run(state: any) {
         this.start_duty = state[this.direction_str].start_duty;
@@ -72,11 +80,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         await delay(1000);
         return super.run(); // tick will now run every time the device outputs a line.
     }
-
-    all_finished = false;
-
-    percentage_minimum: number = -1;
-    percentage_filled: number = -1;
 
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
         const acc = incoming_data.line_data.parsed_data.kalman_acceleration;
@@ -181,11 +184,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         return { [this.direction_str]: {angular_bins: this.angular_bins, mean, stdev, smallest_mean, largest_mean, largest_abs_mean, mean_of_means, stdev_of_means, transformed_angular_bins, norm_idle_duty, norm_start_duty}};
     }
 
-
-
-    angular_bins: {[angle_bin: string]: Array<number>} = {};
-    bin_population_threshold: number;
-
     bin_population_count() {
         let min_population: number | null = null;
         let completed = 0;
@@ -204,9 +202,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         });
         return [min_population as any as number, completed];
     }
-    max_angular_steps: number;
-    direction = 0;
-    direction_str = "cw";
+    
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 8, bin_population_threshold = 10) {
         super(input$);
         this.max_duty = max_duty;
