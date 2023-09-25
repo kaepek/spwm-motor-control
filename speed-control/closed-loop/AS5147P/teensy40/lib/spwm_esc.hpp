@@ -4,7 +4,7 @@
 #include "../encoder/generic/digital_rotary_encoder.hpp"
 #include "../encoder/generic/rotary_encoder_sample_validator.hpp"
 #include "TeensyTimerTool.h"
-#include "spwm_voltage_model_discretiser.hpp"
+// #include "spwm_voltage_model_discretiser.hpp"
 #include "../com/comlib.hpp"
 /*
 
@@ -60,6 +60,24 @@ namespace kaepek
     uint32_t frequency;
   };
 
+  struct SPWMVoltageDutyTriplet
+  {
+    uint32_t phase_a;
+    uint32_t phase_b;
+    uint32_t phase_c;
+  };
+
+  /**
+   * RotationDirection enum class type:
+   * - CounterClockwise
+   * - Clockwise
+   */
+  enum class RotationDirection
+  {
+    CounterClockwise = 0,
+    Clockwise = 1
+  };
+
   /**
    * EscL6234Teensy40AS5147P
    *
@@ -76,8 +94,9 @@ namespace kaepek
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
     // static const int size_of_host_profile = 3;
     // discretiser
-    typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
+    RotationDirection direction = RotationDirection::Clockwise;
+    // typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
+    // SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
     // physical model values
     Dbl4x1 kalman_vec_store = {0};
     Dbl5x1 eular_vec_store = {0};
@@ -111,6 +130,24 @@ namespace kaepek
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
 
+    float cw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    float cw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    float cw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    float ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    float ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
+    // char cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // wanted float but wont compile
+    // char ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+
+    uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
+    double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
+    double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
+    uint32_t number_of_poles;
+    double cw_zero_displacement_deg;
+    double cw_phase_displacement_deg;
+    double ccw_zero_displacement_deg;
+    double ccw_phase_displacement_deg;
 
     // float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // this works!
     // float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
@@ -183,6 +220,73 @@ namespace kaepek
      * Method to get started status
      */
     bool get_started_status();
+
+  protected:
+    /**
+     * Method to update cw_zero_displacement_deg.
+     * @param value The value to update.
+     */
+    void set_cw_zero_displacement_deg(float value);
+
+    /**
+     * Method to update ccw_zero_displacement_deg.
+     * @param value The value to update.
+     */
+    void set_ccw_zero_displacement_deg(float value);
+
+    /**
+     * Method to update cw_phase_displacement_deg.
+     * @param value The value to update.
+     */
+    void set_cw_phase_displacement_deg(float value);
+
+    /**
+     * Method to update ccw_phase_displacement_deg.
+     * @param value The value to update.
+     */
+    void set_ccw_phase_displacement_deg(float value);
+
+    /**
+     * Method to update the trig tables when a phase or zero displacement has been changed.
+     */
+    void update_lookup_tables();
+
+    /**
+     * raw_encoder_value_to_compressed_encoder_value default constructor.
+     * @param raw_encoder_value The encoder value as read by the sensor
+     * @return Returns the encoder value compressed by the ENCODER_COMPRESSION_FACTOR
+     */
+    uint32_t raw_encoder_value_to_compressed_encoder_value(double raw_encoder_value);
+
+    /**
+     * Method to get the current phase a,b and c duty triplet.
+     * @param current_duty The current duty magnitude.
+     * @param encoder_current_compressed_displacement The current encoder displacement measurement value compressed by the compression factor.
+     * @return a SPWMVoltageDutyTriplet struct with the 3 phase duties.
+     */
+    SPWMVoltageDutyTriplet get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, RotationDirection direction);
+
+    /**
+     * Method to get radians from degrees.
+     * @param deg The number of degrees.
+     * @return The number of radians.
+     */
+    static double deg_to_rad(double deg);
+
+    /**
+     * Method to get degrees from radians.
+     * @param rad The number of radians.
+     * @return The number of degrees.
+     */
+    static double rad_to_deg(double rad);
+
+    /**
+     * Method to apply modulus in a way which obeys negative values
+     * @param value The number of to perform the modulo on.
+     * @param mod The base for the modulo.
+     * @return The number modulo the base
+     */
+    static double fnmod(double value, double mod);
   };
 #endif
 }

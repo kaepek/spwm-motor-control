@@ -3,7 +3,7 @@
 #include "../kalman_four_state/kalman_jerk.cpp"
 #include "../encoder/digital_rotary_encoder.cpp"
 #include "../encoder/generic/rotary_encoder_sample_validator.cpp"
-#include "spwm_voltage_model_discretiser.cpp"
+// #include "spwm_voltage_model_discretiser.cpp"
 using namespace TeensyTimerTool;
 
 #ifndef DISABLE_SPWM_PIN_MODIFICATION
@@ -31,7 +31,17 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
-        this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
+        
+        this->number_of_poles = motor_config.number_of_poles;
+        this->cw_zero_displacement_deg = motor_config.cw_zero_displacement_deg;
+        this->cw_phase_displacement_deg = motor_config.cw_phase_displacement_deg;
+        this->ccw_zero_displacement_deg = motor_config.ccw_zero_displacement_deg;
+        this->ccw_phase_displacement_deg = motor_config.ccw_phase_displacement_deg;
+
+        update_lookup_tables();
+    
+
+        // this->discretiser = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>(motor_config.cw_zero_displacement_deg, motor_config.cw_phase_displacement_deg, motor_config.ccw_zero_displacement_deg, motor_config.ccw_phase_displacement_deg, motor_config.number_of_poles);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -42,9 +52,9 @@ namespace kaepek
         // Take encoder value.
         this->current_encoder_displacement = encoder_value;
         // Convert to compressed.
-        uint32_t compressed_encoder_value = discretiser.raw_encoder_value_to_compressed_encoder_value(encoder_value);
+        uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
-        current_triplet = discretiser.get_pwm_triplet(com_torque_percentage * (double)EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY, compressed_encoder_value, discretiser_direction);
+        current_triplet = get_pwm_triplet(com_torque_percentage * (double) MAX_DUTY, compressed_encoder_value, direction);
         // Set pin values.
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
@@ -172,12 +182,12 @@ namespace kaepek
         // Set initial direction.
         if (com_direction_value == 0)
         {
-            discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::Clockwise;
+            direction = RotationDirection::Clockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
         }
         else if (com_direction_value == 1)
         {
-            discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::CounterClockwise;
+            direction = RotationDirection::CounterClockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
         }
 
@@ -306,12 +316,12 @@ namespace kaepek
                 com_direction_value = data_buffer[0];
                 if (com_direction_value == 0)
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::Clockwise;
+                    direction = RotationDirection::Clockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 else if (com_direction_value == 1)
                 {
-                    discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::CounterClockwise;
+                    direction = RotationDirection::CounterClockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
             }
@@ -323,8 +333,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                discretiser.set_cw_phase_displacement_deg(float_value);
-                discretiser.update_lookup_tables();
+                set_cw_phase_displacement_deg(float_value);
+                update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Phase2F32:
@@ -334,8 +344,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                discretiser.set_ccw_phase_displacement_deg(float_value);
-                discretiser.update_lookup_tables();
+                set_ccw_phase_displacement_deg(float_value);
+                update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Offset1F32:
@@ -345,8 +355,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                discretiser.set_cw_zero_displacement_deg(float_value);
-                discretiser.update_lookup_tables();
+                set_cw_zero_displacement_deg(float_value);
+                update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Offset2F32:
@@ -356,13 +366,144 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                discretiser.set_ccw_zero_displacement_deg(float_value);
-                discretiser.update_lookup_tables();
+                set_ccw_zero_displacement_deg(float_value);
+                update_lookup_tables();
             }
             break;
         default:
             // unknown word
             break;
         }
+    }
+
+    // here
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    double EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::deg_to_rad(double deg)
+    {
+        return deg * (M_PI / 180.0);
+    };
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    double EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::rad_to_deg(double rad)
+    {
+        return rad * (180.0 / M_PI);
+    };
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    double EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fnmod(double value, double mod)
+    {
+        return value - mod * floor(value / mod);
+    };
+
+    /*template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser(double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, double ccw_phase_displacement_deg, uint32_t number_of_poles)
+    {
+        this->number_of_poles = number_of_poles;
+        this->cw_zero_displacement_deg = cw_zero_displacement_deg;
+        this->cw_phase_displacement_deg = cw_phase_displacement_deg;
+        this->ccw_zero_displacement_deg = ccw_zero_displacement_deg;
+        this->ccw_phase_displacement_deg = ccw_phase_displacement_deg;
+        update_lookup_tables();
+    };*/
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables()
+    {
+        double cw_zero_displacement_rad = deg_to_rad(this->cw_zero_displacement_deg);
+        double cw_phase_displacement_rad = deg_to_rad(this->cw_phase_displacement_deg);
+        double ccw_zero_displacement_rad = deg_to_rad(this->ccw_zero_displacement_deg);
+        double ccw_phase_displacement_rad = deg_to_rad(this->ccw_phase_displacement_deg);
+        double sin_period_coeff = ((double)this->number_of_poles) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
+
+        for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
+        {
+            double current_angular_position = (2.0 * (double)idx * M_PI) / spwm_angular_resolution_dbl;
+
+            // calculate cw_phase_x_lookup.
+            cw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad));
+            cw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + cw_phase_displacement_rad));
+            cw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + (2.0 * cw_phase_displacement_rad)));
+
+            // calculate ccw_phase_x_lookup.
+            ccw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad));
+            ccw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + ccw_phase_displacement_rad));
+            ccw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + (2.0 * ccw_phase_displacement_rad)));
+        }
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_cw_zero_displacement_deg(float value)
+    {
+        this->cw_zero_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_ccw_zero_displacement_deg(float value)
+    {
+        this->ccw_zero_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_cw_phase_displacement_deg(float value)
+    {
+        this->cw_phase_displacement_deg = value;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_ccw_phase_displacement_deg(float value)
+    {
+        this->ccw_phase_displacement_deg = value;
+    }
+
+    // raw_encoder_value_to_compressed_encoder_value
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    uint32_t EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::raw_encoder_value_to_compressed_encoder_value(double raw_encoder_value)
+    {
+        // compress the encoder displacement to the new range.
+        double compressed_encoder_displacement_value_raw = (raw_encoder_value / encoder_compression_factor_dbl);
+        // could have rounded up and therefore gone > spwm_angular_resolution_dbl, so perform mod to bring back to zero if needed.
+        uint32_t compressed_encoder_value_mod = (uint32_t)round(compressed_encoder_displacement_value_raw) % spwm_angular_resolution_uint32;
+        return compressed_encoder_value_mod;
+    };
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    SPWMVoltageDutyTriplet EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
+    {
+
+        // Serial.print(encoder_current_compressed_displacement); Serial.print("\n");
+
+        double phase_a_lookup;
+        double phase_b_lookup;
+        double phase_c_lookup;
+        if (direction == RotationDirection::Clockwise)
+        {
+            // cw
+            phase_a_lookup = cw_phase_a_lookup[encoder_current_compressed_displacement];
+            phase_b_lookup = cw_phase_b_lookup[encoder_current_compressed_displacement];
+            phase_c_lookup = cw_phase_c_lookup[encoder_current_compressed_displacement];
+        }
+        else
+        {
+            // ccw
+            phase_a_lookup = ccw_phase_a_lookup[encoder_current_compressed_displacement];
+            phase_b_lookup = ccw_phase_b_lookup[encoder_current_compressed_displacement];
+            phase_c_lookup = ccw_phase_c_lookup[encoder_current_compressed_displacement];
+        }
+
+        SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
+        // now modify based on lookup and duty
+        double current_duty_over_2 = (double)current_duty / 2.0;
+        triplet.phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
+        triplet.phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
+        triplet.phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+
+        triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
+        triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
+        triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;
+
+        // Serial.print(triplet.phase_a); Serial.print("\n");
+
+        return triplet;
     }
 }
