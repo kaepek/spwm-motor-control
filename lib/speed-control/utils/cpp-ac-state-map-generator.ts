@@ -15,13 +15,13 @@ const get_direction_ac_map_definition = (name: string, data: Array<number>) => {
             lines.push(`${item},\\`);
         }
     });
-    return lines;
+    return lines.join("\n");
 };
 
 
 export function generate_ac_map_cpp(ac_map: ACMap) {
     const number_of_bins = Object.keys(ac_map.cw.transformed_angular_bins).length;
-    const ac_map_cpp = `const float AC_MAP[2][${number_of_bins}] = {CW_AC_MAP, CCW_AC_MAP}`;
+    const ac_map_cpp = `const float AC_MAP[2][${number_of_bins}] = {CW_AC_MAP, CCW_AC_MAP};`;
     const cw_data = Object.keys(ac_map.cw.transformed_angular_bins).map((angle_bin) => ac_map.cw.transformed_angular_bins[angle_bin]);
     const cw_map = get_direction_ac_map_definition("CW_AC_MAP", cw_data);
     const ccw_data = Object.keys(ac_map.ccw.transformed_angular_bins).map((angle_bin) => ac_map.ccw.transformed_angular_bins[angle_bin]);

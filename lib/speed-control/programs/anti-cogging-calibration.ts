@@ -124,11 +124,11 @@ run_tasks(tasks, adaptor).then((output: ACMap) => {
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
-        fs.writeFileSync(`${parsed_args.output_data_file}.cpp`, cpp_ac_map);
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".cpp"), cpp_ac_map);
     }
     process.exit(0);
 }).catch((err) => {
     console2.error(err);
-    console2.error(err.stack);
+    if (err.hasOwnProperty("stack")) {console2.error(err.stack)};
     process.exit(1);
 });
