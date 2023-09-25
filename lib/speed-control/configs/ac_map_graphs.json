@@ -1,0 +1,24 @@
+{
+    "inputs": [
+        {"name":"compressed_angle", "position": 0},
+        {"name":"cw_duty_modifier", "position": 1},
+        {"name":"ccw_duty_modifier", "position": 2}
+    ],
+    "buffer_length": 300,
+    "plots": [
+        {
+            "name": "cw ac map",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"cw_duty_modifier", "color": "blue"}
+            ]
+        },
+        {
+            "name": "ccw ac map",
+            "independant_column": "compressed_angle",
+            "dependant_columns": [
+                {"name":"ccw_duty_modifier", "color": "red"}
+            ]
+        }
+    ]
+}
