@@ -114,9 +114,9 @@ namespace kaepek
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
     // Const pointer to hold voltage (percentage) for SPWM given direction, channel and compressed encoder steps.
-    const float (*voltage_map_ptr)[2][3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR];
+    const float (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR];
     // Const pointer to hold anti cogging duty correction map.
-    const float (*ac_map_ptr)[2][MAX_DUTY + 1];
+    const float (*ac_map_ptr)[MAX_DUTY + 1];
     // Variable to hold whether anti cogging argument has been given and therefore if it is enables
     bool anti_cogging_enabled = false;
     // Variables to hold SPWM angular resolution (compressed encoder steps) in various datatypes.
@@ -137,7 +137,7 @@ namespace kaepek
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      */
-    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[2][3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
 
     /**
      * EscDirectL6234Teensy40AS5147P constructor with parameters.
@@ -148,7 +148,7 @@ namespace kaepek
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      * @param ac_map_ptr Pointer to an anti-cogging calibration map.
      */
-    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[2][3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const float (*ac_map_ptr)[2][MAX_DUTY + 1]);
+    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const float (*ac_map_ptr)[MAX_DUTY + 1]);
 
     /**
      * Method set the SPWM pin voltages from the SPWMVoltageModelDiscretiser when a successful encoder sample is taken and is determined to be a plausible value and the value indicates motion which obeys the direction constraint (if direction enforcement has been enabled).
