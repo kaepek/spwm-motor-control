@@ -25,7 +25,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
     {
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
@@ -34,14 +34,14 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const float (*ac_map_ptr)[MAX_DUTY + 1]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[MAX_DUTY + 1]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
     {
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
         this->ac_map_ptr = ac_map_ptr;
         this->voltage_map_ptr = voltage_map_ptr;
-        this->anti_cogging_enabled = true;        
+        this->anti_cogging_enabled = true;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -54,8 +54,8 @@ namespace kaepek
         // Convert to compressed.
         uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
-        current_triplet = get_pwm_triplet(com_torque_percentage * (double)MAX_DUTY, compressed_encoder_value, direction);
-        // Set pin values.
+        current_triplet = get_pwm_triplet(com_torque_percentage, compressed_encoder_value, direction); // * (double)MAX_DUTY
+                                                                                                       // Set pin values.
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
         analogWrite(spwm_pin_config.phase_a, current_triplet.phase_a);
@@ -363,16 +363,28 @@ namespace kaepek
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    SPWMVoltageDutyTriplet EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
+    SPWMVoltageDutyTriplet EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double com_torque_percentage, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
     {
 
         double phase_a_lookup;
         double phase_b_lookup;
         double phase_c_lookup;
-        
-        phase_a_lookup = this->voltage_map_ptr[this->bl_direction][0][encoder_current_compressed_displacement];
-        phase_b_lookup = this->voltage_map_ptr[this->bl_direction][1][encoder_current_compressed_displacement];
-        phase_c_lookup = this->voltage_map_ptr[this->bl_direction][2][encoder_current_compressed_displacement];
+
+        phase_a_lookup = (double)this->voltage_map_ptr[this->bl_direction][0][encoder_current_compressed_displacement] / 2.0;
+        phase_b_lookup = (double)this->voltage_map_ptr[this->bl_direction][1][encoder_current_compressed_displacement] / 2.0;
+        phase_c_lookup = (double)this->voltage_map_ptr[this->bl_direction][2][encoder_current_compressed_displacement] / 2.0;
+
+        // e.g. -2047 -> 2047 gets mapped to .... -1023.5 -> 1023.5
+        // we then need to add half the midpoint
+
+        //  MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1 = 2^11 - 1 = 2048 - 1 = 2047
+        // half of this is 2047/2 = 1023.5
+        // check maths
+        // -1023.5  + 1023.5 = 0
+        // 1023.5 + 1023.5 = 2047
+        // this is ok
+
+        double half_max_duty = (double)MAX_DUTY / 2;
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
 
@@ -384,29 +396,49 @@ namespace kaepek
         if (anti_cogging_enabled == true)
         {
             // float value = (*ptr_to_AC_MAP)[1][100];
-            double modified_duty = (double) current_duty;
+            // double modified_duty = (double) current_duty;
             float correction = 0.0;
-            if (direction == RotationDirection::Clockwise) {
+            if (direction == RotationDirection::Clockwise)
+            {
                 correction = (this->ac_map_ptr)[0][encoder_current_compressed_displacement];
             }
-            else {
+            else
+            {
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
-            modified_duty = modified_duty - (0.18 * correction); // -0.15
-            if (modified_duty < 0) {
-                modified_duty = 0;
+
+            // if phase_a_lookup * com_torque_percentage is above the midpoint and after correct lower than the midpoint clamp to midpoint.
+            // if phase_a_lookup * com_torque_percentage is below the midpoint and after correction higher than the midpoint clamp to midpoint.
+
+            // when clamping to zero we care about the midpoint 4096 / 2 if phase_x + midpoint
+
+            phase_a = phase_a + (0.18 * correction);
+            if (phase_a < 0)
+            {
+                phase_a = 0;
             }
-            double current_duty_over_2 = (double)modified_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_b = phase_b + (0.18 * correction);
+            if (phase_b < 0)
+            {
+                phase_b = 0;
+            }
+            phase_c = phase_c + (0.18 * correction);
+            if (phase_c < 0)
+            {
+                phase_c = 0;
+            }
         }
         else
         {
-            double current_duty_over_2 = (double)current_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_a = round((phase_a_lookup * com_torque_percentage) + half_max_duty);
+            phase_b = round((phase_b_lookup * com_torque_percentage) + half_max_duty);
+            phase_c = round((phase_c_lookup * com_torque_percentage) + half_max_duty);
+
+            // check....
+            // phase_a_lookup = -1023.5 * 0.5 + 1023.5 = 511.75 # -511.75 below 1023.5
+            // phase_a_lookup = 0 * 0.5 + 1023.5 = 1023.5
+            // phase_a_lookup = (+1023.5 * 0.5) + 1023.5 = 1535.25 # 511.75 above 1023.5
+
         }
 
         triplet.phase_a = phase_a;
