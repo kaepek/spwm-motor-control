@@ -392,6 +392,9 @@ namespace kaepek
         double phase_b = 0.0;
         double phase_c = 0.0;
 
+        double phase_a_before_correction = ((phase_a_lookup * com_torque_percentage) + half_max_duty);
+        double phase_b_before_correction = ((phase_b_lookup * com_torque_percentage) + half_max_duty);
+        double phase_c_before_correction = ((phase_c_lookup * com_torque_percentage) + half_max_duty);
         // find correction
         if (anti_cogging_enabled == true)
         {
@@ -407,12 +410,43 @@ namespace kaepek
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
 
+            double phase_a_after_correction = phase_a_before_correction + correction;
+            double phase_b_after_correction = phase_b_before_correction + correction;
+            double phase_c_after_correction = phase_c_before_correction + correction;
+
+            if ((phase_a_before_correction < half_max_duty && phase_a_after_correction > half_max_duty) || (phase_a_before_correction > half_max_duty && phase_a_after_correction < half_max_duty))
+            {
+                phase_a = half_max_duty;
+            }
+            else
+            {
+                phase_a = round(phase_a_after_correction);
+            }
+
+            if ((phase_b_before_correction < half_max_duty && phase_b_after_correction > half_max_duty) || (phase_b_before_correction > half_max_duty && phase_b_after_correction < half_max_duty))
+            {
+                phase_b = half_max_duty;
+            }
+            else
+            {
+                phase_b = round(phase_b_after_correction);
+            }
+
+            if ((phase_c_before_correction < half_max_duty && phase_c_after_correction > half_max_duty) || (phase_c_before_correction > half_max_duty && phase_c_after_correction < half_max_duty))
+            {
+                phase_c = half_max_duty;
+            }
+            else
+            {
+                phase_c = round(phase_c_after_correction);
+            }
+
             // if phase_a_lookup * com_torque_percentage is above the midpoint and after correct lower than the midpoint clamp to midpoint.
             // if phase_a_lookup * com_torque_percentage is below the midpoint and after correction higher than the midpoint clamp to midpoint.
 
             // when clamping to zero we care about the midpoint 4096 / 2 if phase_x + midpoint
 
-            phase_a = phase_a + (0.18 * correction);
+            /*phase_a = phase_a + (0.18 * correction);
             if (phase_a < 0)
             {
                 phase_a = 0;
@@ -426,19 +460,18 @@ namespace kaepek
             if (phase_c < 0)
             {
                 phase_c = 0;
-            }
+            }*/
         }
         else
         {
-            phase_a = round((phase_a_lookup * com_torque_percentage) + half_max_duty);
-            phase_b = round((phase_b_lookup * com_torque_percentage) + half_max_duty);
-            phase_c = round((phase_c_lookup * com_torque_percentage) + half_max_duty);
+            phase_a = round(phase_a_before_correction);
+            phase_b = round(phase_b_before_correction);
+            phase_c = round(phase_c_before_correction);
 
             // check....
             // phase_a_lookup = -1023.5 * 0.5 + 1023.5 = 511.75 # -511.75 below 1023.5
             // phase_a_lookup = 0 * 0.5 + 1023.5 = 1023.5
             // phase_a_lookup = (+1023.5 * 0.5) + 1023.5 = 1535.25 # 511.75 above 1023.5
-
         }
 
         triplet.phase_a = phase_a;

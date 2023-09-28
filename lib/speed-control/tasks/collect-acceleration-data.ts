@@ -100,9 +100,9 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const compressed_angle = Math.round(angle_raw * ((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1)));
         this.angular_acc_bins[compressed_angle].push(acc);
         this.angular_vel_bins[compressed_angle].push(vel);
-        const [progress, completed] = this.bin_population_count();
-        const percentage_minimum = progress / this.bin_population_threshold;
-        const percentage_filled = completed / this.max_angular_acc_bins;
+        const [progress, completed, remaining_keys] = this.bin_population_count();
+        const percentage_minimum = progress as number / this.bin_population_threshold;
+        const percentage_filled = completed as number / this.max_angular_acc_bins;
 
         // console.log("filled", completed, this.max_angular_acc_bins, percentage_filled);
         if (this.percentage_minimum != percentage_minimum) {
@@ -113,6 +113,13 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         if (this.percentage_filled != percentage_filled) {
             console2.info(`Collected bin population completely filled ${percentage_filled*100}%`);
             this.percentage_filled = percentage_filled;
+            if (this.percentage_filled > 90) {
+                let remaining_keys_str = (remaining_keys as Array<string>).join(",");
+                if (remaining_keys_str.length > 50) {
+                    remaining_keys_str = remaining_keys_str.substring(0, 50);
+                } 
+                console2.info(`Remaining Ids: ${remaining_keys_str}`);
+            }
         }
 
         if (progress === this.bin_population_threshold) {
@@ -209,23 +216,26 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
     bin_population_count() {
         let min_population: number | null = null;
         let completed = 0;
+        const remaining_keys: Array<string> = [];
         Object.keys(this.angular_acc_bins).forEach((angle_bin) => {
             const counts = this.angular_acc_bins[angle_bin].length;
             if (min_population === null) {
                 min_population = counts;
+                remaining_keys.push(angle_bin);
             }
             else if (counts < min_population) {
                 min_population = counts;
+                remaining_keys.push(angle_bin);
             }
 
             if (counts >= this.bin_population_threshold) {
                 completed++;
             }
         });
-        return [min_population as any as number, completed];
+        return [min_population as any as number, completed, remaining_keys];
     }
     
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 8, bin_population_threshold = 10) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;
