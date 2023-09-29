@@ -34,7 +34,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[MAX_DUTY + 1]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
     {
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
@@ -410,9 +410,9 @@ namespace kaepek
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
 
-            double phase_a_after_correction = phase_a_before_correction + correction;
-            double phase_b_after_correction = phase_b_before_correction + correction;
-            double phase_c_after_correction = phase_c_before_correction + correction;
+            double phase_a_after_correction = phase_a_before_correction + (correction * 0.25);
+            double phase_b_after_correction = phase_b_before_correction + (correction * 0.25);
+            double phase_c_after_correction = phase_c_before_correction + (correction * 0.25);
 
             if ((phase_a_before_correction < half_max_duty && phase_a_after_correction > half_max_duty) || (phase_a_before_correction > half_max_duty && phase_a_after_correction < half_max_duty))
             {

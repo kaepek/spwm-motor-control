@@ -41,7 +41,7 @@ export interface ACState {
     mean_of_acc_means: number;
     stdev_of_acc_means: number;
     transformed_angular_acc_bins: TransformedAccAngularBins;
-    norm_idle_duty: number; 
+    norm_idle_duty: number;
     norm_start_duty: number;
 }
 
@@ -104,25 +104,94 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const percentage_minimum = progress as number / this.bin_population_threshold;
         const percentage_filled = completed as number / this.max_angular_acc_bins;
 
+        if (angle_raw >= 16381) {
+            console2.log("Angle >= 16381", angle_raw, compressed_angle);
+        }
+
         // console.log("filled", completed, this.max_angular_acc_bins, percentage_filled);
         if (this.percentage_minimum != percentage_minimum) {
-            console2.info(`Collected bin population minimum completion ${percentage_minimum*100}%`);
+            console2.info(`Collected bin population minimum completion ${percentage_minimum * 100}%`);
             this.percentage_minimum = percentage_minimum;
         }
 
         if (this.percentage_filled != percentage_filled) {
-            console2.info(`Collected bin population completely filled ${percentage_filled*100}%`);
+            console2.info(`Collected bin population completely filled ${percentage_filled * 100}%`);
             this.percentage_filled = percentage_filled;
-            if (this.percentage_filled > 90) {
-                let remaining_keys_str = (remaining_keys as Array<string>).join(",");
-                if (remaining_keys_str.length > 50) {
-                    remaining_keys_str = remaining_keys_str.substring(0, 50);
-                } 
-                console2.info(`Remaining Ids: ${remaining_keys_str}`);
+            if (this.percentage_filled > 0.98) {
+                let remaining_keys_str = JSON.stringify((remaining_keys as { [angle: string]: number }));
+                console2.info(`Remaining Angle Counts: ${remaining_keys_str}`);
             }
         }
 
         if (progress === this.bin_population_threshold) {
+            return this.return_promise_resolver();
+        }
+        else if (Object.keys(remaining_keys).length === 1 && remaining_keys.hasOwnProperty((this.max_angular_acc_bins - 1).toString())) {
+            // sometimes gets stuck on (this.max_angular_acc_bins - 1)
+            // so lerp these values
+            // TODO FIX ME find the source of these missing angles.
+
+            console2.warn("FIXING VIA LERP TECHNIQUE");
+
+            const previous_results = this.angular_acc_bins[this.max_angular_acc_bins - 2];
+            const next_results = this.angular_acc_bins[0];
+
+            console2.info("previous_results", previous_results);
+            console2.info("next_results", next_results);
+
+
+
+            const previous_results_mean = previous_results.reduce((acc, it) => {
+                acc += it;
+                return acc;
+            }, 0) / previous_results.length;
+
+            console2.info("previous_results_mean", previous_results_mean);
+
+            const next_results_mean = next_results.reduce((acc, it) => {
+                acc += it;
+                return acc;
+            }, 0) / next_results.length;
+
+            console2.info("next_results_mean", next_results_mean);
+
+            const combined = [previous_results_mean, next_results_mean];
+
+            console2.info("combined", combined);
+
+            this.angular_acc_bins[this.max_angular_acc_bins - 1] = combined;
+
+            // and for angular_vel_bins
+
+            const previous_results_vel = this.angular_vel_bins[this.max_angular_acc_bins - 2];
+            const next_results_vel = this.angular_vel_bins[0];
+
+            console2.info("previous_results_vel", previous_results_vel);
+            console2.info("next_results_vel", next_results_vel);
+
+
+
+            const previous_results_mean_vel = previous_results_vel.reduce((acc, it) => {
+                acc += it;
+                return acc;
+            }, 0) / previous_results_vel.length;
+
+            console2.info("previous_results_mean_vel", previous_results_mean);
+
+            const next_results_mean_vel = next_results_vel.reduce((acc, it) => {
+                acc += it;
+                return acc;
+            }, 0) / next_results_vel.length;
+
+            console2.info("next_results_mean_vel", next_results_mean_vel);
+
+            const combined_vel = [previous_results_mean_vel, next_results_mean_vel];
+
+            console2.info("combined_vel", combined_vel);
+
+            this.angular_vel_bins[this.max_angular_acc_bins - 1] = combined_vel;
+
+
             return this.return_promise_resolver();
         }
     }
@@ -141,7 +210,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         // compute stats for angular_acc_bins
         const mean_acc = Object.keys(this.angular_acc_bins).reduce((acc: any, bin_angle) => {
             const values = this.angular_acc_bins[bin_angle];
-            const mean = values.reduce((acc,value) => {
+            const mean = values.reduce((acc, value) => {
                 acc += value;
                 return acc;
             }, 0) / values.length;
@@ -155,14 +224,14 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             return acc;
         }, {}) as AngularAccBinMeans;
 
-        const stdev_acc = Object.keys(this.angular_acc_bins).reduce((acc: {[angle_bin: string]: number}, bin_angle) => {
+        const stdev_acc = Object.keys(this.angular_acc_bins).reduce((acc: { [angle_bin: string]: number }, bin_angle) => {
             const values = this.angular_acc_bins[bin_angle];
             const _mean = mean_acc[bin_angle];
-            const values_neg_mean_square = values.map((value) => Math.pow(value-_mean,2));
+            const values_neg_mean_square = values.map((value) => Math.pow(value - _mean, 2));
             const sum_values_neg_mean_square = values_neg_mean_square.reduce((acc, it) => {
                 acc += it;
                 return acc;
-            },0);
+            }, 0);
             const std = Math.sqrt(sum_values_neg_mean_square / values.length);
             acc[bin_angle] = std;
             return acc;
@@ -170,7 +239,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
 
         const mean_vel = Object.keys(this.angular_vel_bins).reduce((acc: any, bin_angle) => {
             const values = this.angular_vel_bins[bin_angle];
-            const _mean = values.reduce((acc,value) => {
+            const _mean = values.reduce((acc, value) => {
                 acc += value;
                 return acc;
             }, 0) / values.length;
@@ -190,19 +259,19 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const stdev_of_acc_means = Math.sqrt(Object.keys(mean_acc).reduce((acc: number, angle) => {
             acc += Math.pow(mean_acc[angle] - mean_of_acc_means, 2);
             return acc;
-        },0) / this.max_angular_acc_bins);
+        }, 0) / this.max_angular_acc_bins);
 
         const abs_acc_small = Math.abs(smallest_acc_mean);
         const abs_acc_max = Math.abs(largest_acc_mean);
 
         const largest_abs_acc_mean = Math.max(...[abs_acc_small, abs_acc_max]);
 
-        const norm_idle_duty = Math.round(thrust_to_duty_factor*(this.idle_duty as any) as number);
-        const norm_start_duty = Math.round(thrust_to_duty_factor*(this.start_duty as any) as number);
+        const norm_idle_duty = Math.round(thrust_to_duty_factor * (this.idle_duty as any) as number);
+        const norm_start_duty = Math.round(thrust_to_duty_factor * (this.start_duty as any) as number);
 
         // normalise the angular bins with the algorithm...
 
-        const transformed_angular_acc_bins = Object.keys(mean_acc).reduce((acc: {[angle_bin: string]: number}, angle) => {
+        const transformed_angular_acc_bins = Object.keys(mean_acc).reduce((acc: { [angle_bin: string]: number }, angle) => {
             const bin_value = mean_acc[angle];
             const modified_bin_value = bin_value / largest_abs_acc_mean;
             acc[angle] = Math.round(modified_bin_value * -1 * (norm_idle_duty as any) as number);
@@ -210,32 +279,33 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         }, {})
 
         console2.info(`CollectAccelerationData program finished`);
-        return { [this.direction_str]: {mean_vel, angular_acc_bins: this.angular_acc_bins, mean_acc, stdev_acc, smallest_acc_mean, largest_acc_mean, largest_abs_acc_mean, mean_of_acc_means, stdev_of_acc_means, transformed_angular_acc_bins, norm_idle_duty, norm_start_duty}};
+        return { [this.direction_str]: { mean_vel, angular_acc_bins: this.angular_acc_bins, mean_acc, stdev_acc, smallest_acc_mean, largest_acc_mean, largest_abs_acc_mean, mean_of_acc_means, stdev_of_acc_means, transformed_angular_acc_bins, norm_idle_duty, norm_start_duty } };
     }
 
     bin_population_count() {
         let min_population: number | null = null;
         let completed = 0;
-        const remaining_keys: Array<string> = [];
+        const remaining_keys: { [angle: string]: number } = {};
         Object.keys(this.angular_acc_bins).forEach((angle_bin) => {
             const counts = this.angular_acc_bins[angle_bin].length;
             if (min_population === null) {
                 min_population = counts;
-                remaining_keys.push(angle_bin);
+            }
+            if (counts >= this.bin_population_threshold) {
+                completed++;
             }
             else if (counts < min_population) {
                 min_population = counts;
-                remaining_keys.push(angle_bin);
+                remaining_keys[angle_bin] = counts;
             }
-
-            if (counts >= this.bin_population_threshold) {
-                completed++;
+            else {
+                remaining_keys[angle_bin] = counts;
             }
         });
         return [min_population as any as number, completed, remaining_keys];
     }
-    
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3) {
+
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 2) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;
@@ -253,5 +323,10 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         else if (direction_str === "ccw") {
             this.direction = 1;
         }
+        // console.log("((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1))", ((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1)));
+        // console.log("max_angular_acc_bins", );
+
+        // process.exit(1);
+        // console.log(JSON.stringify(Object.keys(this.angular_acc_bins)));
     }
 }
