@@ -16,10 +16,10 @@
     "step-collect-realtime-graph": "kaepek-io-graph --address localhost --port 9002 --config ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample_smooth_errors_ception.json",
     "step-collect-analyse": "npm run step-collect-detector --run_id=${npm_config_run_id} > help && npm run step-collect-file-graph --run_id=${npm_config_run_id}",
     "test-ac": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json --output_data_file none.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --command_address localhost --command_port 9000 --command_protocol udp",
-    "test-ac-out": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json --output_data_file test-ac-data-direct-4098-3.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --command_address localhost --command_port 9000 --command_protocol udp --outgoing_port 9002 --outgoing_address localhost --outgoing_protocol udp",
+    "test-ac-out": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json --output_data_file test-ac-data-direct-4098-4.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --command_address localhost --command_port 9000 --command_protocol udp --outgoing_port 9002 --outgoing_address localhost --outgoing_protocol udp",
     "test-ac-help": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --help",
-    "test-ac-gen-csv": "node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i test-ac-data-direct-4098-3.json -c ./lib/speed-control/configs/ac_map_graphs.json -o test-ac-data-direct-4098-3.csv",
-    "test-ac-gen-csv-graph-html": "kaepek-io-graph-file -i test-ac-data-direct-4098-3.csv -c ./lib/speed-control/configs/ac_map_graphs.json "
+    "test-ac-gen-csv": "node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i test-ac-data-direct-4098-4.json -c ./lib/speed-control/configs/ac_map_graphs.json -o test-ac-data-direct-4098-4.csv",
+    "test-ac-gen-csv-graph-html": "kaepek-io-graph-file -i test-ac-data-direct-4098-4.csv -c ./lib/speed-control/configs/ac_map_graphs.json "
 
   },
   "repository": {

@@ -516,6 +516,8 @@ namespace kaepek
         double phase_b = 0.0;
         double phase_c = 0.0;
 
+        double half_max_duty = (double)MAX_DUTY / 2;
+
         // find correction
         if (anti_cogging_enabled == true)
         {
@@ -533,16 +535,16 @@ namespace kaepek
                 modified_duty = 0;
             }
             double current_duty_over_2 = (double)modified_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_a = round((phase_a_lookup * current_duty_over_2) + half_max_duty);
+            phase_b = round((phase_b_lookup * current_duty_over_2) + half_max_duty);
+            phase_c = round((phase_c_lookup * current_duty_over_2) + half_max_duty);
         }
         else
         {
             double current_duty_over_2 = (double)current_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + current_duty_over_2);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + current_duty_over_2);
+            phase_a = round((phase_a_lookup * current_duty_over_2) + half_max_duty);
+            phase_b = round((phase_b_lookup * current_duty_over_2) + half_max_duty);
+            phase_c = round((phase_c_lookup * current_duty_over_2) + half_max_duty);
         }
 
         triplet.phase_a = phase_a;

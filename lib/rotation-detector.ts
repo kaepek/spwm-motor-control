@@ -71,7 +71,7 @@ export function rotation_detector(data_line$: Observable<any>, direction = true,
         const velocity = parseFloat(line_data.parsed_data["kalman_velocity"]);
         const displacement = parseFloat(line_data.parsed_data["kalman_displacement"]);
         if (tracking === false && ((direction == true && velocity > 0.0) || (direction == false && velocity < 0.0))) {
-            initial_displacment = displacement;
+            if (initial_displacment === null) initial_displacment = displacement;
             tracking = true;
             return { motion: true, rotations: Math.abs(displacement - initial_displacment) / displacement_max, line_data };
         }
@@ -80,7 +80,7 @@ export function rotation_detector(data_line$: Observable<any>, direction = true,
         }
         else {
             tracking = false;
-            return { motion: false, line_data }
+            return { motion: false, rotations: Math.abs(displacement - initial_displacment) / displacement_max, line_data }
         };
     }));
     return $;

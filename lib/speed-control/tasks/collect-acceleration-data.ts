@@ -104,10 +104,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const percentage_minimum = progress as number / this.bin_population_threshold;
         const percentage_filled = completed as number / this.max_angular_acc_bins;
 
-        if (angle_raw >= 16381) {
-            console2.log("Angle >= 16381", angle_raw, compressed_angle);
-        }
-
         // console.log("filled", completed, this.max_angular_acc_bins, percentage_filled);
         if (this.percentage_minimum != percentage_minimum) {
             console2.info(`Collected bin population minimum completion ${percentage_minimum * 100}%`);
@@ -305,7 +301,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         return [min_population as any as number, completed, remaining_keys];
     }
 
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 2) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 8) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;

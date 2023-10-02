@@ -1,0 +1,320 @@
+#include "spwm_esc_direct_pid.hpp"
+#include "spwm_esc_direct.cpp"
+
+namespace kaepek
+{
+#ifndef ENABLE_RK4
+#define ENABLE_RK4 true
+#endif
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscDirectL6234Teensy40AS5147P() : EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
+    {
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, voltage_map_ptr)
+    {
+        proportional_coefficient = pid_config.proportional;
+        differential_coefficient = pid_config.differential;
+        integral_coefficient = pid_config.integral;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, voltage_map_ptr, ac_map_ptr)
+    {
+        proportional_coefficient = pid_config.proportional;
+        differential_coefficient = pid_config.differential;
+        integral_coefficient = pid_config.integral;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    double PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::calculate_eular_derivative(double value, double dt, double previous_value)
+    {
+        return (value - previous_value) / dt;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop()
+    {
+        proportional_error = 0.0;
+        integral_error = 0.0;
+        differential_error = 0.0;
+        previous_proportional_error = 0.0;
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = 0.0;
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop();
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop()
+    {
+
+        if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::started == true)
+        {
+            // Check the encoder has a new sample.
+            if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::has_new_sample() == true)
+            {
+                // Define variables to store the sampled encoder value and the number of elapsed microseconds since the last samples retrieval.
+                uint32_t encoder_value;
+                uint32_t elapsed_micros_since_last_sample;
+                // Fetch the stored values from the buffer.
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_sample_and_elapsed_time(encoder_value, elapsed_micros_since_last_sample);
+                // Convert microseconds to seconds.
+                double seconds_since_last = (double)elapsed_micros_since_last_sample * (double)1e-6;
+                // Perform one kalman step with the data.
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_filter.step(seconds_since_last, encoder_value);
+                // Extract state values.
+                double *kalman_vec = EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_filter.get_kalman_vector();
+                double *eular_vec = EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_filter.get_eular_vector();
+                // Store state in cache ready for printing.
+                cli();
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[0] = kalman_vec[0];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[1] = kalman_vec[1];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[2] = kalman_vec[2];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[3] = kalman_vec[3];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[0] = eular_vec[0];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[1] = eular_vec[1];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[2] = eular_vec[2];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[3] = eular_vec[3];
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[4] = eular_vec[4];
+
+                // Calculate errors
+                // set_point = cache_set_point;
+                proportional_error = cache_set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+                integral_error += proportional_error * seconds_since_last;
+
+                // Watch out for the integral_error saturating
+                if (integral_error >= 100000.0)
+                {
+                    integral_error = 0.0;
+                }
+
+#if ENABLE_RK4
+                // RK4
+                double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
+                double k2 = calculate_eular_derivative(proportional_error + 0.5 * k1 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                double k3 = calculate_eular_derivative(proportional_error + 0.5 * k2 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                double k4 = calculate_eular_derivative(proportional_error + k3 * seconds_since_last, seconds_since_last, previous_proportional_error);
+                differential_error = (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+#else
+                // Eular
+                differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
+#endif
+
+                /*double alpha = 1 / (1 + 2 * M_PI * seconds_since_last * desired_derivative_cutoff_frequency);
+                derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
+                differential_error = derivative_error_filtered;*/
+
+                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency;
+                double alpha = omega * seconds_since_last;
+
+                // Apply a second-order low-pass filter
+                double derivative_error_filtered = (1.0 / (alpha * alpha + 2.0 * alpha + 1.0)) * (alpha * alpha * differential_error + 2.0 * alpha * derivative_error_filtered_1 - (alpha * alpha - 2.0 * alpha + 1.0) * derivative_error_filtered_2);
+
+                // Update previous filtered error values
+                derivative_error_filtered_2 = derivative_error_filtered_1;
+                derivative_error_filtered_1 = derivative_error_filtered;
+                differential_error = derivative_error_filtered;
+
+                // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
+
+                // Calculate duty percentage
+                double duty = 0.0;
+
+                duty = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
+                // duty = abs(duty);
+                // duty = min(abs(duty), 0.5); // cap at 50%
+                if (duty < 0.0)
+                {
+                    duty = 0.0;
+                }
+                duty = min(duty, 0.5);
+                pid_duty = duty;
+
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = pid_duty;
+
+                previous_proportional_error = proportional_error;
+
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop_ctr++;
+                sei();
+            }
+        }
+        else if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::start_attempted == true)
+        {
+            // If the esc did not start in a good state, then print the configuration issues out via the serial port, by invoking the print_configuration_issues method of the esc.
+            EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::print_configuration_issues();
+            delayMicroseconds(10'000'000);
+        }
+        // Attempt to real serial input.
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::read_input();
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::process_host_control_word(uint32_t control_word, uint32_t *data_buffer)
+    {
+        // Handle serial word input.
+        uint16_t com_torque_value = 0;
+        float float_value = 0;
+        switch (control_word)
+        {
+        case SerialInputCommandWord::Null:
+            break;
+        case SerialInputCommandWord::Start:
+            if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault == false)
+            {
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::start();
+            }
+            break;
+        case SerialInputCommandWord::Stop:
+            if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault == false)
+            {
+                this->stop();
+            }
+            break;
+        case SerialInputCommandWord::Reset:
+            this->stop();
+            EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::RotaryEncoderSampleValidator::reset();
+            EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::fault = false;
+            break;
+        case SerialInputCommandWord::Direction1UI8:
+            if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage == 0.0) // dont reverse unless thrust is zero
+            {
+                EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value = data_buffer[0];
+                if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value == 0)
+                {
+                    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::Clockwise;
+                    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
+                }
+                else if (EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value == 1)
+                {
+                    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::CounterClockwise;
+                    EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
+                }
+            }
+            break;
+        case SerialInputCommandWord::Thrust1UI16:
+            com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
+            EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 50%
+            break;
+        case SerialInputCommandWord::SetPointF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            cache_set_point = float_value;
+            break;
+        case SerialInputCommandWord::ProportionalF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            proportional_coefficient = float_value;
+            break;
+        case SerialInputCommandWord::IntegralF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            integral_coefficient = float_value;
+            break;
+        case SerialInputCommandWord::DerivativeF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            differential_coefficient = float_value;
+            break;
+        default:
+            // unknown word
+            break;
+        }
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    void PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
+    {
+        // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
+        // Log ESC state data to serial port.
+
+        /*
+        What do we reall want to print
+        loop_ctr
+        sample_ctr
+        time
+        torque percentage
+        direction
+
+        kalman_disp
+        kalman_v
+        kalman_a
+        kalman_j
+
+        current_triplet_a
+        _b
+        _c
+
+        encoder disp
+
+        prop error
+        integral error
+        derivat error
+
+        prop coeff
+        integral coeff
+        derivat coeff
+
+        */
+        cli();
+        double seconds_elapsed = (double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::micros_since_last_log * 1e-6;
+        Serial.print(((double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop_ctr) / seconds_elapsed);
+        Serial.print(",");
+        Serial.print(((double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::sample_ctr) / seconds_elapsed);
+        Serial.print(",");
+
+        Serial.print(EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::eular_vec_store[0], 4);
+        Serial.print(",");
+        Serial.print(EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_torque_percentage, 4);
+        Serial.print(",");
+        Serial.print(EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value);
+        Serial.print(",");
+
+        Serial.print((double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+
+        Serial.print((double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+
+        Serial.print((double)EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
+        Serial.print(",");
+
+        Serial.print(EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::current_encoder_displacement);
+        Serial.print(",");
+
+        /*Serial.print(proportional_coefficient);
+        Serial.print(",");
+        Serial.print(integral_coefficient);
+        Serial.print(",");
+        Serial.print(differential_coefficient);
+        Serial.print(",");*/
+
+        Serial.print(proportional_error);
+        Serial.print(",");
+        Serial.print(integral_error);
+        Serial.print(",");
+        Serial.print(differential_error);
+
+        Serial.print(",");
+        Serial.print(pid_duty);
+
+        Serial.print(",");
+        Serial.print(cache_set_point * 1.0);
+
+        Serial.print("\n");
+
+        // Reset loop counter and time since last log.
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop_ctr = 0;
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::sample_ctr = 0;
+        EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::micros_since_last_log = 0;
+        sei();
+    }
+}
