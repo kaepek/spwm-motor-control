@@ -301,7 +301,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         return [min_population as any as number, completed, remaining_keys];
     }
 
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 8) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3) {
         super(input$);
         this.max_duty = max_duty;
         this.word_sender = word_sender;

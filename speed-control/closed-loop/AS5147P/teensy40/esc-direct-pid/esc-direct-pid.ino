@@ -21,7 +21,7 @@ const std::size_t FLASH_MICROS = 100000;
 
 // Encoder sampler config.
 const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 8;
+const std::size_t ENCODER_VALUE_COMPRESSION = 4;
 
 // Encoder pin config.
 uint32_t ENC_PIN_CSN = 10;
@@ -31,13 +31,6 @@ uint32_t enc_pin_SCK = 22;
 
 // Device status LED pin.
 const int LED_PIN = 13;
-
-// Motor constants.
-double MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG = -0.16;
-double MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG = 239.98;
-double MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG = 16.21;
-double MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG = 239.98;
-uint32_t MOTOR_CONFIG_NUMBER_OF_POLES = 22;
 
 // Kalman config.
 double KALMAN_ALPHA = 40000000000.0;
@@ -74,9 +67,6 @@ kaepek::DigitalRotaryEncoderSPI ENC;
 
 // kalman config struct.
 kaepek::KalmanConfig KALMAN_CONFIG = kaepek::KalmanConfig();
-
-// Motor calibration struct.
-kaepek::SPWMMotorConfig MOTOR_CALIBRATION_CONFIG = kaepek::SPWMMotorConfig();
 
 // SPWM pin config struct.
 kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
@@ -145,13 +135,6 @@ void setup()
   KALMAN_CONFIG.x_resolution_error = KALMAN_X_RESOLUTION_ERROR;
   KALMAN_CONFIG.process_noise = KALMAN_PROCESS_NOISE;
 
-  // MOTOR_CALIBRATION_CONFIG.
-  MOTOR_CALIBRATION_CONFIG.cw_zero_displacement_deg = MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG;
-  MOTOR_CALIBRATION_CONFIG.cw_phase_displacement_deg = MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG;
-  MOTOR_CALIBRATION_CONFIG.ccw_zero_displacement_deg = MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG;
-  MOTOR_CALIBRATION_CONFIG.ccw_phase_displacement_deg = MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG;
-  MOTOR_CALIBRATION_CONFIG.number_of_poles = MOTOR_CONFIG_NUMBER_OF_POLES;
-
   // SPWM_PIN_CONFIG.
   SPWM_PIN_CONFIG.phase_a = SPWM_PIN_PHASE_A;
   SPWM_PIN_CONFIG.phase_b = SPWM_PIN_PHASE_B;
@@ -169,7 +152,7 @@ void setup()
   ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
   // Initalise the encoder ESC.
-  ESC = kaepek::PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.8, MOTOR_CALIBRATION_CONFIG, SPWM_PIN_CONFIG, KALMAN_CONFIG, PID_CONFIG, VOLTAGE_MAP); // 3us (micro) sample period 2.8 2.6
+  ESC = kaepek::PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.8, SPWM_PIN_CONFIG, KALMAN_CONFIG, PID_CONFIG, VOLTAGE_MAP); // 3us (micro) sample period 2.8 2.6
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(8.0);
