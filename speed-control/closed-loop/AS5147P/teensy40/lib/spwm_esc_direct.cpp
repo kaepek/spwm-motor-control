@@ -410,9 +410,9 @@ namespace kaepek
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
 
-            double phase_a_after_correction = phase_a_before_correction + (correction * 0.25);
-            double phase_b_after_correction = phase_b_before_correction + (correction * 0.25);
-            double phase_c_after_correction = phase_c_before_correction + (correction * 0.25);
+            double phase_a_after_correction = phase_a_before_correction + (correction * 1.0);
+            double phase_b_after_correction = phase_b_before_correction + (correction * 1.0);
+            double phase_c_after_correction = phase_c_before_correction + (correction * 1.0);
 
             if ((phase_a_before_correction < half_max_duty && phase_a_after_correction > half_max_duty) || (phase_a_before_correction > half_max_duty && phase_a_after_correction < half_max_duty))
             {

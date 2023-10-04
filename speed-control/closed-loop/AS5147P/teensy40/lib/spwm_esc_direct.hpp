@@ -67,9 +67,10 @@ namespace kaepek
   };
 
   /**
-   * EscL6234Teensy40AS5147P
+   * EscDirectL6234Teensy40AS5147P
    *
-   * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
+   * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model. Class is given
+   * a voltage map (pwm duty) pointer and an optional anti-cogging map.
    */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
   class EscDirectL6234Teensy40AS5147P : public RotaryEncoderSampleValidator, public SerialInputControl<4>
