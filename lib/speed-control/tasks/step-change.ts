@@ -3,7 +3,7 @@ import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable, Subject } from "rxjs";
-import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
+import { ESCParsedLineData } from "../../rotation-detector.js";
 
 export type Buffer1Element = {
     kalman_hz: number,
@@ -96,6 +96,7 @@ export class StepChange extends Task<ESCParsedLineData> {
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
         this.buffer1$.subscribe((data: Buffer1Element) => this.buffer1_tick(data));
+        this.buffer2$.subscribe((data) => this.buffer2_tick(data));
         return super.run(); // tick will now run every time the device outputs a line.
     }
 
@@ -198,6 +199,98 @@ export class StepChange extends Task<ESCParsedLineData> {
 
             // this buffer2 index value is no ready for emissions.
             this.buffer2_subject.next(this.buffer2[index_to_update]);
+        }
+    }
+
+    com_thrust = -1;
+    segments:Array<{type: string, data: Array<Buffer2Element>}> = []; // e.g. [{ type: "steady" }, { type: "transition" }, { type: "steady" }];
+    e2v_std_min = Number.POSITIVE_INFINITY;
+    first_e2v_value_for_transition = Number.POSITIVE_INFINITY;
+    tmp_buffer: Array<Buffer2Element> = [];
+    index = 0;
+    min_index = -1;
+    check_for_escape = false;
+    highest_velocity = -1;
+
+    buffer2_tick(incoming_data: Buffer2Element) {
+        const thrust = incoming_data["com_thrust_percentage"];
+        const velocity = incoming_data["kalman_velocity"];
+        if (velocity > this.highest_velocity) this.highest_velocity = velocity;
+        if (this.com_thrust === -1) { // first stage (assume 0)
+            // create first segment
+            this.segments.push({ type: "steady", data: [incoming_data] });
+            this.com_thrust = thrust;
+        }
+        else if (this.com_thrust != thrust) { // we have a signal indicating the start of the transition
+            // create transition segment
+            this.segments.push({ type: "transition", data: [] });
+            this.e2v_std_min = incoming_data["smoothed2_future_kalman_acceleration_std"];
+            this.first_e2v_value_for_transition = incoming_data["smoothed2_future_kalman_acceleration_std"];
+            this.tmp_buffer = [incoming_data];
+            this.index = 0;
+            this.check_for_escape = false;
+            this.com_thrust = thrust;
+        }
+        else { // check for the end of the transition
+            const latest_segment_index = this.segments.length - 1;
+            const latest_segment = this.segments[latest_segment_index];
+            if (latest_segment.type === "steady") {
+                latest_segment.data.push(incoming_data);
+            }
+            else if (latest_segment.type === "transition") {
+                /*
+                Here we need some careful logic...
+                We need to travel down the first hump finding the first minimum value as we go.
+                But need to be careful to not climb up the second hump.
+    
+                So the escape condition could be a value of e2v greater than say first_e2v_value_for_transition / 2
+                at this point we accept values from up to the minimum found as the transition
+                and we reject the rest adding to a new steady state segment
+    
+                on the last transition there is 2nd hump so 
+    
+                // need temporary buffer for this segment as it contains both the transition and the steady state.
+    
+                // worried about finiding late minimum arbitrarily late....
+                new idea do this in two rounds use the technique above to find a "provisional" steady state region.
+                Then find the mean and stdev of the steady state segment and then create some threshold so when you are within 
+                say one sigma you are included. the expand the steady state region based on the condition.
+                Could just do max and min for this region as bounds too.
+                */
+    
+                // append this data to the output data so we can plot these transitions as a sanity check.
+    
+                // see if we have ended the transition
+    
+                this.index++;
+                const e2v_std = incoming_data["smoothed2_future_kalman_acceleration_std"];
+                if (e2v_std < this.e2v_std_min) {
+                    // console.log("New transition minumum discovered");
+                    // we have a new minimum
+                    this.e2v_std_min = e2v_std;
+                    this.min_index = this.index;
+                }
+    
+                this.tmp_buffer.push(incoming_data);
+    
+                if (this.check_for_escape && (e2v_std > (this.first_e2v_value_for_transition / 2))) {
+                    // take buffer from start to where min_index is.... this defines the transition segment
+                    // the remaining section of the buffer is steady state
+    
+                    // buffer until min_index
+                    const transition_data = this.tmp_buffer.slice(0, this.min_index);
+    
+                    // buffer after min_index
+                    const steady_state_data = this.tmp_buffer.slice(this.min_index); // to end
+    
+                    latest_segment.data = transition_data;
+                    this.segments.push({ type: "steady", data: steady_state_data });
+                }
+    
+                if (e2v_std < (this.first_e2v_value_for_transition / 2)) {
+                    this.check_for_escape = true;
+                }
+            }
         }
     }
 
