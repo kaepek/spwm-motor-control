@@ -98,11 +98,7 @@ const parser = new ASCIIParser(file_input_config_json.inputs, ",");
 const data_lines = file_input_data_str.split("\n");
 
 let com_thrust = -1;
-
-[{ type: "steady" }, { type: "transition" }, { type: "steady" }];
-
-let segments = [];
-
+let segments = []; // e.g. [{ type: "steady" }, { type: "transition" }, { type: "steady" }];
 let e2v_std_min = Number.POSITIVE_INFINITY;
 let first_e2v_value_for_transition = Number.POSITIVE_INFINITY;
 let tmp_buffer = [];
