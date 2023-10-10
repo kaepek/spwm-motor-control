@@ -102,13 +102,17 @@ const cli_args: Array<CliArg> = [
 ];
 
 
-const parsed_args = parse_args("AntiCoggingCalibration", cli_args, ArgumentHandlers) as any;
+const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
+
+console2.log("parsed args", parsed_args);
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
 
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
 
-const outgoing_data_config = parsed_args.input_config_file.inputs;
+const input_config_file_data = JSON.parse(fs.readFileSync(parsed_args.input_config_file).toString());
+
+const outgoing_data_config = input_config_file_data.inputs;
 
 adaptor.outgoing_data_config = outgoing_data_config;
 
@@ -146,13 +150,16 @@ type StepChangeOuput = {
 const parser = new ASCIIParser(outgoing_data_config_with_extensions, ",");
 
 run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
+
+    console.log(output);
+
     const output_flat: {cw: LineData[], ccw: LineData[]} = {cw: [], ccw:[]};
 
     output.cw.segments.forEach((segment) => {
         output_flat.cw = output_flat.cw.concat(segment.data);
     });
 
-    output.ccw.segments.forEach((segment) => {
+    if (output.ccw) output.ccw.segments.forEach((segment) => {
         output_flat.ccw = output_flat.ccw.concat(segment.data);
     });
 

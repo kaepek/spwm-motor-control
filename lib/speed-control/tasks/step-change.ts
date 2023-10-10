@@ -111,16 +111,18 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         this.duties_to_apply = rounded_range;
 
         this.current_duty = 0;
-        console2.info(`GetStartDuty program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
-        console2.warn("check range");
-        process.exit();
+        console2.info(`GetStepChange program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
         await this.word_sender.send_word("thrustui16", 0);
+        await delay(100);
         await this.word_sender.send_word("directionui8", this.direction);
+        await delay(100);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
+        await delay(100);
         await this.word_sender.send_word("reset");
+        await delay(100);
         await this.word_sender.send_word("start");
         await delay(3000); // put this delay in here to make sure we dont pick up any irrelevant acc data from when the ESC turns on.
-        console2.log("GetStartDuty program is now running");
+        console2.log("GetStepChange program is now running");
         this.send_next_word();
         return super.run(); // tick will now run every time the device outputs a line.
     }
@@ -151,13 +153,13 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
 
         // now process the segments
-        this.segments.forEach((segment, idx) => {
+        /*this.segments.forEach((segment, idx) => {
             // filter segments to make sure we exclude data which has not had the correct duty applied in data yet. Can happen due to latency.
             this.segments[idx].data.filter((line) => {
                 const line_duty = Math.round(line.com_thrust_percentage * this.max_duty)
                 return line_duty === segment.duty;
             })
-        });
+        });*/
 
         // remove the first transitional region because we know that it is in fact stable when thrust is zero.
         this.segments.shift();
@@ -176,7 +178,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {
                 // annotate first line
-                (segment.data[0] as any).steady_region1 = 1.0;
+                // (segment.data[0] as any).steady_region1 = 1.0;
                 // calculate min and max of this region
                 segment_velocity_min = Number.POSITIVE_INFINITY;
                 segment_velocity_max = Number.NEGATIVE_INFINITY;
@@ -194,7 +196,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             }
             else { // transition
                 // annotate first line
-                (segment.data[0] as any).transition_region1 = 1.0;
+                // (segment.data[0] as any).transition_region1 = 1.0;
 
                 const reversed_segment_data = segment.data.reverse();
                 const transition_segment_max_index = segment.data.length - 1;
@@ -212,6 +214,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                         break;
                     }
                 }
+
+                return;
 
                 if (reversed_transition_idx_to_include_in_stable_segment === -1) {
                     // nothing changes leave the segments alone
@@ -252,10 +256,27 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         segments_with_stats.forEach((segment, idx) => {
             if (segment.type === "steady") {
-                (segments_with_stats[idx].data[0] as any).steady_region2 = 1.0;
+                segments_with_stats[idx].data.forEach((data_point, point_idx) => {
+                    if (point_idx === 0.0) {
+                        (segments_with_stats[idx].data[point_idx] as any).steady_region2 = 1.0;
+                    }
+                    else {
+                        (segments_with_stats[idx].data[point_idx] as any).steady_region2 = 0.0;
+                    }
+                });
+                // (segments_with_stats[idx].data[0] as any).steady_region2 = 1.0;
             }
             else {
-                (segments_with_stats[idx].data[0] as any).transition_region2 = 1.0;
+
+                segments_with_stats[idx].data.forEach((data_point, point_idx) => {
+                    if (point_idx === 0.0) {
+                        (segments_with_stats[idx].data[point_idx] as any).transition_region2 = 1.0;
+                    }
+                    else {
+                        (segments_with_stats[idx].data[point_idx] as any).transition_region2 = 0.0;
+                    }
+                });
+
             }
             
         });

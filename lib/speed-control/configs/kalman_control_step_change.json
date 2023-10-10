@@ -16,7 +16,11 @@
         {"name":"voltage_phase_a", "position": 13},
         {"name":"voltage_phase_b", "position": 14},
         {"name": "voltage_phase_c", "position": 15},
-        {"name": "encoder_raw_displacement", "position":16}
+        {"name": "encoder_raw_displacement", "position":16},
+        {"name": "steady_region1", "position":17},
+        {"name": "transition_region1", "position":18},
+        {"name": "steady_region2", "position":19},
+        {"name": "transition_region2", "position":20}
     ],
     "buffer_length": 300,
     "plots": [
@@ -32,7 +36,12 @@
             "name": "kalman_velocity",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red"}
+                {"name":"kalman_velocity", "color": "blue"},
+                {"name":"steady_region1", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"transition_region1", "color": "pink", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"steady_region2", "color": "green", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"transition_region2", "color": "yellow", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
+
             ]
         },
         {
