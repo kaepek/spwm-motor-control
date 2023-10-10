@@ -68,12 +68,15 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         this.current_duty = this.start_duty as number * (this.max_duty / 65534);
         console2.info(`GetMinDuty program running`);
         console2.info("Sending word thrustui16", this.start_duty);
+        await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
+        await delay(300);
         await this.word_sender.send_word("directionui8", this.direction);
         await delay(100);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
         await delay(100);
         await this.word_sender.send_word("reset");
+        await delay(300);
         await this.word_sender.send_word("start");
         await delay(1000);
         this.create_wait_logic();

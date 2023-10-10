@@ -134,7 +134,10 @@ const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
 const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw");
 
-const tasks = [cw_get_start_duty_task, cw_get_step_change_task];
+const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
+const ccw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "ccw");
+
+const tasks = [cw_get_start_duty_task, cw_get_step_change_task, ccw_get_start_duty_task, ccw_get_step_change_task];
 
 type StepChangeOuput = {
     cw: {

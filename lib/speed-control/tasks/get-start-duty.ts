@@ -4,6 +4,7 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
+import { delay } from "../utils/delay.js";
 
 export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     max_duty: number;
@@ -55,11 +56,17 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     async run(state: any) {
         this.current_duty = 0;
         console2.info(`GetStartDuty program running`);
+        await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
+        await delay(300);
         await this.word_sender.send_word("directionui8", this.direction);
+        await delay(300);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
+        await delay(300);
         await this.word_sender.send_word("reset");
+        await delay(300);
         await this.word_sender.send_word("start");
+        await delay(300);
         this.create_wait_logic();
         return super.run(); // tick will now run every time the device outputs a line.
     }
