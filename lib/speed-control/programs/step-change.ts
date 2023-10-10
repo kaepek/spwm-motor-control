@@ -3,7 +3,11 @@ import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../exter
 import NetworkAdaptor from "../../../external/kaepek-io/lib/host/ts-adaptors/network.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import fs from "fs";
-import { StepChange } from "../tasks/step-change.js";
+import { GetStepChange, SegmentWithStats } from "../tasks/step-change.js";
+import { rotation_detector } from "../../rotation-detector.js";
+import { GetStartDuty } from "../tasks/get-start-duty.js";
+import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
+import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 
 /**
  * Brief run the get start duty for both directions. Do this apriori.
@@ -16,11 +20,6 @@ import { StepChange } from "../tasks/step-change.js";
  * We record for some number of seconds (stable time)
  * We then apply the next word and move to a "transtional segment"
  * 
- * To process the data we need to use the double buffer technique to get the error of the error of the acceleration.
- * Then we look for detections of the minimum of the error ^2 of the acceleration.
- * 
- * 
- * We define 
  */
 
 const cli_args: Array<CliArg> = [
@@ -108,42 +107,43 @@ const word_sender = new SendWord(parsed_args.command_address, parsed_args.comman
 
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
 
-// extend the incoming data format with the extra fields we will add via analysis.
-const outgoing_data_config = [
-    ...parsed_args.input_config_file,
-    { "name": "smoothed_future_kalman_acceleration", "position": 17 },
-    { "name": "smoothed_future_kalman_jerk", "position": 18 },
-    { "name": "smoothed_prior_kalman_acceleration", "position": 19 },
-    { "name": "smoothed_prior_kalman_jerk", "position": 20 },
-    { "name": "smoothed_central_kalman_acceleration", "position": 21 },
-    { "name": "smoothed_central_kalman_jerk", "position": 22 },
-    { "name": "smoothed_prior_kalman_acceleration_std", "position": 23 },
-    { "name": "smoothed_prior_kalman_jerk_std", "position": 24 },
-    { "name": "smoothed_future_kalman_acceleration_std", "position": 25 },
-    { "name": "smoothed_future_kalman_jerk_std", "position": 26 },
-    { "name": "smoothed_central_kalman_acceleration_std", "position": 27 },
-    { "name": "smoothed_central_kalman_jerk_std", "position": 28 },
-    { "name": "smoothed2_future_kalman_acceleration", "position": 29 },
-    { "name": "smoothed2_future_kalman_jerk", "position": 30 },
-    { "name": "smoothed2_prior_kalman_acceleration", "position": 31 },
-    { "name": "smoothed2_prior_kalman_jerk", "position": 32 },
-    { "name": "smoothed2_central_kalman_acceleration", "position": 33 },
-    { "name": "smoothed2_central_kalman_jerk", "position": 22 },
-    { "name": "smoothed2_prior_kalman_acceleration_std", "position": 34 },
-    { "name": "smoothed2_prior_kalman_jerk_std", "position": 24 },
-    { "name": "smoothed2_future_kalman_acceleration_std", "position": 35 },
-    { "name": "smoothed2_future_kalman_jerk_std", "position": 36 },
-    { "name": "smoothed2_central_kalman_acceleration_std", "position": 37 },
-    { "name": "smoothed2_central_kalman_jerk_std", "position": 38 }
-];
+const outgoing_data_config = parsed_args.input_config_file
 
 adaptor.outgoing_data_config = outgoing_data_config;
-// adaptor.incoming_data$.
 
-/*adaptor.incoming_data$.subscribe((line_data) => {
+adaptor.incoming_data$.subscribe((line_data) => {
     adaptor.transmit_outgoing_data(line_data.parsed_data);
-});*/
+});
 
-// const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
+const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
+const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
-// StepChange
+const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
+const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw");
+
+const tasks = [cw_get_start_duty_task, cw_get_step_change_task];
+
+type StepChangeOuput = {
+    cw: {
+        segments: SegmentWithStats,
+        start_duty: number
+    },
+    ccw: {
+        segments: SegmentWithStats,
+        start_duty: number
+    }
+}
+
+run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
+    console2.success("All finished, result:", JSON.stringify(output));
+    // write file
+    if (parsed_args.hasOwnProperty("output_data_file")) {
+        // fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
+        // fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".cpp"), cpp_ac_map);
+    }
+    process.exit(0);
+}).catch((err) => {
+    console2.error(err);
+    if (err.hasOwnProperty("stack")) {console2.error(err.stack)};
+    process.exit(1);
+});

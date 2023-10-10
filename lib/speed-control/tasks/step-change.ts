@@ -2,10 +2,18 @@
 import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
-import { Observable, Subject } from "rxjs";
+import { Observable } from "rxjs";
 import { ESCParsedLineData } from "../../rotation-detector.js";
+import { delay } from "../utils/delay.js";
 
-export type Buffer1Element = {
+/**
+ * Brief
+ * Go through a range of duties. Starting with zero and then the determined start duty and iterate N - 2 steps until max duty.
+ * For each sent word we need to take the acceleration data and work out if we have entered a stable region, this is defined to be
+ * when we have not seen a lower acceleration value for a set period of time determined by the wait_time (in milliseconds).
+ */
+
+type LineData = {
     kalman_hz: number,
     sample_hz: number,
     time: number,
@@ -22,276 +30,115 @@ export type Buffer1Element = {
     voltage_phase_a: number,
     voltage_phase_b: number,
     voltage_phase_c: number,
-    encoder_raw_displacement: number,
-    smoothed_prior_kalman_acceleration: number;
-    smoothed_prior_kalman_jerk: number;
-    smoothed_prior_kalman_acceleration_std: number;
-    smoothed_prior_kalman_jerk_std: number;
-    smoothed_future_kalman_acceleration: number;
-    smoothed_future_kalman_jerk: number;
-    smoothed_future_kalman_acceleration_std: number;
-    smoothed_future_kalman_jerk_std: number;
-    smoothed_central_kalman_acceleration: number;
-    smoothed_central_kalman_jerk: number;
-    smoothed_central_kalman_acceleration_std: number;
-    smoothed_central_kalman_jerk_std: number;
+    encoder_raw_displacement: number
+};
+
+type SteadySegment = {
+    type: "steady",
+    data: Array<LineData>,
+    duty: number 
 }
 
-type Buffer2Element = {
-    smoothed2_prior_kalman_acceleration: number;
-    smoothed2_prior_kalman_jerk: number;
-    smoothed2_prior_kalman_acceleration_std: number;
-    smoothed2_prior_kalman_jerk_std: number;
-    smoothed2_future_kalman_acceleration: number;
-    smoothed2_future_kalman_jerk: number;
-    smoothed2_future_kalman_acceleration_std: number;
-    smoothed2_future_kalman_jerk_std: number;
-    smoothed2_central_kalman_acceleration: number;
-    smoothed2_central_kalman_jerk: number;
-    smoothed2_central_kalman_acceleration_std: number;
-    smoothed2_central_kalman_jerk_std: number;
- } & Buffer1Element;
+type TransitionSegment = {
+    type: "transition",
+    data: Array<LineData>,
+    duty: number 
+}
 
+type Segment = SteadySegment | TransitionSegment;
 
-export class StepChange extends Task<ESCParsedLineData> {
+type SteadySegmentWithMinAndMax = SteadySegment & {
+    min_velocity: number;
+    max_velocity: number;
+};
+
+type SteadySegmentWithStats = (SteadySegmentWithMinAndMax & {
+    mean_velocity: number;
+    std_velocity: number;
+});
+
+export type SegmentWithStats = TransitionSegment | SteadySegmentWithStats;
+
+export class GetStepChange extends Task<ESCParsedLineData> {
     max_duty: number;
-    initial_duty = 0;
-    wait_time = 6;
+    wait_time: number;
     current_duty: number | null = null;
     word_sender: SendWord;
-    incoming_data: any;
     wait_timeout: any;
     start_duty: number | null = null;
+    n_duty_steps: number;
 
-    buffer1: Array<Buffer1Element> = [];
-    buffer1_subject: Subject<Buffer1Element> = new Subject<Buffer1Element>;
-    buffer1$ = this.buffer1_subject.asObservable();
-    buffer2: Array<Buffer2Element> = [];
-    buffer2_subject: Subject<Buffer2Element> = new Subject<Buffer2Element>;
-    public buffer2$ = this.buffer2_subject.asObservable();
-    window_length = 10;
-
-
-    async send_next_word() {
-        (this.current_duty as number)++;
-        let finished = false;
-        if (this.current_duty as number > this.max_duty) {
-            this.current_duty = this.max_duty;
-            finished = true;
-        }
-        const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
-        console2.info("Sending word thrustui16", mapped_duty);
-        this.word_sender.send_word("thrustui16", mapped_duty);
-        this.start_duty = mapped_duty;
-        return finished;
+    async create_timeout() {
+        if (this.wait_timeout) clearTimeout(this.wait_timeout);
+        this.wait_timeout = setTimeout(async () => {
+            // we are now in a steady region
+            this.segments.push({ type: "steady", data: [], duty: this.current_duty as number });
+            await delay(this.wait_time);
+            this.send_next_word();
+        }, this.wait_time);
     }
 
+    send_next_word() {
+        if (this.duties_to_apply.length) {
+            const duty_to_apply = this.duties_to_apply.shift();
+            const mapped_duty = parseInt(((65534 / this.max_duty) * (duty_to_apply as number)).toString());
+            this.current_duty = duty_to_apply as number;
+            console2.info("Sending word thrustui16", mapped_duty);
+            this.word_sender.send_word("thrustui16", mapped_duty);
+            this.segments.push({ type: "transition", data: [], duty: duty_to_apply as number });
+            this.create_timeout();
+            this.smallest_acc = Number.POSITIVE_INFINITY;
+        }
+        else {
+            this.return_promise_resolver();
+        }
+    }
 
+    duties_to_apply: Array<number> = [];
     async run(state: any) {
+        const start_duty = state[this.direction_str].start_duty;
+        this.start_duty = start_duty as number * (this.max_duty / 65534);
+        const steps_remaining = this.n_duty_steps - 2;
+        const iter = (this.max_duty - this.start_duty) / steps_remaining;
+        const remaining_range: Array<number> = [];
+        let c_value = this.start_duty;
+        for (let i = 1; i <= steps_remaining; i++) { // 1,2,3,4,5,6,7,8, 9
+            c_value += iter;
+            remaining_range.push(c_value);
+        }
+        const range = [0, this.start_duty, ...remaining_range];
+        const rounded_range = range.map(Math.round);
+        this.duties_to_apply = rounded_range;
+
         this.current_duty = 0;
-        console2.info(`GetStartDuty program running`);
+        console2.info(`GetStartDuty program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("directionui8", this.direction);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
         await this.word_sender.send_word("reset");
         await this.word_sender.send_word("start");
-        this.buffer1$.subscribe((data: Buffer1Element) => this.buffer1_tick(data));
-        this.buffer2$.subscribe((data) => this.buffer2_tick(data));
+        await delay(3000); // put this delay in here to make sure we dont pick up any irrelevant acc data from when the ESC turns on.
+        console2.log("GetStartDuty program is now running");
+        this.send_next_word();
         return super.run(); // tick will now run every time the device outputs a line.
     }
 
+    smallest_acc: number = Number.POSITIVE_INFINITY;
+    segments: Array<Segment> = [];
+
     async tick(incoming_data: ESCParsedLineData) {
-        // kalman_acceleration and kalman_jerk are the targets for smoothing.
-        const message_obj = incoming_data.parsed_data as Buffer1Element;
 
-        // deal with priors;
-        const data_before = this.buffer1.slice(this.buffer1.length - this.window_length, this.buffer1.length);
-        const acceleration_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
-        const jerk_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
-        message_obj["smoothed_prior_kalman_acceleration"] = acceleration_prior_avg;
-        message_obj["smoothed_prior_kalman_jerk"] = jerk_prior_avg;
-        // stdev
-        const acceleration_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_prior_avg, 2), 0) / this.window_length);
-        const jerk_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_prior_avg, 2), 0) / this.window_length);
-        message_obj["smoothed_prior_kalman_acceleration_std"] = acceleration_prior_std;
-        message_obj["smoothed_prior_kalman_jerk_std"] = jerk_prior_std;
-        this.buffer1.push(message_obj);
-
-        // deal with futures;
-
-        if (this.buffer1.length >= this.window_length) {
-            const index_to_update = this.buffer1.length - this.window_length;
-            const data_after = this.buffer1.slice(index_to_update);
-            const acceleration_future_avg = data_after.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
-            const jerk_future_avg = data_after.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
-            this.buffer1[index_to_update]["smoothed_future_kalman_acceleration"] = acceleration_future_avg;
-            this.buffer1[index_to_update]["smoothed_future_kalman_jerk"] = jerk_future_avg;
-            // std
-            const acceleration_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_future_avg, 2), 0) / this.window_length);
-            const jerk_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_future_avg, 2), 0) / this.window_length);
-            this.buffer1[index_to_update]["smoothed_future_kalman_acceleration_std"] = acceleration_future_std;
-            this.buffer1[index_to_update]["smoothed_future_kalman_jerk_std"] = jerk_future_std;
-
-            // create central smoothing
-            const half_data_after = this.buffer1.slice(index_to_update, index_to_update + ((this.window_length - 1) / 2));
-            const half_data_before = this.buffer1.slice(index_to_update - ((this.window_length - 1) / 2), index_to_update);
-            const central_data = half_data_before.concat(half_data_after);
-            const acceleration_central_avg = central_data.reduce((acc, data_item) => acc += data_item["kalman_acceleration"], 0) / this.window_length;
-            const jerk_central_avg = central_data.reduce((acc, data_item) => acc += data_item["kalman_jerk"], 0) / this.window_length;
-            this.buffer1[index_to_update]["smoothed_central_kalman_acceleration"] = acceleration_central_avg;
-            this.buffer1[index_to_update]["smoothed_central_kalman_jerk"] = jerk_central_avg;
-            // std
-            const acceleration_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_acceleration"] - acceleration_central_avg, 2), 0) / this.window_length);
-            const jerk_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["kalman_jerk"] - jerk_central_avg, 2), 0) / this.window_length);
-            this.buffer1[index_to_update]["smoothed_central_kalman_acceleration_std"] = acceleration_central_std;
-            this.buffer1[index_to_update]["smoothed_central_kalman_jerk_std"] = jerk_central_std;
-
-            // this buffer index value is no ready for emissions.
-            this.buffer1_subject.next(this.buffer1[index_to_update]);
-        }
-    }
-
-    buffer1_tick(incoming_data: Buffer1Element) {
-        const message_obj = incoming_data as Buffer2Element;
-
-        // deal with priors;
-        const half_window_length = parseInt(((this.window_length) / 2).toString());
-        const data_before = this.buffer2.slice(this.buffer2.length - half_window_length, this.buffer2.length);
-        const acceleration_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["smoothed_prior_kalman_acceleration"], 0) / half_window_length;
-        const jerk_prior_avg = data_before.reduce((acc, data_item) => acc += data_item["smoothed_prior_kalman_jerk"], 0) / half_window_length;
-        message_obj["smoothed2_prior_kalman_acceleration"] = acceleration_prior_avg;
-        message_obj["smoothed2_prior_kalman_jerk"] = jerk_prior_avg;
-        // stdev
-        const acceleration_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_prior_kalman_acceleration"] - acceleration_prior_avg, 2), 0) / half_window_length);
-        const jerk_prior_std = Math.sqrt(data_before.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_prior_kalman_jerk"] - jerk_prior_avg, 2), 0) / half_window_length);
-        message_obj["smoothed2_prior_kalman_acceleration_std"] = acceleration_prior_std;
-        message_obj["smoothed2_prior_kalman_jerk_std"] = jerk_prior_std;
-        this.buffer2.push(message_obj);
-
-        // deal with futures;
-
-        if (this.buffer2.length >= half_window_length) {
-            const index_to_update = this.buffer2.length - half_window_length;
-            const data_after = this.buffer2.slice(index_to_update);
-            const acceleration_future_avg = data_after.reduce((acc, data_item) => acc += data_item["smoothed_future_kalman_acceleration"], 0) / half_window_length;
-            const jerk_future_avg = data_after.reduce((acc, data_item) => acc += data_item["smoothed_future_kalman_jerk"], 0) / half_window_length;
-            this.buffer2[index_to_update]["smoothed2_future_kalman_acceleration"] = acceleration_future_avg;
-            this.buffer2[index_to_update]["smoothed2_future_kalman_jerk"] = jerk_future_avg;
-            // std
-            const acceleration_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_future_kalman_acceleration"] - acceleration_future_avg, 2), 0) / half_window_length);
-            const jerk_future_std = Math.sqrt(data_after.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_future_kalman_jerk"] - jerk_future_avg, 2), 0) / half_window_length);
-            this.buffer2[index_to_update]["smoothed2_future_kalman_acceleration_std"] = acceleration_future_std;
-            this.buffer2[index_to_update]["smoothed2_future_kalman_jerk_std"] = jerk_future_std;
-
-            // create central smoothing
-            const half_data_after = this.buffer2.slice(index_to_update, index_to_update + ((half_window_length - 1) / 2));
-            const half_data_before = this.buffer2.slice(index_to_update - ((half_window_length - 1) / 2), index_to_update);
-            const central_data = half_data_before.concat(half_data_after);
-            const acceleration_central_avg = central_data.reduce((acc, data_item) => acc += data_item["smoothed_central_kalman_acceleration"], 0) / half_window_length;
-            const jerk_central_avg = central_data.reduce((acc, data_item) => acc += data_item["smoothed_central_kalman_jerk"], 0) / half_window_length;
-            this.buffer2[index_to_update]["smoothed2_central_kalman_acceleration"] = acceleration_central_avg;
-            this.buffer2[index_to_update]["smoothed2_central_kalman_jerk"] = jerk_central_avg;
-            // std
-            const acceleration_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_central_kalman_acceleration"] - acceleration_central_avg, 2), 0) / half_window_length);
-            const jerk_central_std = Math.sqrt(central_data.reduce((acc, data_item) => acc += Math.pow(data_item["smoothed_central_kalman_jerk"] - jerk_central_avg, 2), 0) / half_window_length);
-            this.buffer2[index_to_update]["smoothed2_central_kalman_acceleration_std"] = acceleration_central_std;
-            this.buffer2[index_to_update]["smoothed2_central_kalman_jerk_std"] = jerk_central_std;
-
-            // this buffer2 index value is no ready for emissions.
-            this.buffer2_subject.next(this.buffer2[index_to_update]);
-        }
-    }
-
-    com_thrust = -1;
-    segments:Array<{type: string, data: Array<Buffer2Element>}> = []; // e.g. [{ type: "steady" }, { type: "transition" }, { type: "steady" }];
-    e2v_std_min = Number.POSITIVE_INFINITY;
-    first_e2v_value_for_transition = Number.POSITIVE_INFINITY;
-    tmp_buffer: Array<Buffer2Element> = [];
-    index = 0;
-    min_index = -1;
-    check_for_escape = false;
-    highest_velocity = -1;
-
-    buffer2_tick(incoming_data: Buffer2Element) {
-        const thrust = incoming_data["com_thrust_percentage"];
-        const velocity = incoming_data["kalman_velocity"];
-        if (velocity > this.highest_velocity) this.highest_velocity = velocity;
-        if (this.com_thrust === -1) { // first stage (assume 0)
-            // create first segment
-            this.segments.push({ type: "steady", data: [incoming_data] });
-            this.com_thrust = thrust;
-        }
-        else if (this.com_thrust != thrust) { // we have a signal indicating the start of the transition
-            // create transition segment
-            this.segments.push({ type: "transition", data: [] });
-            this.e2v_std_min = incoming_data["smoothed2_future_kalman_acceleration_std"];
-            this.first_e2v_value_for_transition = incoming_data["smoothed2_future_kalman_acceleration_std"];
-            this.tmp_buffer = [incoming_data];
-            this.index = 0;
-            this.check_for_escape = false;
-            this.com_thrust = thrust;
-        }
-        else { // check for the end of the transition
-            const latest_segment_index = this.segments.length - 1;
-            const latest_segment = this.segments[latest_segment_index];
-            if (latest_segment.type === "steady") {
-                latest_segment.data.push(incoming_data);
-            }
-            else if (latest_segment.type === "transition") {
-                /*
-                Here we need some careful logic...
-                We need to travel down the first hump finding the first minimum value as we go.
-                But need to be careful to not climb up the second hump.
-    
-                So the escape condition could be a value of e2v greater than say first_e2v_value_for_transition / 2
-                at this point we accept values from up to the minimum found as the transition
-                and we reject the rest adding to a new steady state segment
-    
-                on the last transition there is 2nd hump so 
-    
-                // need temporary buffer for this segment as it contains both the transition and the steady state.
-    
-                // worried about finiding late minimum arbitrarily late....
-                new idea do this in two rounds use the technique above to find a "provisional" steady state region.
-                Then find the mean and stdev of the steady state segment and then create some threshold so when you are within 
-                say one sigma you are included. the expand the steady state region based on the condition.
-                Could just do max and min for this region as bounds too.
-                */
-    
-                // append this data to the output data so we can plot these transitions as a sanity check.
-    
-                // see if we have ended the transition
-    
-                this.index++;
-                const e2v_std = incoming_data["smoothed2_future_kalman_acceleration_std"];
-                if (e2v_std < this.e2v_std_min) {
-                    // console.log("New transition minumum discovered");
-                    // we have a new minimum
-                    this.e2v_std_min = e2v_std;
-                    this.min_index = this.index;
-                }
-    
-                this.tmp_buffer.push(incoming_data);
-    
-                if (this.check_for_escape && (e2v_std > (this.first_e2v_value_for_transition / 2))) {
-                    // take buffer from start to where min_index is.... this defines the transition segment
-                    // the remaining section of the buffer is steady state
-    
-                    // buffer until min_index
-                    const transition_data = this.tmp_buffer.slice(0, this.min_index);
-    
-                    // buffer after min_index
-                    const steady_state_data = this.tmp_buffer.slice(this.min_index); // to end
-    
-                    latest_segment.data = transition_data;
-                    this.segments.push({ type: "steady", data: steady_state_data });
-                }
-    
-                if (e2v_std < (this.first_e2v_value_for_transition / 2)) {
-                    this.check_for_escape = true;
-                }
+        if (this.segments.length) {
+            // add data to correct segment
+            const latest_segment_idx = this.segments.length - 1;
+            this.segments[latest_segment_idx].data.push(incoming_data.parsed_data);
+            const acc = incoming_data.parsed_data.kalman_acceleration;
+            if (acc < this.smallest_acc) {
+                this.smallest_acc = acc;
+                this.create_timeout(); // reset the next/exit procedure timeout.
             }
         }
+
     }
 
     async done() {
@@ -299,16 +146,118 @@ export class StepChange extends Task<ESCParsedLineData> {
         // turn off motor
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("stop");
+
+
+        // now process the segments
+        this.segments.forEach((segment, idx) => {
+            // filter segments to make sure we exclude data which has not had the correct duty applied in data yet. Can happen due to latency.
+            this.segments[idx].data.filter((line) => {
+                const line_duty = Math.round(line.com_thrust_percentage * this.max_duty)
+                return line_duty === segment.duty;
+            })
+        });
+
+        // remove the first transitional region because we know that it is in fact stable when thrust is zero.
+        this.segments.shift();
+
+        /** 
+         * now this is a little too permissive in the transition region because we have to wait some time before we confirm the region is stable.
+         * So we need to extend the stable region by some amount and steal data from the transitional region so long as it falls within the bounds
+         * set by the stable region.
+        */
+
+        const reversed_segments = this.segments.reverse() as SteadySegmentWithMinAndMax[];
+
+        let segment_velocity_min = Number.POSITIVE_INFINITY;
+        let segment_velocity_max = Number.NEGATIVE_INFINITY;
+
+        reversed_segments.forEach((segment, reversed_segment_idx) => {
+            if (segment.type === "steady") {
+                // calculate min and max of this region
+                segment_velocity_min = Number.POSITIVE_INFINITY;
+                segment_velocity_max = Number.NEGATIVE_INFINITY;
+                segment.data.forEach((line) => {
+                    if (line.kalman_velocity > segment_velocity_max) {
+                        segment_velocity_max = line.kalman_velocity;
+                    }
+                    if (line.kalman_velocity < segment_velocity_min) {
+                        segment_velocity_min = line.kalman_velocity;
+                    }
+                });
+                // should add min and max vel to these segments
+                reversed_segments[reversed_segment_idx].min_velocity = segment_velocity_min;
+                reversed_segments[reversed_segment_idx].max_velocity = segment_velocity_max;
+            }
+            else { // transition
+                const reversed_segment_data = segment.data.reverse();
+                const transition_segment_max_index = segment.data.length - 1;
+                /** now go from the end of the transition segment to the start, if the transition line velocity data falls within the bounds
+                 * set but the future stable region, then it should be included in this future stable region and not the transition.
+                 */
+                let reversed_transition_idx_to_include_in_stable_segment = -1;
+
+                for (let idx = 0; idx < reversed_segment_data.length; idx++) {
+                    const line_data = reversed_segment_data[idx];
+                    if (line_data.kalman_velocity <= segment_velocity_max && line_data.kalman_velocity >= segment_velocity_min ) {
+                        reversed_transition_idx_to_include_in_stable_segment = idx;
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                if (reversed_transition_idx_to_include_in_stable_segment === -1) {
+                    // nothing changes leave the segments alone
+                    return;
+                }
+                else {
+                    // get the index is the non reversed direction
+                    const transition_idx_to_slice =  transition_segment_max_index - reversed_transition_idx_to_include_in_stable_segment;
+                    const transition_segment_data = segment.data.slice(0, transition_idx_to_slice);
+                    const extra_stable_segment_data = segment.data.slice(transition_idx_to_slice);
+                    reversed_segments[reversed_segment_idx].data = transition_segment_data;
+                    reversed_segments[reversed_segment_idx - 1].data = [...extra_stable_segment_data, ...reversed_segments[reversed_segment_idx - 1].data];
+                }
+
+            }
+        });
+
+        const segments = reversed_segments.reverse();
+
+        // compute stats for the stable regions
+        const segments_with_stats = segments.map((segment: Segment) => {
+            const segment_with_stats = segment as SegmentWithStats;
+            if (segment.type === "steady") {
+                const mean_velocity = segment.data.reduce((acc, line_data) => {
+                    acc += line_data.kalman_velocity;
+                    return acc;
+                }, 0) / segment.data.length;
+
+                const std_velocity = Math.sqrt(segment.data.reduce((acc, line_data) => {
+                    acc += Math.pow(line_data.kalman_velocity - mean_velocity, 2);
+                    return acc;
+                }, 0) / segment.data.length);
+                (segment_with_stats as SteadySegmentWithStats).mean_velocity = mean_velocity;
+                (segment_with_stats as SteadySegmentWithStats).std_velocity = std_velocity;
+            }
+            return segment_with_stats;
+        });
+
+
         console2.info(`StepChange program finished`);
+
+        return { [this.direction_str]: { "segments": segments_with_stats} }
     }
 
     direction = 0;
     direction_str = "cw";
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 1000) {
         super(input$);
+        this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
         this.word_sender = word_sender;
         this.direction_str = direction_str;
+        this.wait_time = wait_time;
         if (direction_str === "cw") {
             this.direction = 0;
         }
