@@ -178,10 +178,10 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         let segment_velocity_min = Number.POSITIVE_INFINITY;
         let segment_velocity_max = Number.NEGATIVE_INFINITY;
 
-        /*reversed_segments.forEach((segment, reversed_segment_idx) => {
+        reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {
                 // annotate first line
-                // (segment.data[0] as any).steady_region1 = 1.0;
+                (segment.data[0] as any).steady_region1 = 1.0;
                 // calculate min and max of this region
                 segment_velocity_min = Number.POSITIVE_INFINITY;
                 segment_velocity_max = Number.NEGATIVE_INFINITY;
@@ -199,12 +199,13 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             }
             else { // transition
 
-                return;
+                
                 // annotate first line
-                // (segment.data[0] as any).transition_region1 = 1.0;
+                (segment.data[0] as any).transition_region1 = 1.0;
 
-                const reversed_segment_data = segment.data.reverse();
+                const reversed_segment_data = [...segment.data].reverse();
                 const transition_segment_max_index = segment.data.length - 1;
+
                 //now go from the end of the transition segment to the start, if the transition line velocity data falls within the bounds
                 // set but the future stable region, then it should be included in this future stable region and not the transition.
                 //
@@ -212,7 +213,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
                 for (let idx = 0; idx < reversed_segment_data.length; idx++) {
                     const line_data = reversed_segment_data[idx];
-                    if (line_data.kalman_velocity <= segment_velocity_max && line_data.kalman_velocity >= segment_velocity_min ) {
+                    // if (velocity >= (min_velocity * 0.995) && velocity <= (max_velocity * 1.005)
+                    if (line_data.kalman_velocity <= (segment_velocity_max * 1.005) && line_data.kalman_velocity >= (segment_velocity_min * 0.995) ) {
                         reversed_transition_idx_to_include_in_stable_segment = idx;
                     }
                     else {
@@ -234,7 +236,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 }
 
             }
-        });*/
+        });
 
         const segments = reversed_segments.reverse();
 
