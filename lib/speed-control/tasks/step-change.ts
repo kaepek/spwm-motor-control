@@ -154,13 +154,13 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
 
         // now process the segments
-        /*this.segments.forEach((segment, idx) => {
+        this.segments.forEach((segment, idx) => {
             // filter segments to make sure we exclude data which has not had the correct duty applied in data yet. Can happen due to latency.
             this.segments[idx].data.filter((line) => {
                 const line_duty = Math.round(line.com_thrust_percentage * this.max_duty)
                 return line_duty === segment.duty;
             })
-        });*/
+        });
 
         // remove the first transitional region because we know that it is in fact stable when thrust is zero.
         this.segments.shift();
@@ -170,8 +170,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
          * So we need to extend the stable region by some amount and steal data from the transitional region so long as it falls within the bounds
          * set by the stable region.
         */
-
-        // return { [this.direction_str]: { "segments": this.segments} } // this works great here...
 
         const reversed_segments = this.segments.reverse() as SteadySegmentWithMinAndMax[];
 

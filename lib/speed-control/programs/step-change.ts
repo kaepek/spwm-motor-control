@@ -147,7 +147,21 @@ type StepChangeOuput = {
     }
 }
 
-const parser = new ASCIIParser(outgoing_data_config_with_extensions, ",");
+
+const steady_format = [
+    {"name": "duty", "position": 0},
+    {"name": "mean_velocity", "position": 1},
+    {"name": "std_velocity", "position": 2}
+
+];
+const transition_format = [
+    {"name": "duty", "position": 0},
+    {"name": "transition_time", "position": 1}
+];
+
+const detections_parser = new ASCIIParser(outgoing_data_config_with_extensions, ",");
+const steady_parser = new ASCIIParser(steady_format, ",");
+const transition_parser = new ASCIIParser(transition_format, ",");
 
 run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
 
@@ -167,25 +181,103 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
 
     const output_lines: {cw: Array<string>, ccw: Array<string>} = {cw: [], ccw: []};
     output_flat.cw.forEach((line) => {
-        const str_line = parser.serialise(line);
+        const str_line = detections_parser.serialise(line);
         output_lines.cw.push(str_line);
     });
     output_flat.ccw.forEach((line) => {
-        const str_line = parser.serialise(line);
+        const str_line = detections_parser.serialise(line);
         output_lines.ccw.push(str_line);
     });
 
     const cw_lines_output = output_lines.cw.join("\n");
     const ccw_lines_output = output_lines.ccw.join("\n");
 
+    // extract the stable/transition region stats.
 
-    
+    const stats: {cw: any, ccw: any} = {
+        cw: [],
+        ccw: []
+    };
+
+    output.cw.segments.forEach((segment) => {
+        const type = segment.type;
+        if (segment.type === "steady") {
+            stats.cw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
+        }
+        else {
+            const last_segment_element = segment.data[segment.data.length - 1];
+            const first_segment_element = segment.data[0];
+            const max_time = last_segment_element.time;
+            const min_time = first_segment_element.time;
+            const transition_time = Math.abs(max_time - min_time);
+            const duty = segment.duty;
+            stats.cw.push({type, duty, max_time, min_time, transition_time});
+        }
+    });
+
+    if (output.ccw) {
+        output.ccw.segments.forEach((segment) => {
+            const type = segment.type;
+            if (segment.type === "steady") {
+                stats.ccw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
+            }
+            else {
+                const last_segment_element = segment.data[segment.data.length - 1];
+                const first_segment_element = segment.data[0];
+                const duty = segment.duty;
+                const max_time = last_segment_element.time;
+                const min_time = first_segment_element.time;
+                const transition_time = Math.abs(max_time - min_time);
+                stats.ccw.push({type, duty, max_time, min_time, transition_time});
+            }
+        });
+    }
+
+    const charts: {cw: {steady: Array<string>, transition: Array<string>}, ccw: {steady: Array<string>, transition: Array<string>}} = {cw: {steady: [], transition: []}, ccw: {steady: [], transition: []}};
+
+    /*
+const steady_format = [
+    {"name": "duty", "position": 0},
+    {"name": "mean_velocity", "position": 1},
+    {"name": "std_velocity", "position": 2}
+
+];
+const transition_format = [
+    {"name": "duty", "position": 0},
+    {"name": "transition_time", "position": 1}
+];
+    */
+
+    stats.cw.forEach((stat: any) => {
+        if (stat.type === "steady") {
+            charts.cw.steady.push(steady_parser.serialise(stat));
+        }   
+        else {
+            charts.cw.transition.push(transition_parser.serialise(stat));
+        }
+    });
+    stats.ccw.forEach((stat: any) => {
+        if (stat.type === "steady") {
+            charts.ccw.steady.push(steady_parser.serialise(stat));
+        }   
+        else {
+            charts.ccw.transition.push(transition_parser.serialise(stat));
+        }
+    });
+
     console2.success("All finished, result:", JSON.stringify(output));
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
-        fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
-        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".cw.csv"), cw_lines_output);
-        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".ccw.csv"), ccw_lines_output);
+        fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output, null, 4));
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".detections.cw.csv"), cw_lines_output);
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".detections.ccw.csv"), ccw_lines_output);
+        // write stats
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".stats.json"), JSON.stringify(stats, null, 4));
+        // write charts
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".transition.cw.csv"), charts.cw.transition.join("\n"));
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".transition.ccw.csv"), charts.ccw.transition.join("\n"));
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".steady.cw.csv"), charts.cw.steady.join("\n"));
+        fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".steady.ccw.csv"), charts.ccw.steady.join("\n"));
     }
     process.exit(0);
 }).catch((err) => {
