@@ -178,7 +178,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         let segment_velocity_min = Number.POSITIVE_INFINITY;
         let segment_velocity_max = Number.NEGATIVE_INFINITY;
 
-        reversed_segments.forEach((segment, reversed_segment_idx) => {
+        /*reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {
                 // annotate first line
                 // (segment.data[0] as any).steady_region1 = 1.0;
@@ -198,14 +198,16 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 reversed_segments[reversed_segment_idx].max_velocity = segment_velocity_max;
             }
             else { // transition
+
+                return;
                 // annotate first line
                 // (segment.data[0] as any).transition_region1 = 1.0;
 
                 const reversed_segment_data = segment.data.reverse();
                 const transition_segment_max_index = segment.data.length - 1;
-                /** now go from the end of the transition segment to the start, if the transition line velocity data falls within the bounds
-                 * set but the future stable region, then it should be included in this future stable region and not the transition.
-                 */
+                //now go from the end of the transition segment to the start, if the transition line velocity data falls within the bounds
+                // set but the future stable region, then it should be included in this future stable region and not the transition.
+                //
                 let reversed_transition_idx_to_include_in_stable_segment = -1;
 
                 for (let idx = 0; idx < reversed_segment_data.length; idx++) {
@@ -217,8 +219,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                         break;
                     }
                 }
-
-                return;
 
                 if (reversed_transition_idx_to_include_in_stable_segment === -1) {
                     // nothing changes leave the segments alone
@@ -234,7 +234,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 }
 
             }
-        });
+        });*/
 
         const segments = reversed_segments.reverse();
 
@@ -257,7 +257,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             return segment_with_stats;
         });
 
-        /*segments_with_stats.forEach((segment, idx) => {
+        segments_with_stats.forEach((segment, idx) => {
             if (segment.type === "steady") {
                 segments_with_stats[idx].data.forEach((data_point, point_idx) => {
                     if (point_idx === 0.0) {
@@ -267,7 +267,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                         (segments_with_stats[idx].data[point_idx] as any).steady_region2 = 0.0;
                     }
                 });
-                // (segments_with_stats[idx].data[0] as any).steady_region2 = 1.0;
             }
             else {
 
@@ -279,10 +278,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                         (segments_with_stats[idx].data[point_idx] as any).transition_region2 = 0.0;
                     }
                 });
-
             }
-            
-        });*/
+        });
 
 
         console2.info(`StepChange program finished`);
