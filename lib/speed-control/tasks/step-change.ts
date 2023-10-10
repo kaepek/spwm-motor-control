@@ -84,8 +84,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             const mapped_duty = parseInt(((65534 / this.max_duty) * (duty_to_apply as number)).toString());
             this.current_duty = duty_to_apply as number;
             console2.info("Sending word thrustui16", mapped_duty);
-            this.word_sender.send_word("thrustui16", mapped_duty);
             this.segments.push({ type: "transition", data: [], duty: duty_to_apply as number });
+            this.word_sender.send_word("thrustui16", mapped_duty);
             this.create_timeout();
             this.smallest_acc = Number.POSITIVE_INFINITY;
         }
@@ -112,14 +112,15 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         this.current_duty = 0;
         console2.info(`GetStepChange program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
+        await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("directionui8", this.direction);
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("reset");
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("start");
         await delay(3000); // put this delay in here to make sure we dont pick up any irrelevant acc data from when the ESC turns on.
         console2.log("GetStepChange program is now running");
@@ -169,6 +170,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
          * So we need to extend the stable region by some amount and steal data from the transitional region so long as it falls within the bounds
          * set by the stable region.
         */
+
+        // return { [this.direction_str]: { "segments": this.segments} } // this works great here...
 
         const reversed_segments = this.segments.reverse() as SteadySegmentWithMinAndMax[];
 
@@ -254,7 +257,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             return segment_with_stats;
         });
 
-        segments_with_stats.forEach((segment, idx) => {
+        /*segments_with_stats.forEach((segment, idx) => {
             if (segment.type === "steady") {
                 segments_with_stats[idx].data.forEach((data_point, point_idx) => {
                     if (point_idx === 0.0) {
@@ -279,7 +282,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
             }
             
-        });
+        });*/
 
 
         console2.info(`StepChange program finished`);
