@@ -13,7 +13,7 @@ import { delay } from "../utils/delay.js";
  * when we have not seen a lower acceleration value for a set period of time determined by the wait_time (in milliseconds).
  */
 
-type LineData = {
+export type LineData = {
     kalman_hz: number,
     sample_hz: number,
     time: number,
@@ -112,6 +112,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         this.current_duty = 0;
         console2.info(`GetStartDuty program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
+        console2.warn("check range");
+        process.exit();
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("directionui8", this.direction);
         await this.word_sender.send_word("thrustui16", this.current_duty as number);
@@ -173,6 +175,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {
+                // annotate first line
+                (segment.data[0] as any).steady_region1 = 1.0;
                 // calculate min and max of this region
                 segment_velocity_min = Number.POSITIVE_INFINITY;
                 segment_velocity_max = Number.NEGATIVE_INFINITY;
@@ -189,6 +193,9 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 reversed_segments[reversed_segment_idx].max_velocity = segment_velocity_max;
             }
             else { // transition
+                // annotate first line
+                (segment.data[0] as any).transition_region1 = 1.0;
+
                 const reversed_segment_data = segment.data.reverse();
                 const transition_segment_max_index = segment.data.length - 1;
                 /** now go from the end of the transition segment to the start, if the transition line velocity data falls within the bounds
@@ -241,6 +248,16 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 (segment_with_stats as SteadySegmentWithStats).std_velocity = std_velocity;
             }
             return segment_with_stats;
+        });
+
+        segments_with_stats.forEach((segment, idx) => {
+            if (segment.type === "steady") {
+                (segments_with_stats[idx].data[0] as any).steady_region2 = 1.0;
+            }
+            else {
+                (segments_with_stats[idx].data[0] as any).transition_region2 = 1.0;
+            }
+            
         });
 
 
