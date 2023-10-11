@@ -304,7 +304,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                         break;
                     }
                 }
-                (segments_with_stats[segment_idx].data[dead_time_index] as any).dead_time = 1.0;
+                (segments_with_stats[segment_idx].data[dead_time_index] as any).dead_region = 1.0;
                 const start_time = segment.data[0].time;
                 const end_time = segment.data[dead_time_index].time;
                 const dead_time = end_time - start_time;

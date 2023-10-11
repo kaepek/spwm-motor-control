@@ -121,7 +121,7 @@ const outgoing_data_config_with_extensions = [
     {"name": "transition_region1", "position":18},
     {"name": "steady_region2", "position":19},
     {"name": "transition_region2", "position":20},
-    {"name": "dead_time", "position": 21}
+    {"name": "dead_region", "position": 21}
 ];
 
 adaptor.incoming_data$.subscribe((line_data) => {
@@ -238,10 +238,10 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
                 const min_time = first_segment_element.time;
                 const transition_time = Math.abs(max_time - min_time);
                 const dead_time = segment.dead_time;
-                const duty_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).duty;
+                const duty_prior = (output.ccw.segments[idx - 1] as SteadySegmentWithStats).duty;
                 const duty_change = duty - duty_prior;
-                const velocity_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
-                const velocity_next = (output.cw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
+                const velocity_prior = (output.ccw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
+                const velocity_next = (output.ccw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
                 const velocity_change = velocity_next - velocity_prior;
                 stats.ccw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time});
             }

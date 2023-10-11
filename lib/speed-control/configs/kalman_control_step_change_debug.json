@@ -21,7 +21,7 @@
         {"name": "transition_region1", "position":18},
         {"name": "steady_region2", "position":19},
         {"name": "transition_region2", "position":20},
-        {"name": "dead_time", "position": 21}
+        {"name": "dead_region", "position": 21}
     ],
     "buffer_length": 300,
     "plots": [
@@ -40,7 +40,7 @@
                 {"name":"kalman_velocity", "color": "black"},
                 {"name":"steady_region1", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"transition_region1", "color": "green", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
-                {"name":"dead_time", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"dead_region", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"steady_region2", "color": "pink", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"transition_region2", "color": "lightgreen", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
