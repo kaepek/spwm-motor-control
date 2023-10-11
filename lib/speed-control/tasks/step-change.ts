@@ -54,7 +54,7 @@ type SteadySegmentWithMinAndMax = SteadySegment & {
     max_velocity: number;
 };
 
-type SteadySegmentWithStats = (SteadySegmentWithMinAndMax & {
+export type SteadySegmentWithStats = (SteadySegmentWithMinAndMax & {
     mean_velocity: number;
     std_velocity: number;
 });

@@ -3,7 +3,7 @@ import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../exter
 import NetworkAdaptor from "../../../external/kaepek-io/lib/host/ts-adaptors/network.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
 import fs from "fs";
-import { GetStepChange, LineData, SegmentWithStats } from "../tasks/step-change.js";
+import { GetStepChange, LineData, SegmentWithStats, SteadySegmentWithStats } from "../tasks/step-change.js";
 import { rotation_detector } from "../../rotation-detector.js";
 import { GetStartDuty } from "../tasks/get-start-duty.js";
 import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
@@ -201,7 +201,8 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
         ccw: []
     };
 
-    output.cw.segments.forEach((segment) => {
+    output.cw.segments.forEach((segment, idx) => {
+        
         const type = segment.type;
         if (segment.type === "steady") {
             stats.cw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
@@ -214,12 +215,17 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
             const transition_time = Math.abs(max_time - min_time);
             const dead_time = segment.dead_time;
             const duty = segment.duty;
-            stats.cw.push({type, duty, max_time, min_time, transition_time, dead_time});
+            const duty_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).duty;   
+            const duty_change = duty - duty_prior;
+            const velocity_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
+            const velocity_next = (output.cw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
+            const velocity_change = velocity_next - velocity_prior;
+            stats.cw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time});
         }
     });
 
     if (output.ccw) {
-        output.ccw.segments.forEach((segment) => {
+        output.ccw.segments.forEach((segment, idx) => {
             const type = segment.type;
             if (segment.type === "steady") {
                 stats.ccw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
@@ -232,7 +238,12 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
                 const min_time = first_segment_element.time;
                 const transition_time = Math.abs(max_time - min_time);
                 const dead_time = segment.dead_time;
-                stats.ccw.push({type, duty, max_time, min_time, transition_time, dead_time});
+                const duty_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).duty;
+                const duty_change = duty - duty_prior;
+                const velocity_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
+                const velocity_next = (output.cw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
+                const velocity_change = velocity_next - velocity_prior;
+                stats.ccw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time});
             }
         });
     }
