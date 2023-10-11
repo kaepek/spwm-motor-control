@@ -109,7 +109,9 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
+        await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
+        await delay(300);
         await this.word_sender.send_word("stop");
         console2.info(`GetStartDuty program finished`);
         console2.success(`Found start duty ${this.start_duty}`);

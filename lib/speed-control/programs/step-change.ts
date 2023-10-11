@@ -9,6 +9,7 @@ import { GetStartDuty } from "../tasks/get-start-duty.js";
 import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { ASCIIParser } from "../../../external/kaepek-io/lib/host/ts-adaptors/ascii-parser.js";
+import { delay } from "../utils/delay.js";
 
 /**
  * Brief run the get start duty for both directions. Do this apriori.
@@ -104,8 +105,6 @@ const cli_args: Array<CliArg> = [
 
 const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
 
-console2.log("parsed args", parsed_args);
-
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
 
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
@@ -121,7 +120,8 @@ const outgoing_data_config_with_extensions = [
     {"name": "steady_region1", "position":17},
     {"name": "transition_region1", "position":18},
     {"name": "steady_region2", "position":19},
-    {"name": "transition_region2", "position":20}
+    {"name": "transition_region2", "position":20},
+    {"name": "dead_time", "position": 21}
 ];
 
 adaptor.incoming_data$.subscribe((line_data) => {
@@ -150,7 +150,6 @@ type StepChangeOuput = {
     }
 }
 
-
 const steady_format = [
     {"name": "duty", "position": 0},
     {"name": "mean_velocity", "position": 1},
@@ -159,7 +158,8 @@ const steady_format = [
 ];
 const transition_format = [
     {"name": "duty", "position": 0},
-    {"name": "transition_time", "position": 1}
+    {"name": "transition_time", "position": 1},
+    {"name": "dead_time", "position": 2}
 ];
 
 const detections_parser = new ASCIIParser(outgoing_data_config_with_extensions, ",");
@@ -167,8 +167,7 @@ const steady_parser = new ASCIIParser(steady_format, ",");
 const transition_parser = new ASCIIParser(transition_format, ",");
 
 run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
-
-    console.log(output);
+    console2.success("All finished, result:", JSON.stringify(output));
 
     const output_flat: {cw: LineData[], ccw: LineData[]} = {cw: [], ccw:[]};
 
@@ -213,8 +212,9 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
             const max_time = last_segment_element.time;
             const min_time = first_segment_element.time;
             const transition_time = Math.abs(max_time - min_time);
+            const dead_time = segment.dead_time;
             const duty = segment.duty;
-            stats.cw.push({type, duty, max_time, min_time, transition_time});
+            stats.cw.push({type, duty, max_time, min_time, transition_time, dead_time});
         }
     });
 
@@ -231,25 +231,13 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
                 const max_time = last_segment_element.time;
                 const min_time = first_segment_element.time;
                 const transition_time = Math.abs(max_time - min_time);
-                stats.ccw.push({type, duty, max_time, min_time, transition_time});
+                const dead_time = segment.dead_time;
+                stats.ccw.push({type, duty, max_time, min_time, transition_time, dead_time});
             }
         });
     }
 
     const charts: {cw: {steady: Array<string>, transition: Array<string>}, ccw: {steady: Array<string>, transition: Array<string>}} = {cw: {steady: [], transition: []}, ccw: {steady: [], transition: []}};
-
-    /*
-const steady_format = [
-    {"name": "duty", "position": 0},
-    {"name": "mean_velocity", "position": 1},
-    {"name": "std_velocity", "position": 2}
-
-];
-const transition_format = [
-    {"name": "duty", "position": 0},
-    {"name": "transition_time", "position": 1}
-];
-    */
 
     stats.cw.forEach((stat: any) => {
         if (stat.type === "steady") {
@@ -283,7 +271,11 @@ const transition_format = [
         fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".steady.ccw.csv"), charts.ccw.steady.join("\n"));
     }
     process.exit(0);
-}).catch((err) => {
+}).catch(async (err) => {
+    await delay(300);
+    await word_sender.send_word("thrustui16", 0);
+    await delay(300);
+    await word_sender.send_word("stop");
     console2.error(err);
     if (err.hasOwnProperty("stack")) {console2.error(err.stack)};
     process.exit(1);

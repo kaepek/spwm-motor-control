@@ -10,6 +10,7 @@ import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../exter
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
 import { CollectAccelerationData, ACMap } from "../tasks/collect-acceleration-data.js";
 import { generate_ac_map_cpp } from "../utils/cpp-ac-state-map-generator.js";
+import { delay } from "../utils/delay.js";
 
 const cli_args: Array<CliArg> = [
     {
@@ -127,7 +128,11 @@ run_tasks(tasks, adaptor).then((output: ACMap) => {
         fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".cpp"), cpp_ac_map);
     }
     process.exit(0);
-}).catch((err) => {
+}).catch(async (err) => {
+    await delay(300);
+    await word_sender.send_word("thrustui16", 0);
+    await delay(300);
+    await word_sender.send_word("stop");
     console2.error(err);
     if (err.hasOwnProperty("stack")) {console2.error(err.stack)};
     process.exit(1);

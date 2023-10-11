@@ -45,6 +45,8 @@ type TransitionSegment = {
     duty: number 
 }
 
+type TransitionSegmentWithDeadTime = TransitionSegment & {dead_time: number};
+
 type Segment = SteadySegment | TransitionSegment;
 
 type SteadySegmentWithMinAndMax = SteadySegment & {
@@ -57,7 +59,7 @@ type SteadySegmentWithStats = (SteadySegmentWithMinAndMax & {
     std_velocity: number;
 });
 
-export type SegmentWithStats = TransitionSegment | SteadySegmentWithStats;
+export type SegmentWithStats = TransitionSegmentWithDeadTime | SteadySegmentWithStats;
 
 export class GetStepChange extends Task<ESCParsedLineData> {
     max_duty: number;
@@ -149,7 +151,9 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
+        await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
+        await delay(300);
         await this.word_sender.send_word("stop");
 
 
@@ -283,6 +287,31 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             }
         });
 
+        // last step compute dead times
+        segments_with_stats.forEach((segment, segment_idx) => {
+            if (segment.type === "steady") {
+                segment_velocity_min = segment.min_velocity * this.direction_sign;
+                segment_velocity_max = segment.max_velocity * this.direction_sign;
+            }
+            else {
+                // iterate through transition when we exceed a threshold then we can assume the deadtime is over
+                let dead_time_index = 0;
+                for (let idx = 0; idx < segment.data.length - 1; idx++){
+                    const line = segment.data[idx];
+                    const kalman_velocity_pos = line.kalman_velocity * this.direction_sign;
+                    if (kalman_velocity_pos > (segment_velocity_max * this.max_stability_tolerance) || kalman_velocity_pos < (segment_velocity_min * this.min_stability_tolerance) ) {
+                        dead_time_index = idx;
+                        break;
+                    }
+                }
+                (segments_with_stats[segment_idx].data[dead_time_index] as any).dead_time = 1.0;
+                const start_time = segment.data[0].time;
+                const end_time = segment.data[dead_time_index].time;
+                const dead_time = end_time - start_time;
+                (segments_with_stats[segment_idx] as TransitionSegmentWithDeadTime).dead_time = dead_time;
+            }
+        });
+
 
         console2.info(`StepChange program finished`);
 
@@ -294,7 +323,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     direction_sign = 1.0;
     max_stability_tolerance = 1.0;
     min_stability_tolerance = 1.0;
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 0.5) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1) {
         super(input$);
         this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
