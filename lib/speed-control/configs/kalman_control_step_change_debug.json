@@ -38,9 +38,11 @@
             "independant_column": "time",
             "dependant_columns": [
                 {"name":"kalman_velocity", "color": "black"},
-                {"name":"steady_region2", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
-                {"name":"transition_region2", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
-                {"name":"dead_time", "color": "green", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
+                {"name":"steady_region1", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"transition_region1", "color": "green", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"dead_time", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"steady_region2", "color": "pink", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"transition_region2", "color": "lightgreen", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
         },
         {
