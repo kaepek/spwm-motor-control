@@ -137,7 +137,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             // add data to correct segment
             const latest_segment_idx = this.segments.length - 1;
             this.segments[latest_segment_idx].data.push(incoming_data.parsed_data);
-            const acc = incoming_data.parsed_data.kalman_acceleration;
+            const acc = incoming_data.parsed_data.kalman_acceleration * this.direction_sign;
             if (acc < this.smallest_acc) {
                 this.smallest_acc = acc;
                 this.create_timeout(); // reset the next/exit procedure timeout.
@@ -184,16 +184,17 @@ export class GetStepChange extends Task<ESCParsedLineData> {
                 segment_velocity_min = Number.POSITIVE_INFINITY;
                 segment_velocity_max = Number.NEGATIVE_INFINITY;
                 segment.data.forEach((line) => {
-                    if (line.kalman_velocity > segment_velocity_max) {
-                        segment_velocity_max = line.kalman_velocity;
+                    const kalman_velocity_pos = line.kalman_velocity * this.direction_sign;
+                    if (kalman_velocity_pos > segment_velocity_max) {
+                        segment_velocity_max = kalman_velocity_pos;
                     }
-                    if (line.kalman_velocity < segment_velocity_min) {
-                        segment_velocity_min = line.kalman_velocity;
+                    if (kalman_velocity_pos < segment_velocity_min) {
+                        segment_velocity_min = kalman_velocity_pos;
                     }
                 });
                 // should add min and max vel to these segments
-                reversed_segments[reversed_segment_idx].min_velocity = segment_velocity_min;
-                reversed_segments[reversed_segment_idx].max_velocity = segment_velocity_max;
+                reversed_segments[reversed_segment_idx].min_velocity = segment_velocity_min * this.direction_sign;
+                reversed_segments[reversed_segment_idx].max_velocity = segment_velocity_max * this.direction_sign;
             }
             else { // transition
 
@@ -211,8 +212,9 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
                 for (let idx = 0; idx < reversed_segment_data.length; idx++) {
                     const line_data = reversed_segment_data[idx];
+                    const kalman_velocity_pos = line_data.kalman_velocity * this.direction_sign;
                     // if (velocity >= (min_velocity * 0.995) && velocity <= (max_velocity * 1.005)
-                    if (line_data.kalman_velocity <= (segment_velocity_max * 1.005) && line_data.kalman_velocity >= (segment_velocity_min * 0.995) ) {
+                    if (kalman_velocity_pos <= (segment_velocity_max * this.max_stability_tolerance) && kalman_velocity_pos >= (segment_velocity_min * this.min_stability_tolerance) ) {
                         reversed_transition_idx_to_include_in_stable_segment = idx;
                     }
                     else {
@@ -289,18 +291,27 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
     direction = 0;
     direction_str = "cw";
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 1000) {
+    direction_sign = 1.0;
+    max_stability_tolerance = 1.0;
+    min_stability_tolerance = 1.0;
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 0.5) {
         super(input$);
         this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
         this.word_sender = word_sender;
         this.direction_str = direction_str;
         this.wait_time = wait_time;
+        this.max_stability_tolerance = 1.0 + (stable_region_tolerance_percentage / 100);
+        this.min_stability_tolerance = 1.0 - (stable_region_tolerance_percentage / 100);
         if (direction_str === "cw") {
             this.direction = 0;
         }
         else if (direction_str === "ccw") {
             this.direction = 1;
+            this.direction_sign = -1.0;
+        }
+        else {
+            throw `Unrecognised direction ${direction_str} should be 'cw' or 'ccw'`;
         }
     }
 }
