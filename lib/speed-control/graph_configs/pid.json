@@ -35,7 +35,7 @@
             ]
         },
         {
-            "name": "differential_errors",
+            "name": "differential_errors_by_time",
             "independant_column": "time",
             "dependant_columns": [
                 {"name": "differential_error", "color": "blue"}
@@ -46,6 +46,13 @@
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name":"kalman_acceleration", "color": "purple", "line": false}
+            ]
+        },
+        {
+            "name": "kalman_hz",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"kalman_hz", "color": "black", "line": false}
             ]
         }
     ]

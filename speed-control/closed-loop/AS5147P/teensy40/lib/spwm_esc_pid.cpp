@@ -108,8 +108,6 @@ namespace kaepek
                 derivative_error_filtered_1 = derivative_error_filtered;
                 differential_error = derivative_error_filtered;
 
-
-
                 // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
 
                 // Calculate duty percentage
