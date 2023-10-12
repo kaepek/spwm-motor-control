@@ -87,11 +87,39 @@ const cli_args: Array<CliArg> = [
         short: "m",
         required: true,
         group: "command"
+    },
+    {
+        name: "max_duty",
+        type: CliArgType.Number,
+        short: "d",
+        required: false
+    },
+    {
+        name: "angular_steps",
+        type: CliArgType.Number,
+        short: "b",
+        required: false
+    },
+    {
+        name: "angular_compression_ratio",
+        type: CliArgType.Number,
+        short: "r",
+        required: true
+    },
+    {
+        name: "bin_population_threshold",
+        type: CliArgType.Number,
+        short: "t",
+        required: false
     }
 ];
 
 
 const parsed_args = parse_args("AntiCoggingCalibration", cli_args, ArgumentHandlers) as any;
+
+const max_duty = parsed_args.max_duty || 2047;
+const angular_steps = parsed_args.angular_steps || 16384;
+const bin_population_threshold = parsed_args.bin_population_threshold || 3;
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
 
@@ -107,13 +135,15 @@ adaptor.incoming_data$.subscribe((line_data) => {
 const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
 const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
+// max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3
+
 // what tasks do we need for this program
 const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
 const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
-const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw");
+const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", max_duty, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
-const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw");
+const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw", max_duty, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
 const tasks = [ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_collect_acceleration_data, cw_get_start_duty_task, cw_get_idle_duty_task, cw_collect_acceleration_data];
 

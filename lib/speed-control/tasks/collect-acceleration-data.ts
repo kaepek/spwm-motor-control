@@ -95,8 +95,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const acc = incoming_data.line_data.parsed_data.kalman_acceleration;
         const vel = incoming_data.line_data.parsed_data.kalman_velocity;
         const angle_raw = incoming_data.line_data.parsed_data.encoder_raw_displacement;
-        // angle could be 16383... 16383 -> max_angular_acc_bins - 1 (aka 2047)
-        // 16383 * (2047/16383)
         const compressed_angle = Math.round(angle_raw * ((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1)));
         this.angular_acc_bins[compressed_angle].push(acc);
         this.angular_vel_bins[compressed_angle].push(vel);
@@ -104,9 +102,9 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         const percentage_minimum = progress as number / this.bin_population_threshold;
         const percentage_filled = completed as number / this.max_angular_acc_bins;
 
-        // console.log("filled", completed, this.max_angular_acc_bins, percentage_filled);
         if (this.percentage_minimum != percentage_minimum) {
             console2.info(`Collected bin population minimum completion ${percentage_minimum * 100}%`);
+            console2.info(`Collected bin population (smallest bin population)/(bin_population_threshold) ${progress}/${this.bin_population_threshold}`);
             this.percentage_minimum = percentage_minimum;
         }
 
@@ -119,7 +117,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             }
         }
 
-        if (progress === this.bin_population_threshold) {
+        if (Object.keys(remaining_keys).length === 0) {
             return this.return_promise_resolver();
         }
         else if (Object.keys(remaining_keys).length === 1 && remaining_keys.hasOwnProperty((this.max_angular_acc_bins - 1).toString())) {

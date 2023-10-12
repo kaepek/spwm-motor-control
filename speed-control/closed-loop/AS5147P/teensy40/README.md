@@ -99,8 +99,19 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load a configured `ESC sinusoidal` program onto the Teensy 4.0 microcontroller.
-3. Run the anti-cogging program.
-
+3. `cd` to the `./[spwm-root-directory]`
+3. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+4. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`
+5. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio <angular-compression-ratio>`
+    - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-sinusoidal.json`
+    - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
+    - You need to set `<angular-compression-ratio>` to the correct value, one can do this by taking the configured value of the `ENCODER_VALUE_COMPRESSION` found within the `ESC sinusodial pid code` e.g. `8`.
+- Example command for the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/tarot-4006-esc-sinusoidal.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio 8`
+7. When the anti-cogging program has finished, optionally graph the collected anti-cogging data with the following commands:
+    1. Export the collected anti-cogging data to a csv: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/<anti-cogging-output-file-name>.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv` replace `<anti-cogging-output-file-name>.json` with the relevant name and rename `<anti-cogging-output-graph-data-file-name>.csv` with a name of your choosing.
+    2. Use the graph-file program to render the csv to a graph file: `kaepek-io-graph-file -i ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`
+    3. Inspect the outputed graph `./calibration-data/<anti-cogging-output-graph-data-file-name>.csv.html`
+- Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal.json.csv.html`.
 
 ### ESC direct
 
