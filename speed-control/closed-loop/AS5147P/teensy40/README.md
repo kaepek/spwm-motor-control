@@ -112,6 +112,36 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     2. Use the graph-file program to render the csv to a graph file: `kaepek-io-graph-file -i ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`
     3. Inspect the outputed graph `./calibration-data/<anti-cogging-output-graph-data-file-name>.csv.html`
 - Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal.json.csv.html`.
+8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
+9. Load the `ESC sinusoidal anti-cogging` ino onto the Teensy4.0 microcontroller.
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
+    - keyboard usage: 
+        - `[space]` to start.
+        - `x` to stop.
+        - `r` to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `w` to increase speed.
+        - `s` to decrease speed.
+        - `q` to change direction (note thrust must be zero to change direction).
+    - dualshock ps4 controller usage: 
+        - `options` button to start.
+        - `share` button to stop.
+        - `playstation` icon middle button to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `r2` to control thrust.
+        - `triangle` to change direction (note thrust must be zero to change direction).
+    - netsend usage:
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w start` to start.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w stop` to stop.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w reset` to reset.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d <duty_value>` to set duty (`<duty_value>` ranges from 0 -> 65535 [min->max], converted to 0 -> `MAX_DUTY` inside the controller, depending on setting `PWM_WRITE_RESOLUTION` the `MAX_DUTY` is `2^PWM_WRITE_RESOLUTION - 1`, so if `PWM_WRITE_RESOLUTION` is set to 11 then `MAX_DUTY` would be 2047, if then you sent the following command `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d 65535` the controller would apply a duty cycle of 2047).
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d <direction>`, direction can be 0 for clockwise and 1 for counter-clockwise. E.g. to set the direction to clockwise use the following `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d 0`. Note that the thrust must be zero before you will be allowed to change direction.
 
 ### ESC direct
 
