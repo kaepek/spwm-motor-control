@@ -176,12 +176,14 @@ namespace kaepek
                 EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value = data_buffer[0];
                 if (EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value == 0)
                 {
-                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::Clockwise;
+                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::direction = RotationDirection::Clockwise;
+                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::bl_direction = false;
                     EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 else if (EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::com_direction_value == 1)
                 {
-                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser_direction = SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::MAX_DUTY>::Direction::CounterClockwise;
+                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::direction = RotationDirection::CounterClockwise;
+                    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::bl_direction = true;
                     EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
             }
@@ -193,8 +195,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.set_cw_phase_displacement_deg(float_value);
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.update_lookup_tables();
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_cw_phase_displacement_deg(float_value);
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Phase2F32:
@@ -204,8 +206,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.set_ccw_phase_displacement_deg(float_value);
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.update_lookup_tables();
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_ccw_phase_displacement_deg(float_value);
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Offset1F32:
@@ -215,8 +217,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.set_cw_zero_displacement_deg(float_value);
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.update_lookup_tables();
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_cw_zero_displacement_deg(float_value);
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Offset2F32:
@@ -226,8 +228,8 @@ namespace kaepek
                 *((unsigned char *)&float_value + 1) = data_buffer[1];
                 *((unsigned char *)&float_value + 2) = data_buffer[2];
                 *((unsigned char *)&float_value + 3) = data_buffer[3];
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.set_ccw_zero_displacement_deg(float_value);
-                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::discretiser.update_lookup_tables();
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::set_ccw_zero_displacement_deg(float_value);
+                EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables();
             }
             break;
         case SerialInputCommandWord::Thrust1UI16:

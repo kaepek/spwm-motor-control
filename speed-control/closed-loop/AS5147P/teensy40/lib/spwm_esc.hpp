@@ -96,6 +96,7 @@ namespace kaepek
     // static const int size_of_host_profile = 3;
     // discretiser
     RotationDirection direction = RotationDirection::Clockwise;
+    volatile bool bl_direction = false;
     // typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
     // SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
     // physical model values
