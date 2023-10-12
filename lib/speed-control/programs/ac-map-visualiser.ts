@@ -1,5 +1,5 @@
-import { ArgumentHandlers, CliArg, CliArgType, parse_args } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
-import { ASCIIParser } from "../../../external/kaepek-io/lib/host/ts-adaptors/ascii-parser.js"
+import { ArgumentHandlers, CliArg, CliArgType, parse_args } from "../../../external/kaepek-io/lib/host/controller/utils/cli-args.js";
+import { ASCIIParser } from "../../../external/kaepek-io/lib/host/controller/utils/ascii-parser.js"
 import { ACMap } from "../tasks/collect-acceleration-data";
 import fs from "fs";
 

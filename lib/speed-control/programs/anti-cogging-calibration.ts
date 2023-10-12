@@ -1,12 +1,12 @@
-import NetworkAdaptor from "../../../external/kaepek-io/lib/host/ts-adaptors/network.js";
+import NetworkAdaptor from "../../../external/kaepek-io/lib/host/controller/utils/network.js";
 import { parseArgs } from "node:util";
 import fs from "fs";
 import { rotation_detector } from "../../rotation-detector.js";
-import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
+import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { GetStartDuty } from "../tasks/get-start-duty.js";
-import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
-import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
+import { run_tasks } from "../../../external/kaepek-io/lib/host/controller/utils/task-runner.js";
+import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/controller/utils/cli-args.js";
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
 import { CollectAccelerationData, ACMap } from "../tasks/collect-acceleration-data.js";
 import { generate_ac_map_cpp } from "../utils/cpp-ac-state-map-generator.js";

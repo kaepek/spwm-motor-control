@@ -1,14 +1,14 @@
 import { Subject } from "rxjs";
-import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/ts-adaptors/cli-args.js";
-import NetworkAdaptor from "../../../external/kaepek-io/lib/host/ts-adaptors/network.js";
-import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
+import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/controller/utils/cli-args.js";
+import NetworkAdaptor from "../../../external/kaepek-io/lib/host/controller/utils/network.js";
+import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/send-word.js";
 import fs from "fs";
 import { GetStepChange, LineData, SegmentWithStats, SteadySegmentWithStats } from "../tasks/step-change.js";
 import { rotation_detector } from "../../rotation-detector.js";
 import { GetStartDuty } from "../tasks/get-start-duty.js";
-import { run_tasks } from "../../../external/kaepek-io/lib/host/ts-adaptors/task-runner.js";
+import { run_tasks } from "../../../external/kaepek-io/lib/host/controller/utils/task-runner.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
-import { ASCIIParser } from "../../../external/kaepek-io/lib/host/ts-adaptors/ascii-parser.js";
+import { ASCIIParser } from "../../../external/kaepek-io/lib/host/controller/utils/ascii-parser.js";
 import { delay } from "../utils/delay.js";
 
 /**

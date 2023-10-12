@@ -1,6 +1,6 @@
 
-import { Task } from "../../../external/kaepek-io/lib/host/ts-adaptors/task.js";
-import { SendWord } from "../../../external/kaepek-io/lib/host/ts-adaptors/send-word.js";
+import { Task } from "../../../external/kaepek-io/lib/host/controller/utils/task.js";
+import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/send-word.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { ESCParsedLineData } from "../../rotation-detector.js";
