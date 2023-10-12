@@ -15,7 +15,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
-2. Load the code onto the teensy40 microcontroller.
+2. Load the `ESC sinusoidal` code onto the teensy40 microcontroller.
 3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
@@ -92,7 +92,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 #### Usage instructions
 
 0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC sinusoidal section. 
-1. In the `ESC sinusodial pid code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
+1. In the `ESC sinusodial code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
     - `MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CCW_ZERO_DISPLACEMENT_DEG`
@@ -100,18 +100,18 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load a configured `ESC sinusoidal` program onto the Teensy 4.0 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
-3. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-4. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`
-5. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio <angular-compression-ratio>`
-    - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-sinusoidal.json`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`
+6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio <angular-compression-ratio>`
+    - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-sinusoidal-ac.json`
     - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
-    - You need to set `<angular-compression-ratio>` to the correct value, one can do this by taking the configured value of the `ENCODER_VALUE_COMPRESSION` found within the `ESC sinusodial pid code` e.g. `8`.
-- Example command for the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/tarot-4006-esc-sinusoidal.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio 8`
+    - You need to set `<angular-compression-ratio>` to the correct value, one can do this by taking the configured value of the `ENCODER_VALUE_COMPRESSION` found within the `ESC sinusodial code` e.g. `8`.
+- Example command for the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/tarot-4006-esc-sinusoidal-ac.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio 8`
 7. When the anti-cogging program has finished, optionally graph the collected anti-cogging data with the following commands:
     1. Export the collected anti-cogging data to a csv: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/<anti-cogging-output-file-name>.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv` replace `<anti-cogging-output-file-name>.json` with the relevant name and rename `<anti-cogging-output-graph-data-file-name>.csv` with a name of your choosing.
     2. Use the graph-file program to render the csv to a graph file: `kaepek-io-graph-file -i ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`
     3. Inspect the outputed graph `./calibration-data/<anti-cogging-output-graph-data-file-name>.csv.html`
-- Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal.json.csv.html`.
+- Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv.html`.
 8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
 9. Load the `ESC sinusoidal anti-cogging` ino onto the Teensy4.0 microcontroller.
 10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
@@ -143,13 +143,44 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
         - `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d <duty_value>` to set duty (`<duty_value>` ranges from 0 -> 65535 [min->max], converted to 0 -> `MAX_DUTY` inside the controller, depending on setting `PWM_WRITE_RESOLUTION` the `MAX_DUTY` is `2^PWM_WRITE_RESOLUTION - 1`, so if `PWM_WRITE_RESOLUTION` is set to 11 then `MAX_DUTY` would be 2047, if then you sent the following command `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d 65535` the controller would apply a duty cycle of 2047).
         - `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d <direction>`, direction can be 0 for clockwise and 1 for counter-clockwise. E.g. to set the direction to clockwise use the following `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d 0`. Note that the thrust must be zero before you will be allowed to change direction.
 
+# TODO FIX ME WRONG DATA TYPE IS COMING OUT FROM AC MAP.... NEED TO CONVERT ESC-AC TO USE UINT_16
+
 ### ESC direct
 
 - [ESC direct code](./esc-direct/esc-direct.ino)
 
-#### Usage instructions
 
-1. Load the code onto the teensy40 microcontroller.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC direct section.
+1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-comp2-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
+2. Load the `ESC direct` code onto the teensy40 microcontroller.
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
+    - keyboard usage: 
+        - `[space]` to start.
+        - `x` to stop.
+        - `r` to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `w` to increase speed.
+        - `s` to decrease speed.
+        - `q` to change direction (note thrust must be zero to change direction).
+    - dualshock ps4 controller usage: 
+        - `options` button to start.
+        - `share` button to stop.
+        - `playstation` icon middle button to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `r2` to control thrust.
+        - `triangle` to change direction (note thrust must be zero to change direction).
+    - netsend usage:
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w start` to start.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w stop` to stop.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w reset` to reset.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d <duty_value>` to set duty (`<duty_value>` ranges from 0 -> 65535 [min->max], converted to 0 -> `MAX_DUTY` inside the controller, depending on setting `PWM_WRITE_RESOLUTION` the `MAX_DUTY` is `2^PWM_WRITE_RESOLUTION - 1`, so if `PWM_WRITE_RESOLUTION` is set to 11 then `MAX_DUTY` would be 2047, if then you sent the following command `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d 65535` the controller would apply a duty cycle of 2047).
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d <direction>`, direction can be 0 for clockwise and 1 for counter-clockwise. E.g. to set the direction to clockwise use the following `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d 0`. Note that the thrust must be zero before you will be allowed to change direction.
 
 ### ESC direct anti-cogging
 
@@ -157,7 +188,52 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 #### Usage instructions
 
-1. Load the code onto the teensy40 microcontroller.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC direct section.
+1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-comp2-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
+2. Load the `ESC direct` code onto the teensy40 microcontroller.
+3. `cd` to the `./[spwm-root-directory]`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`
+6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio <angular-compression-ratio>`
+    - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-direct-ac.json`
+    - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
+    - You need to set `<angular-compression-ratio>` to the correct value, one can do this by taking the configured value of the `ENCODER_VALUE_COMPRESSION` found within the `ESC direct code` e.g. `4`.
+- Example command for the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --output_data_file ./calibration-data/tarot-4006-esc-direct-ac.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp  --command_address localhost --command_port 9000 --command_protocol udp --angular_steps 16384 --angular_compression_ratio 4`
+7. When the anti-cogging program has finished, optionally graph the collected anti-cogging data with the following commands:
+    1. Export the collected anti-cogging data to a csv: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/<anti-cogging-output-file-name>.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv` replace `<anti-cogging-output-file-name>.json` with the relevant name and rename `<anti-cogging-output-graph-data-file-name>.csv` with a name of your choosing.
+    2. Use the graph-file program to render the csv to a graph file: `kaepek-io-graph-file -i ./calibration-data/<anti-cogging-output-graph-data-file-name>.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`
+    3. Inspect the outputed graph `./calibration-data/<anti-cogging-output-graph-data-file-name>.csv.html`
+- Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-direct-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-direct-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-direct-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-direct-ac.json.csv.html`.
+8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
+9. Load the `ESC direct anti-cogging` ino onto the Teensy4.0 microcontroller.
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
+    - keyboard usage: 
+        - `[space]` to start.
+        - `x` to stop.
+        - `r` to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `w` to increase speed.
+        - `s` to decrease speed.
+        - `q` to change direction (note thrust must be zero to change direction).
+    - dualshock ps4 controller usage: 
+        - `options` button to start.
+        - `share` button to stop.
+        - `playstation` icon middle button to reset (if ESC led is flashing indicating a fault, note must stop first).
+        - `r2` to control thrust.
+        - `triangle` to change direction (note thrust must be zero to change direction).
+    - netsend usage:
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w start` to start.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w stop` to stop.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w reset` to reset.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d <duty_value>` to set duty (`<duty_value>` ranges from 0 -> 65535 [min->max], converted to 0 -> `MAX_DUTY` inside the controller, depending on setting `PWM_WRITE_RESOLUTION` the `MAX_DUTY` is `2^PWM_WRITE_RESOLUTION - 1`, so if `PWM_WRITE_RESOLUTION` is set to 11 then `MAX_DUTY` would be 2047, if then you sent the following command `kaepek-io-netsend -h localhost -p 9000 -n udp -w thrustui16 -d 65535` the controller would apply a duty cycle of 2047).
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d <direction>`, direction can be 0 for clockwise and 1 for counter-clockwise. E.g. to set the direction to clockwise use the following `kaepek-io-netsend -h localhost -p 9000 -n udp -w directionui8 -d 0`. Note that the thrust must be zero before you will be allowed to change direction.
 
 ### ESC direct pid
 
