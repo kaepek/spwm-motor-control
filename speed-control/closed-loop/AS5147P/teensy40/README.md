@@ -243,17 +243,48 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 1. Load the code onto the teensy40 microcontroller.
 
+# TODO
+
 ### ESC direct pid ac
 
 - [ESC direct anti-cogging pid code](./esc-direct-pid-ac/esc-direct-pid-ac.ino)
 
 #### Usage instructions
 
+# TODO
+
 1. Load the code onto the teensy40 microcontroller.
 
 
 - [Teensy40 Code](./speed-control/closed-loop/AS5147P/teensy40/esc/esc.ino)
 
+### Step change analysis - PID auto configure.
+
+A program to perform a step change analysis and get PID values.
+
+1. First load one of the following ESC's onto the Teensy 4.0 microcontroller.
+    - ESC sinusoidal.
+    - ESC sinusoidal anti-cogging.
+    - ESC direct.
+    - ESC direct anti-cogging.
+2. Configure the motor parameters as per the specific sections configuration instructions.
+3. Start the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`.
+3. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`.
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`.
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`.
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`.
+    - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`.
+4. Run the step change analysis program: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --command_address localhost --command_port 9000 --command_protocol udp  --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp --output_data_file ./calibration-data/<step-change-output-file-name>.json`.
+- Example command: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --incoming_address localhost --incoming_port 9001 --incoming_protocol udp --command_address localhost --command_port 9000 --command_protocol udp  --outgoing_address localhost --outgoing_port 9002 --outgoing_protocol udp --output_data_file ./calibration-data/tarot-4006-esc-direct-step-change.json`.
+5. After the step change program has finished graph optionally graph the output: `kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.cw.csv -c ./lib/speed-control/configs/step_change.json && kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.ccw.csv -c ./lib/speed-control/configs/step_change.json`
+- Example command: `kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-direct-step-change.detections.cw.csv -c ./lib/speed-control/configs/step_change.json && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-direct-step-change.detections.ccw.csv -c ./lib/speed-control/configs/step_change.json`
+6. Optionally inspect the output data files:
+    - `./calibration-data/<step-change-output-file-name>.stats.json`
+    - `./calibration-data/<step-change-output-file-name>.steady.cw.csv`
+    - `./calibration-data/<step-change-output-file-name>.steady.ccw.csv`
+    - `./calibration-data/<step-change-output-file-name>.transition.cw.csv`
+    - `./calibration-data/<step-change-output-file-name>.transition.cww.csv`
 
 ### Director usage
 
