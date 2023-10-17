@@ -90,6 +90,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             this.word_sender.send_word("thrustui16", mapped_duty);
             this.create_timeout();
             this.smallest_acc = Number.POSITIVE_INFINITY;
+            this.largest_vel = Number.NEGATIVE_INFINITY;
         }
         else {
             this.return_promise_resolver();
@@ -131,6 +132,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     }
 
     smallest_acc: number = Number.POSITIVE_INFINITY;
+    largest_vel: number = Number.NEGATIVE_INFINITY;
     segments: Array<Segment> = [];
 
     async tick(incoming_data: ESCParsedLineData) {
@@ -140,8 +142,13 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             const latest_segment_idx = this.segments.length - 1;
             this.segments[latest_segment_idx].data.push(incoming_data.parsed_data);
             const acc = incoming_data.parsed_data.kalman_acceleration * this.direction_sign;
+            const vel = incoming_data.parsed_data.kalman_velocity * this.direction_sign;
             if (acc < this.smallest_acc) {
                 this.smallest_acc = acc;
+                this.create_timeout(); // reset the next/exit procedure timeout.
+            }
+            if (vel > this.largest_vel) {
+                this.largest_vel = vel;
                 this.create_timeout(); // reset the next/exit procedure timeout.
             }
         }
@@ -155,6 +162,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         await this.word_sender.send_word("thrustui16", 0);
         await delay(300);
         await this.word_sender.send_word("stop");
+        await delay(10000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
 
 
         // now process the segments
