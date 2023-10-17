@@ -308,21 +308,6 @@ A program to perform a step change analysis and get PID values.
     - `./calibration-data/<step-change-output-file-name>.transition.cw.csv`
     - `./calibration-data/<step-change-output-file-name>.transition.ccw.csv`
 
-### Director usage
-
-```
-kaepek-io-director -i keyboard dualshock -c stop start null thrustui16 directionui8 -p console serial -o network=localhost,9000,udp
-```
-
-### Graphing state
-
-```
-kaepek-io-graph --address localhost --port 9000 --config ./spwm-dir/speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json
-```
-
-
-## New README
-
 ### Anti-cogging analysis
 
 kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp
