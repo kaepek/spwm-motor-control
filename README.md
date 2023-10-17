@@ -17,11 +17,11 @@ git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 ## Open loop code (no feedback)
 
 - [Arduino Code](./speed-control/open-loop/arduino-uno/arduino-uno.ino)
-- [Teensy40 Code](./speed-control/open-loop/teensy-40/teensy-40.ino)
+- [Teensy40 Code](./speed-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
 
-## Closed loop code (rotary encoder AS5147P)
+## Closed loop (AS5147P rotary encoder , Teensy 4.0 microcontroller, l6234 motor driver)
 
-- [Teensy40 Code](./speed-control/closed-loop/AS5147P/teensy40/esc/esc.ino)
+- [Detailed instructions](./speed-control/closed-loop/AS5147P/teensy40/README.md)
 
 ### Director usage
 
@@ -38,7 +38,7 @@ kaepek-io-graph --address localhost --port 9000 --config ./spwm-dir/speed-contro
 # Position control:
 
 ## Open loop code (no feedback)
-- [Teensy40 Code](./position-control/open-loop/teensy-40/teensy-40.ino)
+- [Teensy40 Code](./position-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
 
 ## Closed loop code (rotary encoder AS5147P)
 - [Todo](./)
