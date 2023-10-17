@@ -8,7 +8,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 #### Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC sinusoidal section. 
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#spwm-procedure) see the ESC sinusoidal section. 
 1. In the `ESC sinusodial code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
     - `MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG`
@@ -51,7 +51,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 - [ESC sinusoidal pid code](./esc-pid/esc-pid.ino)
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC sinusoidal section. 
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#spwm-procedure) see the ESC sinusoidal section. 
 1. In the `ESC sinusodial pid code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
     - `MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG`
@@ -89,7 +89,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 #### Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC sinusoidal section. 
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#spwm-procedure) see the ESC sinusoidal section. 
 1. In the `ESC sinusodial code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
     - `MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG`
@@ -147,7 +147,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 - [ESC direct code](./esc-direct/esc-direct.ino)
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC direct section.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct pwm section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-comp2-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
 2. Load the `ESC direct` code onto the teensy40 microcontroller.
 3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
@@ -185,7 +185,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 #### Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC direct section.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct PWM section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-comp2-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
 2. Load the `ESC direct` code onto the teensy40 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
@@ -238,7 +238,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 #### Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration#analysing-the-combined-reports) see the ESC direct section.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct PWM section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-comp2-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-pid/calibration/voltage-map.cpp`.
 2. Load the `ESC direct pid` code onto the teensy40 microcontroller.
 3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 -p serial console -o network=localhost,9002,udp`
