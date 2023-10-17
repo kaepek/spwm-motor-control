@@ -124,16 +124,21 @@ namespace kaepek
                 duty = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
                 // add bias term (optional default zero)
                 // duty += duty_bias
-                // add power law term
-                /*
-                if (power_law_setpoint_divisor !== 0.0 && power_law_root !== 0.0) {
-                    duty += pow((cache_set_point/power_law_setpoint_divisor),1.0/power_law_root);
-                }
-                */
 
+                // add power law term
+                if (BaseEscClass::direction == RotationDirection::Clockwise) {
+                    if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0) {
+                        duty += pow((cache_set_point/power_law_set_point_divisor_cw),1.0/power_law_root_cw);
+                    }
+                }
+                else if (BaseEscClass::direction == RotationDirection::CounterClockwise) {
+                    if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0) {
+                        duty += pow((cache_set_point/power_law_set_point_divisor_ccw),1.0/power_law_root_ccw);
+                    }
+                }
 
                 // todo make the 0.5 cap a constructor argument
-                
+
                 // duty = abs(duty);
                 // duty = min(abs(duty), 0.5); // cap at 50%
                 if (duty < 0.0)
@@ -237,6 +242,34 @@ namespace kaepek
             *((unsigned char *)&float_value + 2) = data_buffer[2];
             *((unsigned char *)&float_value + 3) = data_buffer[3];
             differential_coefficient = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawSetPointDivisorCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_set_point_divisor_cw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawSetPointDivisorCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_set_point_divisor_ccw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawRootCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_root_cw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawRootCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_root_ccw = float_value;
             break;
         default:
             // unknown word

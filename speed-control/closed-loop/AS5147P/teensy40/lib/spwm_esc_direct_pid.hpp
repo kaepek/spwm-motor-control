@@ -29,6 +29,12 @@ namespace kaepek
     volatile float integral_coefficient = 0.0;
     volatile float differential_coefficient = 0.0;
 
+    // bias terms
+    volatile float power_law_set_point_divisor_cw = 0.0;
+    volatile float power_law_root_cw = 0.0;
+    volatile float power_law_set_point_divisor_ccw = 0.0;
+    volatile float power_law_root_ccw = 0.0;
+
     volatile double proportional_error = 0.0;
     volatile double previous_proportional_error = 0.0;
     volatile double differential_error = 0.0;
