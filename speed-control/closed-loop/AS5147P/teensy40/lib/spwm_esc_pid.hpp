@@ -46,6 +46,8 @@ namespace kaepek
 
     double desired_derivative_cutoff_frequency = 1500.0;
 
+    using BaseEscClass = EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
+
     /**
      * Method to calculate the temporal numerical derivative.
      * @param value The value to differentiate using the eular method.
