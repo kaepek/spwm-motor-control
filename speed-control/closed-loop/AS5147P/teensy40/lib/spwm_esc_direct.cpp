@@ -307,7 +307,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 50%
+            com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.3; // cap at 50%
             break;
         case SerialInputCommandWord::Direction1UI8:
             if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero

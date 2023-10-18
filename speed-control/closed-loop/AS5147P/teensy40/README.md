@@ -241,7 +241,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct PWM section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-pid/calibration/voltage-map.cpp`.
 2. Load the `ESC direct pid` code onto the teensy40 microcontroller.
-3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 -p serial console -o network=localhost,9002,udp`
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 -p serial console -o network=localhost,9002,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try the following config:
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
@@ -264,6 +264,10 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
         - `kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d <proportional-coefficient>` to set the PID proportional-coefficient. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w proportionalf32 -d 1` sets the PID proportional-coefficient to a value of `1`.
         - `kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d <integral-coefficient>` to set the PID integral-coefficient. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w integralf32 -d 20` sets the PID integral-coefficient to a value of `20`. Caution setting this to high can cause an unstable system, please start with a low value.
         - `kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d <derivative-coefficient>` to set the PID derivative-coefficient. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w derivativef32 -d 0.04` sets the PID derivative-coefficient to a value of `0.04`. Caution setting this to high can cause an unstable system, please start with a low value.
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawrootcwf32 -d <power-law-root-cw>` to set the PID power law root as determined from the step change analysis for the clockwise direction. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawrootcwf32 -d 1.32487484314192`
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawrootccwf32 -d <power-law-root-ccw>` to set the PID power law root as determined from the step change analysis for the counter clockwise direction. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawrootccwf32 -d 1.41956119254751`
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawsetpointdivisorcwf32 -d <power-law-set-point-divisor-cw>` to set the PID power law set point divisor for the clockwise direction. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawsetpointdivisorcwf32 -d 79.6099419492692`
+        - `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawsetpointdivisorccwf32 -d <power-law-set-point-divisor-ccw>` to set the PID power law set point divisor for the counter clockwise direction. E.g. `kaepek-io-netsend -h localhost -p 9000 -n udp -w powerlawsetpointdivisorccwf32 -d 91.5200700239708`
 
 # TODO
 

@@ -15,28 +15,34 @@
         {"name": "pid_duty_percentage", "position": 12},
         {"name": "setpoint", "position": 13}
     ],
-    "buffer_length": 390,
+    "buffer_length": 650,
     "plots": [
         {
             "name": "kalman_velocity",
-            "independant_column": "time",
+            "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red"},
-                {"name": "setpoint", "color": "black"},
+                {"name":"kalman_velocity", "color": "red", "line": false},
+                {"name": "setpoint", "color": "black", "line": false},
                 {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 0.3}}
             ]
         },
         {
             "name": "proportional_integral_errors",
-            "independant_column": "time",
+            "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name": "proportional_error", "color": "black"},
-                {"name": "integral_error", "color": "gray"}
+                {"name": "proportional_error", "color": "black", "line": false}
+            ]
+        },
+        {
+            "name": "integral_error_errors",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name": "integral_error", "color": "gray", "line": false}
             ]
         },
         {
             "name": "differential_errors_by_time",
-            "independant_column": "time",
+            "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name": "differential_error", "color": "blue"}
             ]
@@ -50,7 +56,7 @@
         },
         {
             "name": "kalman_hz",
-            "independant_column": "time",
+            "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name":"kalman_hz", "color": "black", "line": false}
             ]

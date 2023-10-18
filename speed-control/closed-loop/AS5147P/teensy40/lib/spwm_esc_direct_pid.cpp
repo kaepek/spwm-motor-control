@@ -126,14 +126,18 @@ namespace kaepek
                 // duty += duty_bias
 
                 // add power law term
-                if (BaseEscClass::direction == RotationDirection::Clockwise) {
-                    if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0) {
-                        duty += pow((cache_set_point/power_law_set_point_divisor_cw),1.0/power_law_root_cw);
+                if (BaseEscClass::direction == RotationDirection::Clockwise)
+                {
+                    if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
+                    {
+                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
                     }
                 }
-                else if (BaseEscClass::direction == RotationDirection::CounterClockwise) {
-                    if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0) {
-                        duty += pow((cache_set_point/power_law_set_point_divisor_ccw),1.0/power_law_root_ccw);
+                else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
+                {
+                    if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
+                    {
+                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
                     }
                 }
 
@@ -145,7 +149,7 @@ namespace kaepek
                 {
                     duty = 0.0;
                 }
-                duty = min(duty, 0.5);
+                duty = min(duty, 0.3);
                 pid_duty = duty;
 
                 BaseEscClass::com_torque_percentage = pid_duty;
@@ -320,18 +324,39 @@ namespace kaepek
 
         Serial.print(BaseEscClass::eular_vec_store[0], 4);
         Serial.print(",");
-        Serial.print(BaseEscClass::com_torque_percentage, 4);
+        Serial.print(BaseEscClass::com_torque_percentage, 4); // put me back!
+
+        // Serial.print(power_law_set_point_divisor_cw, 4); // value is ok
+        // Serial.print(power_law_root_cw, 4); // value is ok
+
+        /*if (BaseEscClass::direction == RotationDirection::Clockwise)
+        {
+            if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
+            {
+                double help = pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
+                // double help = fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw;
+                // double help = 1.0 / (double) power_law_root_cw;
+                Serial.print(min(help, 0.3), 6);
+            }
+            else {
+                Serial.print(-1.0);
+            }
+        }
+        else {
+            Serial.print(-2.0);
+        }*/ // works ok
+
         Serial.print(",");
         Serial.print(BaseEscClass::com_direction_value);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
         Serial.print(BaseEscClass::current_encoder_displacement);
@@ -344,17 +369,17 @@ namespace kaepek
         Serial.print(differential_coefficient);
         Serial.print(",");*/
 
-        Serial.print(proportional_error);
+        Serial.print(proportional_error, 4);
         Serial.print(",");
-        Serial.print(integral_error);
+        Serial.print(integral_error, 4);
         Serial.print(",");
-        Serial.print(differential_error);
+        Serial.print(differential_error, 4);
 
         Serial.print(",");
-        Serial.print(pid_duty);
+        Serial.print(pid_duty, 4);
 
         Serial.print(",");
-        Serial.print(cache_set_point * 1.0);
+        Serial.print(cache_set_point * 1.0, 4);
 
         Serial.print("\n");
 
