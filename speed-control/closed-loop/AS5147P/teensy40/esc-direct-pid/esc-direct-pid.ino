@@ -33,9 +33,9 @@ uint32_t enc_pin_SCK = 22;
 const int LED_PIN = 13;
 
 // Kalman config.
-double KALMAN_ALPHA = 40000000000.0;
+double KALMAN_ALPHA = 40000000000.0; // 40000000000.0; // changing this one
 double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
-double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 1000.0; // 10.0; // 0.000000000001;
+double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // changing this one // 1000.0; // 10.0; // 0.000000000001;
 
 // spwm pin config.
 uint32_t SPWM_PIN_PHASE_A = 1;
@@ -152,7 +152,7 @@ void setup()
   ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
   // Initalise the encoder ESC.
-  ESC = kaepek::PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.8, SPWM_PIN_CONFIG, KALMAN_CONFIG, PID_CONFIG, VOLTAGE_MAP); // 3us (micro) sample period 2.8 2.6
+  ESC = kaepek::PidEscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 6.0, SPWM_PIN_CONFIG, KALMAN_CONFIG, PID_CONFIG, VOLTAGE_MAP); // 3.8us (micro) sample period
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(8.0);

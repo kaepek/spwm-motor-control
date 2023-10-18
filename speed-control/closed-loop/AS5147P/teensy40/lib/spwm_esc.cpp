@@ -265,11 +265,14 @@ namespace kaepek
         Serial.print(",");
         Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-        Serial.print(current_triplet.phase_a);
+
+
+        double half_max_duty = (double)MAX_DUTY / 2;
+        Serial.print((double) current_triplet.phase_a - half_max_duty);
         Serial.print(",");
-        Serial.print(current_triplet.phase_b);
+        Serial.print((double) current_triplet.phase_b - half_max_duty);
         Serial.print(",");
-        Serial.print(current_triplet.phase_c);
+        Serial.print((double) current_triplet.phase_c - half_max_duty);
         Serial.print(",");
         Serial.print(current_encoder_displacement);
 #endif
@@ -325,7 +328,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 50%
+            com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.3; // cap at 50%
             break;
         case SerialInputCommandWord::Direction1UI8:
             if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero
