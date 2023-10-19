@@ -1,0 +1,64 @@
+{
+    "inputs": [
+        {"name":"kalman_hz", "position": 0},
+        {"name":"sample_hz", "position": 1},
+        {"name":"time", "position": 2},
+        {"name":"com_thrust_percentage", "position": 3},
+        {"name":"com_direction", "position": 4},
+        {"name":"kalman_velocity", "position": 5},
+        {"name":"kalman_acceleration", "position": 6},
+        {"name":"kalman_jerk", "position": 7},
+        {"name":"encoder_raw_displacement", "position": 8},
+        {"name": "proportional_error", "position": 9},
+        {"name": "integral_error", "position": 10},
+        {"name": "differential_error", "position": 11},
+        {"name": "pid_duty_percentage", "position": 12},
+        {"name": "setpoint", "position": 13},
+        {"name":"voltage_phase_a", "position": 14},
+        {"name":"voltage_phase_b", "position": 15},
+        {"name": "voltage_phase_c", "position": 16}
+    ],
+    "buffer_length": 650,
+    "plots": [
+        {
+            "name": "kalman_velocity, kalman_acceleration, duty_percentage, setpoint vs encoder_raw_displacement",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name": "setpoint", "color": "blueviolet", "line": false, "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name": "kalman_velocity", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"kalman_acceleration", "color": "darkgreen", "axis": {"location": "right", "min": -1.0, "max": 1.0}},
+                {"name": "pid_duty_percentage", "color": "orangered", "axis": {"location": "right", "min": 0.0, "max": 0.3}}
+            ]
+        },
+        {
+            "name": "voltages vs encoder_raw_displacement",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name":"voltage_phase_a", "color": "red"},
+                {"name":"voltage_phase_b", "color": "olive"},
+                {"name": "voltage_phase_c", "color": "black"}
+            ]
+        },
+        {
+            "name": "proportional_integral_errors",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name": "proportional_error", "color": "black", "line": false}
+            ]
+        },
+        {
+            "name": "integral_error_errors",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name": "integral_error", "color": "gray", "line": false}
+            ]
+        },
+        {
+            "name": "differential_errors_by_time",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name": "differential_error", "color": "blue"}
+            ]
+        }
+    ]
+}

@@ -383,6 +383,14 @@ namespace kaepek
         Serial.print(",");
         Serial.print(cache_set_point * 1.0, 4);
 
+        double half_max_duty = (double)BaseEscClass::MAX_DUTY / 2;
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_a - half_max_duty);
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_b - half_max_duty);
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_c - half_max_duty);
+
         Serial.print("\n");
 
         // Reset loop counter and time since last log.
