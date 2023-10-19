@@ -24,8 +24,7 @@
             "name": "kalman_velocity, kalman_acceleration, duty_percentage, setpoint vs encoder_raw_displacement",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name": "setpoint", "color": "blueviolet", "line": false, "axis": {"location": "right", "min": 0.0, "max": 1.0}},
-                {"name": "kalman_velocity", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name": "kalman_velocity", "color": "blue", "axis": {"location": "right", "min": 0.2, "max": 0.7}},
                 {"name":"kalman_acceleration", "color": "darkgreen", "axis": {"location": "right", "min": -1.0, "max": 1.0}},
                 {"name": "pid_duty_percentage", "color": "orangered", "axis": {"location": "right", "min": 0.0, "max": 0.3}}
             ]
@@ -37,27 +36,6 @@
                 {"name":"voltage_phase_a", "color": "red"},
                 {"name":"voltage_phase_b", "color": "olive"},
                 {"name": "voltage_phase_c", "color": "black"}
-            ]
-        },
-        {
-            "name": "proportional_integral_errors",
-            "independant_column": "encoder_raw_displacement",
-            "dependant_columns": [
-                {"name": "proportional_error", "color": "black", "line": false}
-            ]
-        },
-        {
-            "name": "integral_error_errors",
-            "independant_column": "encoder_raw_displacement",
-            "dependant_columns": [
-                {"name": "integral_error", "color": "gray", "line": false}
-            ]
-        },
-        {
-            "name": "differential_errors_by_time",
-            "independant_column": "encoder_raw_displacement",
-            "dependant_columns": [
-                {"name": "differential_error", "color": "blue"}
             ]
         }
     ]
