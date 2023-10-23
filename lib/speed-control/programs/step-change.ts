@@ -10,6 +10,8 @@ import { run_tasks } from "../../../external/kaepek-io/lib/host/controller/utils
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { ASCIIParser } from "../../../external/kaepek-io/lib/host/controller/utils/ascii-parser.js";
 import { delay } from "../utils/delay.js";
+import { GetIdleDuty } from "../tasks/get-min-duty.js";
+import { SetIdleDuty } from "../tasks/set-idle.js";
 
 /**
  * Brief run the get start duty for both directions. Do this apriori.
@@ -132,12 +134,18 @@ const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
 const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
 const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
+const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
+const cw_set_idle_duty_task = new SetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw");
 
+const despin_task = new SetIdleDuty(cw_rotation$, word_sender, "cw", 0);
+
 const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
+const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
+const ccw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "ccw");
 
-const tasks = [cw_get_start_duty_task, cw_get_step_change_task, ccw_get_start_duty_task, ccw_get_step_change_task];
+const tasks = [cw_get_start_duty_task, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_get_step_change_task, despin_task, ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_get_step_change_task];
 
 type StepChangeOuput = {
     cw: {

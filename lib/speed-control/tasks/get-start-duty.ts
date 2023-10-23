@@ -15,6 +15,8 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     incoming_data: any;
     wait_timeout: any;
     start_duty: number | null = null;
+    start_time: Date | null = null;
+    end_time: Date | null = null;
 
     async send_next_word() {
         (this.current_duty as number)++;
@@ -25,6 +27,7 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
         const mapped_duty = parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString());
         console2.info("Sending word thrustui16", mapped_duty);
+        this.start_time = new Date();
         this.word_sender.send_word("thrustui16", mapped_duty);
         this.start_duty = mapped_duty;
         this.create_wait_logic();
@@ -98,8 +101,9 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
             }
             else {
                 // we still have motion
-                if (incoming_data["rotations"] as number > 5) {
+                if (incoming_data["rotations"] as number > 5) { // need to compute startup time in ms
                     // we have 5 complete rotations
+                    this.end_time = new Date();
                     return this.return_promise_resolver();
                 }
             }
@@ -114,9 +118,13 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         await delay(300);
         await this.word_sender.send_word("stop");
         console2.info(`GetStartDuty program finished`);
+        const start_duty_with_excess = parseInt((this.start_duty as number * 1.1).toString());
         console2.success(`Found start duty ${this.start_duty}`);
+        console2.success(`Found start duty with excess ${start_duty_with_excess}`);
+        const delta_time = (this.end_time as Date).getTime()-(this.start_time as Date).getTime();
+        console2.success(`Found start time ${delta_time} [ms]`);
         // return found start duty.
-        return { [this.direction_str]: { "start_duty": this.start_duty} };
+        return { [this.direction_str]: { "start_duty": start_duty_with_excess, "start_time": delta_time} };
     }
 
     direction = 0;
@@ -131,6 +139,9 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
         else if (direction_str === "ccw") {
             this.direction = 1;
+        }
+        else {
+            throw `Unrecognised direction ${direction_str} should be 'cw' or 'ccw'`;
         }
     }
 }

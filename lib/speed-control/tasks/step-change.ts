@@ -11,6 +11,10 @@ import { delay } from "../utils/delay.js";
  * Go through a range of duties. Starting with zero and then the determined start duty and iterate N - 2 steps until max duty.
  * For each sent word we need to take the acceleration data and work out if we have entered a stable region, this is defined to be
  * when we have not seen a lower acceleration value for a set period of time determined by the wait_time (in milliseconds).
+ * 
+ * Brief 2
+ * Go through a range of dutites. Start by finding the start speed and the idle speed in both directions. Then go from the start speed and
+ * set the idle speed. Once we are idleing succesfully, go from the idle speed to the maximum set duty in N - 1 steps.
  */
 
 export type LineData = {
@@ -69,6 +73,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     wait_timeout: any;
     start_duty: number | null = null;
     n_duty_steps: number;
+    idle_duty: number | null = null;
 
     async create_timeout() {
         if (this.wait_timeout) clearTimeout(this.wait_timeout);
@@ -93,39 +98,38 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             this.largest_vel = Number.NEGATIVE_INFINITY;
         }
         else {
+            clearTimeout(this.wait_timeout);
             this.return_promise_resolver();
         }
     }
 
     duties_to_apply: Array<number> = [];
     async run(state: any) {
-        const start_duty = state[this.direction_str].start_duty;
-        this.start_duty = start_duty as number * (this.max_duty / 65534);
-        const steps_remaining = this.n_duty_steps - 2;
-        const iter = (this.max_duty - this.start_duty) / steps_remaining;
+        const idle_duty = state[this.direction_str].idle_duty;
+
+        console.log("inputs", { idle_duty});
+
+        this.idle_duty = parseInt((idle_duty as number * (this.max_duty / 65534)).toString());
+
+        const steps_remaining = this.n_duty_steps - 1;
+        const iter = (this.end_duty - this.idle_duty) / steps_remaining;
         const remaining_range: Array<number> = [];
-        let c_value = this.start_duty;
+        let c_value = this.idle_duty;
         for (let i = 1; i <= steps_remaining; i++) { // 1,2,3,4,5,6,7,8, 9
             c_value += iter;
             remaining_range.push(c_value);
         }
-        const range = [0, this.start_duty, ...remaining_range];
+        const range = [this.idle_duty, ...remaining_range];
         const rounded_range = range.map(Math.round);
         this.duties_to_apply = rounded_range;
 
-        this.current_duty = 0;
+        console.log("this.end_duty", this.end_duty);
+        console.log("this.idle_duty", this.idle_duty);
+        console.log("this.duties to apply", JSON.stringify(this.duties_to_apply));
+
+        this.current_duty = this.idle_duty;
         console2.info(`GetStepChange program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
-        await delay(300);
-        await this.word_sender.send_word("thrustui16", 0);
-        await delay(300);
-        await this.word_sender.send_word("directionui8", this.direction);
-        await delay(300);
-        await this.word_sender.send_word("thrustui16", this.current_duty as number);
-        await delay(300);
-        await this.word_sender.send_word("reset");
-        await delay(300);
-        await this.word_sender.send_word("start");
-        await delay(3000); // put this delay in here to make sure we dont pick up any irrelevant acc data from when the ESC turns on.
+        await delay(100);
         console2.log("GetStepChange program is now running");
         this.send_next_word();
         return super.run(); // tick will now run every time the device outputs a line.
@@ -158,12 +162,12 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
+        console2.info(`StepChange program, turning motor off.`);
         await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
         await delay(300);
         await this.word_sender.send_word("stop");
         await delay(10000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
-
 
         // now process the segments
         this.segments.forEach((segment, idx) => {
@@ -187,6 +191,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         let segment_velocity_min = Number.POSITIVE_INFINITY;
         let segment_velocity_max = Number.NEGATIVE_INFINITY;
+
+        console.log("reversed segments", JSON.stringify(reversed_segments, null, 4));
 
         reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {
@@ -331,12 +337,14 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     direction_sign = 1.0;
     max_stability_tolerance = 1.0;
     min_stability_tolerance = 1.0;
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1) {
+    end_duty = 2047;
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 1023) {
         super(input$);
         this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
         this.word_sender = word_sender;
         this.direction_str = direction_str;
+        this.end_duty = end_duty;
         this.wait_time = wait_time;
         this.max_stability_tolerance = 1.0 + (stable_region_tolerance_percentage / 100);
         this.min_stability_tolerance = 1.0 - (stable_region_tolerance_percentage / 100);
