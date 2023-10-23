@@ -73,7 +73,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     wait_timeout: any;
     start_duty: number | null = null;
     n_duty_steps: number;
-    idle_duty: number | null = null;
 
     async create_timeout() {
         if (this.wait_timeout) clearTimeout(this.wait_timeout);
@@ -106,28 +105,39 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     duties_to_apply: Array<number> = [];
     async run(state: any) {
         const idle_duty = state[this.direction_str].idle_duty;
+        const start_duty = state[this.direction_str].start_duty;
 
-        console.log("inputs", { idle_duty});
+        let begin_duty = 0;
 
-        this.idle_duty = parseInt((idle_duty as number * (this.max_duty / 65534)).toString());
+        if (this.start_duty_override === "idle") {
+            begin_duty = parseInt((idle_duty as number * (this.max_duty / 65534)).toString());
+        }
+        else if (this.start_duty_override === "start"){
+            begin_duty = parseInt((start_duty as number * (this.max_duty / 65534)).toString());
+        }
+        else if (this.start_duty_override !== undefined) {
+            begin_duty = parseInt((this.start_duty_override as number * (this.max_duty / 65534)).toString());
+        }
+
+        console.log("inputs", { begin_duty, end_duty: this.end_duty});
 
         const steps_remaining = this.n_duty_steps - 1;
-        const iter = (this.end_duty - this.idle_duty) / steps_remaining;
+        const iter = (this.end_duty - begin_duty) / steps_remaining;
         const remaining_range: Array<number> = [];
-        let c_value = this.idle_duty;
+        let c_value = begin_duty;
         for (let i = 1; i <= steps_remaining; i++) { // 1,2,3,4,5,6,7,8, 9
             c_value += iter;
             remaining_range.push(c_value);
         }
-        const range = [this.idle_duty, ...remaining_range];
+        const range = [begin_duty, ...remaining_range];
         const rounded_range = range.map(Math.round);
         this.duties_to_apply = rounded_range;
 
         console.log("this.end_duty", this.end_duty);
-        console.log("this.idle_duty", this.idle_duty);
+        console.log("this.idle_duty", begin_duty);
         console.log("this.duties to apply", JSON.stringify(this.duties_to_apply));
 
-        this.current_duty = this.idle_duty;
+        this.current_duty = begin_duty;
         console2.info(`GetStepChange program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
         await delay(100);
         console2.log("GetStepChange program is now running");
@@ -338,7 +348,9 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     max_stability_tolerance = 1.0;
     min_stability_tolerance = 1.0;
     end_duty = 2047;
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 464) {
+    start_duty_override: number | string | undefined;
+
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 464, start_duty_override: number | string | undefined = "idle") {
         super(input$);
         this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
@@ -348,6 +360,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         this.wait_time = wait_time;
         this.max_stability_tolerance = 1.0 + (stable_region_tolerance_percentage / 100);
         this.min_stability_tolerance = 1.0 - (stable_region_tolerance_percentage / 100);
+        this.start_duty_override = start_duty_override;
         if (direction_str === "cw") {
             this.direction = 0;
         }

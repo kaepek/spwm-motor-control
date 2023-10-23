@@ -54,9 +54,10 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
         console2.info("Waiting for startup");
-        await delay(start_time);
+        await delay(start_time * 4);
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
+        await delay(start_time * 4);
 
         return super.run(); // tick will now run every time the device outputs a line. 
     }

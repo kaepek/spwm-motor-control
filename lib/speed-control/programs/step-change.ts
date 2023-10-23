@@ -340,24 +340,26 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
             return [Math.log10(pair[0]), Math.log10(pair[1])];
         });
 
-        const linear_result = regression.linear(linear_pairs as any);
+        const linear_result = regression.linear(linear_pairs as any, {precision: 6});
         const linear_result_gradient = linear_result.equation[0]; // m
         const linear_result_y_intercept = linear_result.equation[1]; // c
         const linear_result_gradient_reciprocal = 1 / linear_result_gradient; // 1/m
         const linear_result_neg_intercept_over_gradient = - (linear_result_y_intercept / linear_result_gradient); // -c/m
         const linear_result_r2 = linear_result.r2;
+        console.log("linear_result_r2", direction_str, linear_result_r2);
         const linear_raw_equation = "y = mx + c";
         const linear_equation = "speed = m(duty) + c";
         // m value c value
         const linear_equation_rearraged = "duty = (speed/m) - (c/m)";
         // 1/m value -c/m value
 
-        const power_law_result = regression.linear(loglog_pairs as any);
+        const power_law_result = regression.linear(loglog_pairs as any, {precision: 6});
         const power_law_result_gradient = power_law_result.equation[0]; // m
         const power_law_result_gradient_reciprocal = 1 / power_law_result_gradient;
         const power_law_result_y_intercept = power_law_result.equation[1]; // c
         const power_law_divisor = Math.pow(10.0, power_law_result_y_intercept); //10^c
         const power_law_result_r2 = power_law_result.r2;
+        console.log("power_law_result_r2", direction_str, power_law_result_r2);
 
         const power_law_raw_equation = "log10(y) = m(log10(x)) + log10(c)"
         const power_law_equation = "speed = (10^c)(duty)^m";
@@ -455,7 +457,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
                 { "name": "Linear model Duty percentage / 100%", "position": 11 },
                 { "name": "Power law model Duty percentage / 100%", "position": 12 }
             ],
-            plots: [,
+            plots: [
                 {
                     "name": "Models vs Experimental data comparison: (Duty percentage / 100%) vs Speed [Hz] and Linear model Speed [Hz] and Power law model Speed [Hz]",
                     "independant_column": "Duty percentage / 100%",
