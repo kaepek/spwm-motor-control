@@ -338,7 +338,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     max_stability_tolerance = 1.0;
     min_stability_tolerance = 1.0;
     end_duty = 2047;
-    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 1023) {
+    constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 464) {
         super(input$);
         this.n_duty_steps = n_duty_steps;
         this.max_duty = max_duty;
