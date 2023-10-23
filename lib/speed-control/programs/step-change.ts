@@ -12,6 +12,8 @@ import { ASCIIParser } from "../../../external/kaepek-io/lib/host/controller/uti
 import { delay } from "../utils/delay.js";
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
 import { SetIdleDuty } from "../tasks/set-idle.js";
+import regression from 'regression';
+
 
 /**
  * Brief run the get start duty for both directions. Do this apriori.
@@ -101,11 +103,19 @@ const cli_args: Array<CliArg> = [
         short: "m",
         required: true,
         group: "command"
+    },
+    {
+        name: "duty_cap_multiplier",
+        type: CliArgType.Number,
+        short: "d",
+        required: true
     }
 ];
 
 
 const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
+
+const duty_multiplier = parsed_args.duty_cap_multiplier;
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
 
@@ -158,6 +168,29 @@ type StepChangeOuput = {
     }
 }
 
+type SteadyStat = {
+    type: "steady"
+    duty: number,
+    max_velocity: number,
+    min_velocity: number,
+    mean_velocity: number,
+    std_velocity: number
+};
+
+type TransitionStat = {
+    type: "transition",
+    duty_prior: number,
+    duty: number,
+    duty_change: number,
+    velocity_prior: number,
+    velocity_next: number,
+    velocity_change: number,
+    max_time: number,
+    min_time: number,
+    transition_time: number,
+    dead_time: number
+}
+
 const steady_format = [
     {"name": "duty", "position": 0},
     {"name": "mean_velocity", "position": 1},
@@ -173,6 +206,7 @@ const transition_format = [
 const detections_parser = new ASCIIParser(outgoing_data_config_with_extensions, ",");
 const steady_parser = new ASCIIParser(steady_format, ",");
 const transition_parser = new ASCIIParser(transition_format, ",");
+const max_possible_duty = 2047;
 
 run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
     console2.success("All finished, result:", JSON.stringify(output));
@@ -204,7 +238,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
 
     // extract the stable/transition region stats.
 
-    const stats: {cw: any, ccw: any} = {
+    const stats: {cw: Array<SteadyStat | TransitionStat>, ccw: Array<SteadyStat | TransitionStat>} = {
         cw: [],
         ccw: []
     };
@@ -213,7 +247,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
         
         const type = segment.type;
         if (segment.type === "steady") {
-            stats.cw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
+            stats.cw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity} as SteadyStat);
         }
         else {
             const last_segment_element = segment.data[segment.data.length - 1];
@@ -228,7 +262,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
             const velocity_prior = (output.cw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
             const velocity_next = (output.cw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
             const velocity_change = velocity_next - velocity_prior;
-            stats.cw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time});
+            stats.cw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time} as TransitionStat);
         }
     });
 
@@ -236,7 +270,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
         output.ccw.segments.forEach((segment, idx) => {
             const type = segment.type;
             if (segment.type === "steady") {
-                stats.ccw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity});
+                stats.ccw.push({type, duty: segment.duty, max_velocity: segment.max_velocity, min_velocity: segment.min_velocity, mean_velocity: segment.mean_velocity, std_velocity: segment.std_velocity} as SteadyStat);
             }
             else {
                 const last_segment_element = segment.data[segment.data.length - 1];
@@ -251,7 +285,7 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
                 const velocity_prior = (output.ccw.segments[idx - 1] as SteadySegmentWithStats).mean_velocity;
                 const velocity_next = (output.ccw.segments[idx + 1] as SteadySegmentWithStats).mean_velocity;
                 const velocity_change = velocity_next - velocity_prior;
-                stats.ccw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time});
+                stats.ccw.push({type, duty_prior, duty, duty_change, velocity_prior, velocity_next, velocity_change, max_time, min_time, transition_time, dead_time} as TransitionStat);
             }
         });
     }
@@ -274,6 +308,259 @@ run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
             charts.ccw.transition.push(transition_parser.serialise(stat));
         }
     });
+
+    // ok now do regression
+    Object.keys(stats).forEach((direction: string) => {
+        const direction_str = direction as "cw" | "ccw";
+        const raw_duty_velocity_pairs = [] as Array<Array<number>>;
+
+        // get duty velocity pairs and modify with abs to get speed and normalise duty so that the maximum possible yields a duty percentage of the duty_cap_multiplier
+        stats[direction_str].forEach((stat) => {
+            if (stat.type === "steady") 
+            {
+                raw_duty_velocity_pairs.push([stat.duty, stat.mean_velocity, stat.std_velocity]);
+            }
+        });
+        const raw_duty_speed_pairs = raw_duty_velocity_pairs.map((pair) => {
+            return [pair[0],Math.abs(pair[1]), pair[2]];
+        });
+        // max_possible_duty 2047
+        // duty_multiplier 0.3
+        // so when duty is at 2047 (duty/2047) = 0.3 real duty percentage
+        // but (duty/2047) = 1
+        // so ((duty/2047) * 0.3) = 0.3 
+        const raw_duty_multiplier = ((1/max_possible_duty) * duty_multiplier);
+        
+        // get linear duty speed pairs
+        const linear_pairs = raw_duty_speed_pairs.map(pair => {
+            return [raw_duty_multiplier*pair[0], pair[1]];
+        });
+
+        // get log log duty speed pairs
+        const loglog_pairs = linear_pairs.map((pair) => {
+            return [Math.log10(pair[0]), Math.log10(pair[1])];
+        });
+
+        const linear_result = regression.linear(linear_pairs as any);
+        const linear_result_gradient = linear_result.equation[0]; // m
+        const linear_result_y_intercept = linear_result.equation[1]; // c
+        const linear_result_gradient_reciprocal = 1 / linear_result_gradient; // 1/m
+        const linear_result_neg_intercept_over_gradient = - (linear_result_y_intercept / linear_result_gradient); // -c/m
+        const linear_result_r2 = linear_result.r2;
+        const linear_raw_equation = "y = mx + c";
+        const linear_equation = "speed = m(duty) + c";
+        // m value c value
+        const linear_equation_rearraged = "duty = (speed/m) - (c/m)";
+        // 1/m value -c/m value
+
+        const power_law_result = regression.linear(loglog_pairs as any);
+        const power_law_result_gradient = power_law_result.equation[0]; // m
+        const power_law_result_gradient_reciprocal = 1/power_law_result_gradient;
+        const power_law_result_y_intercept = power_law_result.equation[1]; // c
+        const power_law_divisor = Math.pow(10.0, power_law_result_y_intercept); //10^c
+        const power_law_result_r2 = power_law_result.r2;
+
+        const power_law_raw_equation = "log10(y) = m(log10(x)) + log10(c)"
+        const power_law_equation = "speed = (10^c)(duty)^m";
+        const power_law_equation_rearranged = "duty = (speed/(10^c))^(1/m)";
+        // 10^c value m value
+
+        // write csv config file
+
+        // what chars format do we want
+        /*
+         Duty,
+         Speed[hz],
+         Speed STD,
+         Duty percentage / 100%,
+         LOG10(Duty percentage / 100%),
+         LOG10(Speed [Hz]),
+         Linear model Speed [Hz],
+         Linear Model Speed Error [ΔHz],
+         Power law model Speed [Hz],
+         Power law model Speed Error [ΔHz],
+         Linear model Duty,
+         Power law model Duty,
+         */
+
+
+         // what plots do we want
+
+         // title 
+         const linear_fit_title = `(Duty percentage / 100%) vs Speed [Hz] and Linear model Speed [Hz] and Linear Model Speed Error [ΔHz]. Raw Equation: ${linear_raw_equation}. Equation: ${linear_equation} m=${linear_result_gradient}, c=${linear_result_y_intercept}, r^2=${linear_result_r2}.`;
+         const linear_fit = {
+            "name": linear_fit_title,
+            "independant_column": "Duty percentage / 100%",
+            "dependant_columns": [
+                {"name": "Speed [Hz]", "color": "black", "line": false},
+                {"name": "Linear model Speed [Hz]", "color": "blue", "scatter": false},
+                {"name": "Linear Model Speed Error [ΔHz]", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
+            ]
+         };
+         
+         const linear_fit_rearranged_title = `Speed [Hz] vs (Duty percentage / 100%) and (Linear model Duty percentage / 100%). Rearranged Equation ${linear_equation_rearraged} 1/m=${linear_result_gradient_reciprocal}, -c/m=${linear_result_neg_intercept_over_gradient}, r^2=${linear_result_r2}`;
+         const linear_fit_rearranged = {
+            "name": linear_fit_rearranged_title,
+            "independant_column": "Speed [Hz]",
+            "dependant_columns": [
+                {"name": "Duty percentage / 100%", "color": "black", "line": false},
+                {"name": "Linear model Duty percentage / 100%", "color": "blue", "scatter": false}
+            ]
+         };
+
+         const power_law_fit_title = `LOG10(Duty percentage / 100%) vs LOG10(Speed [Hz]) and Power law model LOG10(Speed [Hz]). Raw Equation: ${power_law_raw_equation}. Equation: ${power_law_equation} m=${power_law_result_gradient}, c=${power_law_result_y_intercept}, r^2=${power_law_result_r2}.`;
+         const power_law_fit = {
+            "name": power_law_fit_title,
+            "independant_column": "LOG10(Duty percentage / 100%)",
+            "dependant_columns": [
+                {"name": "LOG10(Speed [Hz])", "color": "black", "line": false},
+                {"name": "Power law model LOG10(Speed [Hz])", "color": "blue", "scatter": false},
+            ]
+        };
+
+        const power_law_fit_model_title = `Duty percentage / 100% vs Speed [Hz] and Power law model Speed [Hz] and Power law model Speed Error [ΔHz]. Raw Equation: ${power_law_raw_equation}. Equation: ${power_law_equation} m=${power_law_result_gradient}, c=${power_law_result_y_intercept}, r^2=${power_law_result_r2}.`;
+        const power_law_fit_model = {
+           "name": power_law_fit_model_title,
+           "independant_column": "Duty percentage / 100%",
+           "dependant_columns": [
+               {"name": "Speed [Hz]", "color": "black", "line": false},
+               {"name": "Power law model Speed [Hz]", "color": "blue", "scatter": false},
+               {"name": "Power law model Speed Error [ΔHz]", "color": "red", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
+           ]
+       };
+
+        const power_law_fit_rearranged_title = `Speed [Hz] vs (Duty percentage / 100%) and (Power law model Duty percentage / 100%). Rearranged Equation ${power_law_equation_rearranged} m=${power_law_result_gradient}, -10^c=${power_law_divisor}, r^2=${power_law_result_r2}.`;
+        const power_law_fit_rearranged = {
+            "name": power_law_fit_rearranged_title,
+            "independant_column": "Speed [Hz]",
+            "dependant_columns": [
+                {"name": "Duty percentage / 100%", "color": "black", "line": false},
+                {"name": "Power law model Duty percentage / 100%", "color": "blue", "scatter": false}
+            ]
+        };
+
+        const regression_config = {
+            inputs: [
+                {"name":"Duty percentage / 100%", "position": 0},
+                {"name":"Speed [Hz]", "position": 1},
+                {"name":"Speed STD", "position": 2},
+                {"name":"Duty percentage / 100%", "position": 3},
+                {"name":"LOG10(Duty percentage / 100%)", "position": 4},
+                {"name":"LOG10(Speed [Hz])", "position": 5},
+                {"name":"Linear model Speed [Hz]", "position": 6},
+                {"name":"Linear Model Speed Error [ΔHz]", "position": 7},
+                {"name":"Power law model LOG10(Speed [Hz])", "position": 8},
+                {"name":"Power law model Speed [Hz]", "position": 9},
+                {"name":"Power law model Speed Error [ΔHz]", "position": 10},
+                {"name":"Linear model Duty percentage / 100%", "position": 11},
+                {"name":"Power law model Duty percentage / 100%", "position": 12}
+            ],
+            plots: [
+                linear_fit,
+                linear_fit_rearranged,
+                power_law_fit,
+                power_law_fit_model,
+                power_law_fit_rearranged
+            ]
+        };
+
+        // now need to build these: 
+        type RegressionLines = {
+            Duty: number,
+            "Speed [Hz]": number,
+            "Speed STD": number,
+            "Duty percentage / 100%": number,
+            "LOG10(Duty percentage / 100%)": number,
+            "LOG10(Speed [Hz])": number,
+            "Linear model Speed [Hz]": number,
+            "Linear Model Speed Error [ΔHz]": number,
+            "Power law model LOG10(Speed [Hz])": number, // 
+            "Power law model Speed [Hz]": number,
+            "Power law model Speed Error [ΔHz]": number,
+            "Linear model Duty percentage / 100%": number,
+            "Power law model Duty percentage / 100%": number
+        };
+
+        const regression_lines: Array<RegressionLines> = [];
+
+
+        /*
+        const linear_result = regression.linear(linear_pairs as any);
+        const linear_result_gradient = linear_result.equation[0]; // m
+        const linear_result_y_intercept = linear_result.equation[1]; // c
+        const linear_result_gradient_reciprocal = 1 / linear_result_gradient; // 1/m
+        const linear_result_neg_intercept_over_gradient = - (linear_result_y_intercept / linear_result_gradient); // -c/m
+        const linear_result_r2 = linear_result.r2;
+        const linear_raw_equation = "y = mx + c";
+        const linear_equation = "speed = m(duty) + c";
+        // m value c value
+        const linear_equation_rearraged = "duty = (speed/m) - (c/m)";
+        // 1/m value -c/m value
+
+        const power_law_result = regression.linear(loglog_pairs as any);
+        const power_law_result_gradient = power_law_result.equation[0]; // m
+        const power_law_result_gradient_reciprocal = 1/power_law_result_gradient;
+        const power_law_result_y_intercept = power_law_result.equation[1]; // c
+        const power_law_divisor = Math.pow(10.0, power_law_result_y_intercept); //10^c
+        const power_law_result_r2 = power_law_result.r2;
+
+        const power_law_raw_equation = "log10(y) = m(log10(x)) + log10(c)"
+        const power_law_equation = "speed = (10^c)(duty)^m";
+        const power_law_equation_rearranged = "duty = (speed/(10^c))^(1/m)";
+
+        */
+        raw_duty_speed_pairs.forEach((value, idx) => {
+            const duty = value[0];
+            const speed = value[1];
+            const speed_std = value[2];
+            const duty_div_100pc = linear_pairs[idx][0];
+            const log10_duty_div_100pc = loglog_pairs[idx][0];
+            const log10_speed = loglog_pairs[idx][1];
+            const linear_model_speed = linear_result_gradient * duty_div_100pc + linear_result_y_intercept;
+            const linear_model_speed_error = speed - linear_model_speed;
+            const power_law_model_speed = power_law_divisor * Math.pow(duty_div_100pc, power_law_result_gradient);
+            const power_law_model_log10_speed = Math.log10(power_law_model_speed);
+            const power_law_model_speed_error = speed - power_law_model_speed;
+            const linear_model_duty_div_100pc = (speed * linear_result_gradient_reciprocal) + (linear_result_neg_intercept_over_gradient);
+            const power_model_duty_div_100pc = (speed / power_law_divisor) ^ (power_law_result_gradient_reciprocal);
+
+
+            regression_lines.push(
+                {
+                    Duty: duty,
+                    "Speed [Hz]": speed,
+                    "Speed STD": speed_std,
+                    "Duty percentage / 100%": duty_div_100pc,
+                    "LOG10(Duty percentage / 100%)": log10_duty_div_100pc,
+                    "LOG10(Speed [Hz])": log10_speed,
+                    "Linear model Speed [Hz]": linear_model_speed,
+                    "Linear Model Speed Error [ΔHz]": linear_model_speed_error,
+                    "Power law model LOG10(Speed [Hz])": power_law_model_log10_speed, // 
+                    "Power law model Speed [Hz]": power_law_model_speed,
+                    "Power law model Speed Error [ΔHz]": power_law_model_speed_error,
+                    "Linear model Duty percentage / 100%": linear_model_duty_div_100pc,
+                    "Power law model Duty percentage / 100%": power_model_duty_div_100pc
+                }
+            );
+        });
+
+        // now save config and plot data
+        const regression_parser = new ASCIIParser(regression_config.inputs, ",");
+
+        const regression_data_flat_lines = regression_lines.map((regression_line) => regression_parser.serialise(regression_line)).join("\n"); // regression_lines
+
+        if (parsed_args.hasOwnProperty("output_data_file")) {
+            fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, `.regression.${direction_str}.csv`), regression_data_flat_lines);
+            fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, `.regression.${direction_str}.config.json`), JSON.stringify(regression_config, null, 2));
+        }
+
+    })
+
+
+    // create chart for linear duty with best line fit.
+    // create chart for log log duty with best line fit.
+    // create linear model vs real speed fit chart
+    // create create for power law model vs real speed fit.
 
     console2.success("All finished, result:", JSON.stringify(output));
     // write file

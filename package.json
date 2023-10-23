@@ -17,13 +17,14 @@
     "test-ac-help": " node dist/lib/speed-control/programs/anti-cogging-calibration.js --help",
     "test-ac-gen-csv": "node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i test-ac-data-direct-4098-6.json -c ./lib/speed-control/configs/ac_map_graphs.json -o test-ac-data-direct-4098-6.csv",
     "test-ac-gen-csv-graph-html": "kaepek-io-graph-file -i test-ac-data-direct-4098-6.csv -c ./lib/speed-control/configs/ac_map_graphs.json "
-
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kaepek/spwm-motor-control.git"
   },
   "dependencies": {
+    "@types/regression": "^2.0.4",
+    "regression": "^2.0.1",
     "rxjs": "^7.8.1",
     "ts-node": "^10.9.1"
   },

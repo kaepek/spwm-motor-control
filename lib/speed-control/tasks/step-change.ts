@@ -167,7 +167,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         await this.word_sender.send_word("thrustui16", 0);
         await delay(300);
         await this.word_sender.send_word("stop");
-        await delay(10000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
+        await delay(1000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
 
         // now process the segments
         this.segments.forEach((segment, idx) => {
