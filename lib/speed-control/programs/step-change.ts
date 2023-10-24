@@ -28,38 +28,61 @@ import regression from 'regression';
  * 
  */
 
+/*
+reset && node ./dist/lib/speed-control/programs/step-change.js 
+--input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json 
+
+--command_address localhost 
+--command_port 9000 
+--command_protocol udp 
+--outgoing_address localhost 
+--outgoing_port 9002 
+--outgoing_protocol udp 
+--duty_cap_multiplier 0.3 
+--output_data_file ./calibration-data/new_idle_6.json
+
+*/
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
         type: CliArgType.InputFilePath, // InputJSONFilePathArgumentHandler
         short: "c",
+        help: "Relative file path to indicate which config file the program will use to parse the data coming from the microcontroller program via the kaepek-io-director",
         required: true
     },
     {
         name: "output_data_file",
         type: CliArgType.OutputFilePath,
         short: "o",
+        help: "Relative file path to indicate where to output the analysis files from this program.",
         required: false
     },
     {
         name: "incoming_address",
         type: CliArgType.String,
         short: "a",
-        required: true,
+        required: false,
+        help: "The incoming address to indicate what host to connect to, to accept incoming data coming from the kaepek-io-director program.",
+        default: "localhost",
         group: "incoming"
     },
     {
         name: "incoming_port",
         type: CliArgType.Number,
         short: "p",
-        required: true,
+        help: "The incoming port to indicate what host port to connect to, to accept incoming data coming from the kaepek-io-director program.",
+        required: false,
+        default: 9001,
         group: "incoming"
     },
     {
         name: "incoming_protocol",
         type: CliArgType.String,
         short: "n",
-        required: true,
+        help: "The incoming protocol to indicate what host connection protocol to connect via, to accept incoming data coming from the kaepek-io-director program.",
+        required: false,
+        default: "udp",
         group: "incoming"
     },
     {
@@ -67,12 +90,16 @@ const cli_args: Array<CliArg> = [
         type: CliArgType.String,
         short: "s",
         required: false,
+        help: "The outgoing address to indicate where this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: "localhost",
         group: "outgoing"
     },
     {
         name: "outgoing_port",
         type: CliArgType.Number,
         short: "x",
+        help: "The outgoing port to indicate what port this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: 9002,
         required: false,
         group: "outgoing"
     },
@@ -80,6 +107,8 @@ const cli_args: Array<CliArg> = [
         name: "outgoing_protocol",
         type: CliArgType.String,
         short: "v",
+        help: "The outgoing protocol to indicate what protocol this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: "udp",
         required: false,
         group: "outgoing"
     },
@@ -87,32 +116,86 @@ const cli_args: Array<CliArg> = [
         name: "command_address",
         type: CliArgType.String,
         short: "y",
-        required: true,
+        help: "The command host address, indicates which host this program will send word commands to the kaepek-io-director program.",
+        required: false,
+        default: "localhost",
         group: "command"
     },
     {
         name: "command_port",
         type: CliArgType.Number,
+        help: "The command host port, indicates which port this program will use to send word commands to the kaepek-io-director program.",
         short: "u",
-        required: true,
+        required: false,
+        default: 9000,
         group: "command"
     },
     {
         name: "command_protocol",
         type: CliArgType.String,
+        help: "The command host protocol, indicates which protocol this program will use to send word commands to the kaepek-io-director program.",
         short: "m",
-        required: true,
+        required: false,
+        default: "udp",
         group: "command"
     },
     {
         name: "duty_cap_multiplier",
         type: CliArgType.Number,
         short: "d",
+        help: "The duty cap multiplier, represents the microcontrollers internal duty cap on the with a range 0.0 -> 1.0, 1.0 represents 100% of the possible duty authority.",
         required: true
+    },
+    {
+        name: "duty_max",
+        type: CliArgType.Number,
+        short: "q",
+        help: "The maximum internally supported duty value of the microcontroller.",
+        required: false,
+        default: 2047
+    },
+    {
+        name: "duty_end",
+        type: CliArgType.Number,
+        short: "e",
+        help: "The duty to end the step change program with.",
+        required: false,
+        default: 2047
+    },
+    {
+        name: "duty_begin",
+        type: CliArgType.StringOrNumber,
+        short: "b",
+        required: false,
+        help: "The duty to start the step change program with. Several possible values: either 'idle' which represents the lowest possible speed the motor will reliably turn, 'start' which represents the startup speed required to overcome sticktion etc, or a user provided numerical value e.g. 10. Note the program will bring the motor up to the idle speed before applying the user selected values.",
+        default: "idle"
+    },
+    {
+        name: "stable_region_tolerance_percentage",
+        type: CliArgType.Number,
+        short: "t",
+        required: false,
+        help: "The percentage tolerance allowing values to be permitted into the stable region from the transition region. Aka if 1, values in the transition region which are +/-1% will be allowed into the stable region, the first failure of out of bounds marks the the boundary of the transition/stable region.",
+        default: 1
+    },
+    {
+        name: "wait_time",
+        type: CliArgType.Number,
+        help: "During a transition. The [wait_time] is the number of milliseconds to wait between while not seeing a lower acceleration before we assume we are in a stable velocity region and the transition has concluded.",
+        short: "w",
+        required: false,
+        default: 3000
+    },
+    {
+        name: "number_duty_steps",
+        type: CliArgType.Number,
+        help: "The number of duty steps to apply between (inclusive) the duty_begin and duty_end values.",
+        short: "f",
+        required: false,
+        default: 10
     }
 ];
-
-
+  
 const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
 
 const duty_multiplier = parsed_args.duty_cap_multiplier;
@@ -146,7 +229,7 @@ const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
 const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_set_idle_duty_task = new SetIdleDuty(cw_rotation$, word_sender, "cw");
-const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw");
+const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw", parsed_args.duty_max, parsed_args.number_duty_steps, parsed_args.wait_time, parsed_args.stable_region_tolerance_percentage, parsed_args.duty_end, parsed_args.duty_begin);
 
 const despin_task = new SetIdleDuty(cw_rotation$, word_sender, "cw", 0);
 
