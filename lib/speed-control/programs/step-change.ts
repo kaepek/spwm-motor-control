@@ -28,21 +28,6 @@ import regression from 'regression';
  * 
  */
 
-/*
-reset && node ./dist/lib/speed-control/programs/step-change.js 
---input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json 
-
---command_address localhost 
---command_port 9000 
---command_protocol udp 
---outgoing_address localhost 
---outgoing_port 9002 
---outgoing_protocol udp 
---duty_cap_multiplier 0.3 
---output_data_file ./calibration-data/new_idle_6.json
-
-*/
-
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
@@ -124,8 +109,8 @@ const cli_args: Array<CliArg> = [
     {
         name: "command_port",
         type: CliArgType.Number,
-        help: "The command host port, indicates which port this program will use to send word commands to the kaepek-io-director program.",
         short: "u",
+        help: "The command host port, indicates which port this program will use to send word commands to the kaepek-io-director program.",
         required: false,
         default: 9000,
         group: "command"
@@ -133,8 +118,8 @@ const cli_args: Array<CliArg> = [
     {
         name: "command_protocol",
         type: CliArgType.String,
-        help: "The command host protocol, indicates which protocol this program will use to send word commands to the kaepek-io-director program.",
         short: "m",
+        help: "The command host protocol, indicates which protocol this program will use to send word commands to the kaepek-io-director program.",
         required: false,
         default: "udp",
         group: "command"
@@ -198,6 +183,9 @@ const cli_args: Array<CliArg> = [
   
 const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
 
+// console.log("parsed_args", parsed_args);
+// process.exit(0);
+
 const duty_multiplier = parsed_args.duty_cap_multiplier;
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
@@ -236,7 +224,7 @@ const despin_task = new SetIdleDuty(cw_rotation$, word_sender, "cw", 0);
 const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "ccw");
-const ccw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "ccw");
+const ccw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "ccw",  parsed_args.duty_max, parsed_args.number_duty_steps, parsed_args.wait_time, parsed_args.stable_region_tolerance_percentage, parsed_args.duty_end, parsed_args.duty_begin);
 
 const tasks = [cw_get_start_duty_task, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_get_step_change_task, despin_task, ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_get_step_change_task];
 
@@ -291,7 +279,12 @@ const steady_parser = new ASCIIParser(steady_format, ",");
 const transition_parser = new ASCIIParser(transition_format, ",");
 const max_possible_duty = 2047;
 
-run_tasks(tasks, adaptor).then((output: StepChangeOuput) => {
+run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
+    await delay(300);
+    await word_sender.send_word("thrustui16", 0);
+    await delay(300);
+    await word_sender.send_word("stop");
+
     console2.success("All finished, result:", JSON.stringify(output));
 
     const output_flat: { cw: LineData[], ccw: LineData[] } = { cw: [], ccw: [] };

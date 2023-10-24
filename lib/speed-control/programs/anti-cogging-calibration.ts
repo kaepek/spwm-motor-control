@@ -17,33 +17,41 @@ const cli_args: Array<CliArg> = [
         name: "input_config_file",
         type: CliArgType.InputFilePath, // InputJSONFilePathArgumentHandler
         short: "c",
+        help: "Relative file path to indicate which config file the program will use to parse the data coming from the microcontroller program via the kaepek-io-director",
         required: true
     },
     {
         name: "output_data_file",
         type: CliArgType.OutputFilePath,
         short: "o",
+        help: "Relative file path to indicate where to output the analysis files from this program.",
         required: false
     },
     {
         name: "incoming_address",
         type: CliArgType.String,
         short: "a",
-        required: true,
+        required: false,
+        help: "The incoming address to indicate what host to connect to, to accept incoming data coming from the kaepek-io-director program.",
+        default: "localhost",
         group: "incoming"
     },
     {
         name: "incoming_port",
         type: CliArgType.Number,
         short: "p",
-        required: true,
+        help: "The incoming port to indicate what host port to connect to, to accept incoming data coming from the kaepek-io-director program.",
+        required: false,
+        default: 9001,
         group: "incoming"
     },
     {
         name: "incoming_protocol",
         type: CliArgType.String,
         short: "n",
-        required: true,
+        help: "The incoming protocol to indicate what host connection protocol to connect via, to accept incoming data coming from the kaepek-io-director program.",
+        required: false,
+        default: "udp",
         group: "incoming"
     },
     {
@@ -51,12 +59,16 @@ const cli_args: Array<CliArg> = [
         type: CliArgType.String,
         short: "s",
         required: false,
+        help: "The outgoing address to indicate where this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: "localhost",
         group: "outgoing"
     },
     {
         name: "outgoing_port",
         type: CliArgType.Number,
         short: "x",
+        help: "The outgoing port to indicate what port this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: 9002,
         required: false,
         group: "outgoing"
     },
@@ -64,6 +76,8 @@ const cli_args: Array<CliArg> = [
         name: "outgoing_protocol",
         type: CliArgType.String,
         short: "v",
+        help: "The outgoing protocol to indicate what protocol this program will send data to. Useful for graphing via the kaepek-io-graph program.",
+        default: "udp",
         required: false,
         group: "outgoing"
     },
@@ -71,45 +85,58 @@ const cli_args: Array<CliArg> = [
         name: "command_address",
         type: CliArgType.String,
         short: "y",
-        required: true,
+        help: "The command host address, indicates which host this program will send word commands to the kaepek-io-director program.",
+        required: false,
+        default: "localhost",
         group: "command"
     },
     {
         name: "command_port",
         type: CliArgType.Number,
         short: "u",
-        required: true,
+        help: "The command host port, indicates which port this program will use to send word commands to the kaepek-io-director program.",
+        required: false,
+        default: 9000,
         group: "command"
     },
     {
         name: "command_protocol",
         type: CliArgType.String,
         short: "m",
-        required: true,
+        help: "The command host protocol, indicates which protocol this program will use to send word commands to the kaepek-io-director program.",
+        required: false,
+        default: "udp",
         group: "command"
     },
     {
-        name: "max_duty",
+        name: "duty_max",
         type: CliArgType.Number,
         short: "d",
-        required: false
+        help: "The maximum internally supported duty value of the microcontroller.",
+        required: false,
+        default: 2047
     },
     {
         name: "angular_steps",
         type: CliArgType.Number,
         short: "b",
+        help: "The number of angular steps that the rotary encoder has.",
+        default: 16384,
         required: false
     },
     {
         name: "angular_compression_ratio",
         type: CliArgType.Number,
         short: "r",
+        help: "The angular compression ratio, as read from ENCODER_VALUE_COMPRESSION within the microcontroller.",
         required: true
     },
     {
         name: "bin_population_threshold",
         type: CliArgType.Number,
         short: "t",
+        help: "The velocity data points needed per each compressed angular step required before data collection is completed.",
+        default: 3,
         required: false
     }
 ];
@@ -117,9 +144,9 @@ const cli_args: Array<CliArg> = [
 
 const parsed_args = parse_args("AntiCoggingCalibration", cli_args, ArgumentHandlers) as any;
 
-const max_duty = parsed_args.max_duty || 2047;
-const angular_steps = parsed_args.angular_steps || 16384;
-const bin_population_threshold = parsed_args.bin_population_threshold || 3;
+const duty_max = parsed_args.duty_max;
+const angular_steps = parsed_args.angular_steps;
+const bin_population_threshold = parsed_args.bin_population_threshold;
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
 
@@ -135,21 +162,25 @@ adaptor.incoming_data$.subscribe((line_data) => {
 const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
 const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
-// max_duty = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3
+// duty_max = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3
 
 // what tasks do we need for this program
 const cw_get_start_duty_task = new GetStartDuty(cw_rotation$, word_sender, "cw");
 const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
-const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", max_duty, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
+const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 const ccw_get_start_duty_task = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
-const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw", max_duty, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
+const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
 const tasks = [ccw_get_start_duty_task, ccw_get_idle_duty_task, ccw_collect_acceleration_data, cw_get_start_duty_task, cw_get_idle_duty_task, cw_collect_acceleration_data];
 
 // need to parse state to each task when we are running it
 
-run_tasks(tasks, adaptor).then((output: ACMap) => {
+run_tasks(tasks, adaptor).then(async (output: ACMap) => {
+    await delay(300);
+    await word_sender.send_word("thrustui16", 0);
+    await delay(300);
+    await word_sender.send_word("stop");
     const cpp_ac_map = generate_ac_map_cpp(output);
     console2.success("All finished, result:", JSON.stringify(output));
     // write file

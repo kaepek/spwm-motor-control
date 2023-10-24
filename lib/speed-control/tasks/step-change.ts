@@ -119,8 +119,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
             begin_duty = parseInt((this.start_duty_override as number * (this.max_duty / 65534)).toString());
         }
 
-        console.log("inputs", { begin_duty, end_duty: this.end_duty});
-
         const steps_remaining = this.n_duty_steps - 1;
         const iter = (this.end_duty - begin_duty) / steps_remaining;
         const remaining_range: Array<number> = [];
@@ -133,14 +131,10 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         const rounded_range = range.map(Math.round);
         this.duties_to_apply = rounded_range;
 
-        console.log("this.end_duty", this.end_duty);
-        console.log("this.idle_duty", begin_duty);
-        console.log("this.duties to apply", JSON.stringify(this.duties_to_apply));
-
         this.current_duty = begin_duty;
         console2.info(`GetStepChange program is initalising, duty range is ${JSON.stringify(this.duties_to_apply)}`);
         await delay(100);
-        console2.log("GetStepChange program is now running");
+        console2.info("GetStepChange program is now running");
         this.send_next_word();
         return super.run(); // tick will now run every time the device outputs a line.
     }
@@ -176,8 +170,8 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
         await delay(300);
-        await this.word_sender.send_word("stop");
-        await delay(1000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
+        // await this.word_sender.send_word("stop");
+        // await delay(1000); // todo parameterise this as a cooldown time. also this should only need to be applied if this is the 1st direction
 
         // now process the segments
         this.segments.forEach((segment, idx) => {
@@ -201,8 +195,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         let segment_velocity_min = Number.POSITIVE_INFINITY;
         let segment_velocity_max = Number.NEGATIVE_INFINITY;
-
-        console.log("reversed segments", JSON.stringify(reversed_segments, null, 4));
 
         reversed_segments.forEach((segment, reversed_segment_idx) => {
             if (segment.type === "steady") {

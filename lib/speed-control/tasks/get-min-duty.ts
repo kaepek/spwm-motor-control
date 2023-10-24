@@ -112,10 +112,10 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
-        await delay(300);
+        // await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
-        await delay(300);
-        await this.word_sender.send_word("stop");
+        // await delay(300);
+        // await this.word_sender.send_word("stop");
         const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) + 7)).toString());
         console2.info(`GetMinDuty program finished`);
         console2.success(`Found idle duty ${final_duty_before_stall}`);

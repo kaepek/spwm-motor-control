@@ -35,22 +35,19 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
             this.start_duty = this.idle_duty_override;
         }
 
-        console.log("duty info", {start_duty: this.start_duty, idle_duty: this.idle_duty});
-
-        console2.info(`SetIdleDuty program running, targeting ${this.idle_duty} min duty`);
+        console2.info(`SetIdleDuty program running, targeting a thrustui16 value of ${this.idle_duty}`);
         console2.info("Resetting controller");
+        /*await delay(1000);
         await this.word_sender.send_word("stop");
         await delay(1000);
         await this.word_sender.send_word("thrustui16", 0);
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("directionui8", this.direction);
-        await delay(100);
-        await this.word_sender.send_word("thrustui16", this.start_duty as number);
-        await delay(100);
+        await delay(300);
         await this.word_sender.send_word("reset");
-        await delay(100);
-        await this.word_sender.send_word("start");
-        await delay(100);
+        await delay(1000);
+        await this.word_sender.send_word("start");*/
+        await delay(1000);
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
         console2.info("Waiting for startup");
@@ -58,7 +55,6 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
         await delay(start_time * 4);
-
         return super.run(); // tick will now run every time the device outputs a line. 
     }
 
