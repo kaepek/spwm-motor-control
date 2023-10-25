@@ -507,7 +507,7 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
             ]
         };
 
-        const power_law_fit_rearranged_title = `Speed [Hz] vs (Duty percentage / 100%) and (Power law model Duty percentage / 100%). Rearranged Equation ${power_law_equation_rearranged} m=${power_law_result_gradient}, -10^c=${power_law_divisor}, r^2=${power_law_result_r2}.`;
+        const power_law_fit_rearranged_title = `Speed [Hz] vs (Duty percentage / 100%) and (Power law model Duty percentage / 100%). Rearranged Equation ${power_law_equation_rearranged} m=${power_law_result_gradient}, 10^c=${power_law_divisor}, r^2=${power_law_result_r2}.`;
         const power_law_fit_rearranged = {
             "name": power_law_fit_rearranged_title,
             "independant_column": "Speed [Hz]",
