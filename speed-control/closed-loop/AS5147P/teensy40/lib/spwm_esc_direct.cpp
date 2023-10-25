@@ -202,7 +202,7 @@ namespace kaepek
         start_attempted = false;
         started = false;
         // Stop the encoder sample validator.
-        RotaryEncoderSampleValidator::stop();
+        RotaryEncoderSampleValidator::stop(); // maybe not but prevent loop
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // Disable SPWM pins.

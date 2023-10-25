@@ -10,6 +10,7 @@ Smooth FOC like control with torque and speed control.
 
 ```
 git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
+npm run build
 ```
 
 # Speed control:
@@ -22,18 +23,6 @@ git clone --recurse-submodules git@github.com:kaepek/spwm-motor-control.git
 ## Closed loop (AS5147P rotary encoder , Teensy 4.0 microcontroller, l6234 motor driver)
 
 - [Detailed instructions](./speed-control/closed-loop/AS5147P/teensy40/README.md)
-
-### Director usage
-
-```
-kaepek-io-director -i keyboard dualshock -c stop start null thrustui16 directionui8 -p console serial -o network=localhost,9000,udp
-```
-
-### Graphing state
-
-```
-kaepek-io-graph --address localhost --port 9000 --config ./spwm-dir/speed-control/closed-loop/AS5147P/teensy40/esc/graph_configs/kalman_control_sample.json
-```
 
 # Position control:
 
