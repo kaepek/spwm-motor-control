@@ -40,7 +40,6 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::loop()
     {
-
         if (BaseEscClass::started == true)
         {
             // Check the encoder has a new sample.
@@ -97,30 +96,59 @@ namespace kaepek
                 derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
                 differential_error = derivative_error_filtered;*/
 
-                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency;
-                double alpha = omega * seconds_since_last;
+                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
+                double alpha = omega * seconds_since_last; // this
 
                 // Apply a second-order low-pass filter
-                double derivative_error_filtered = (1.0 / (alpha * alpha + 2.0 * alpha + 1.0)) * (alpha * alpha * differential_error + 2.0 * alpha * derivative_error_filtered_1 - (alpha * alpha - 2.0 * alpha + 1.0) * derivative_error_filtered_2);
+                double derivative_error_filtered = (1.0 / (alpha * alpha + 2.0 * alpha + 1.0)) * (alpha * alpha * differential_error + 2.0 * alpha * derivative_error_filtered_1 - (alpha * alpha - 2.0 * alpha + 1.0) * derivative_error_filtered_2); // this
 
                 // Update previous filtered error values
-                derivative_error_filtered_2 = derivative_error_filtered_1;
-                derivative_error_filtered_1 = derivative_error_filtered;
-                differential_error = derivative_error_filtered;
+                derivative_error_filtered_2 = derivative_error_filtered_1; // this
+                derivative_error_filtered_1 = derivative_error_filtered; // this
+                differential_error = derivative_error_filtered; // this
 
                 // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
+
+                // differential_error = fabs(differential_error) * differential_error;
 
                 // Calculate duty percentage
                 double duty = 0.0;
 
                 duty = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
+                // add bias term (optional default zero)
+                // duty += duty_bias
+
+                // add power law term
+                if (BaseEscClass::direction == RotationDirection::Clockwise)
+                {
+                    if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
+                    {
+                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
+                    }
+                    else {
+                        duty += (double) linear_set_point_coefficient_cw * fabs((double) cache_set_point) +  (double) linear_bias_cw;
+                    }
+                }
+                else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
+                {
+                    if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
+                    {
+                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
+                    }
+                    else {
+                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) cache_set_point) + (double) linear_bias_ccw;
+                    }
+                }
+
+                // todo make the 0.5 cap a constructor argument
+
                 // duty = abs(duty);
                 // duty = min(abs(duty), 0.5); // cap at 50%
                 if (duty < 0.0)
                 {
                     duty = 0.0;
                 }
-                duty = min(duty, 0.5);
+                duty = min(duty, 0.3);
                 pid_duty = duty;
 
                 BaseEscClass::com_torque_percentage = pid_duty;
@@ -367,18 +395,39 @@ namespace kaepek
 
         Serial.print(BaseEscClass::eular_vec_store[0], 4);
         Serial.print(",");
-        Serial.print(BaseEscClass::com_torque_percentage, 4);
+        Serial.print(BaseEscClass::com_torque_percentage, 4); // put me back!
+
+        // Serial.print(linear_bias_cw, 18); // value is ok
+        // Serial.print(power_law_root_cw, 4); // value is ok
+
+        /*if (BaseEscClass::direction == RotationDirection::Clockwise)
+        {
+            if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
+            {
+                double help = pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
+                // double help = fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw;
+                // double help = 1.0 / (double) power_law_root_cw;
+                Serial.print(min(help, 0.3), 6);
+            }
+            else {
+                Serial.print(-1.0);
+            }
+        }
+        else {
+            Serial.print(-2.0);
+        }*/ // works ok
+
         Serial.print(",");
         Serial.print(BaseEscClass::com_direction_value);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
-        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 
         Serial.print(BaseEscClass::current_encoder_displacement);
@@ -391,17 +440,25 @@ namespace kaepek
         Serial.print(differential_coefficient);
         Serial.print(",");*/
 
-        Serial.print(proportional_error);
+        Serial.print(proportional_error, 4);
         Serial.print(",");
-        Serial.print(integral_error);
+        Serial.print(integral_error, 4);
         Serial.print(",");
-        Serial.print(differential_error);
+        Serial.print(differential_error, 4);
 
         Serial.print(",");
-        Serial.print(pid_duty);
+        Serial.print(pid_duty, 4);
 
         Serial.print(",");
-        Serial.print(cache_set_point * 1.0);
+        Serial.print(cache_set_point * 1.0, 4);
+
+        double half_max_duty = (double)BaseEscClass::MAX_DUTY / 2;
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_a - half_max_duty);
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_b - half_max_duty);
+        Serial.print(",");
+        Serial.print((double) BaseEscClass::current_triplet.phase_c - half_max_duty);
 
         Serial.print("\n");
 
