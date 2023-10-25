@@ -29,6 +29,22 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, ac_map_ptr)
+    {
+        proportional_coefficient = pid_config.proportional;
+        differential_coefficient = pid_config.differential;
+        integral_coefficient = pid_config.integral;
+        power_law_set_point_divisor_cw = pid_config.power_law_set_point_divisor_cw;
+        power_law_root_cw = pid_config.power_law_root_cw;
+        power_law_set_point_divisor_ccw = pid_config.power_law_set_point_divisor_ccw;
+        power_law_root_ccw = pid_config.power_law_root_ccw;
+        linear_set_point_coefficient_cw = pid_config.linear_set_point_coefficient_cw;
+        linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
+        linear_bias_cw = pid_config.linear_bias_cw;
+        linear_bias_ccw = pid_config.linear_bias_ccw;
+    }
+
+    template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     double PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::calculate_eular_derivative(double value, double dt, double previous_value)
     {
         return (value - previous_value) / dt;

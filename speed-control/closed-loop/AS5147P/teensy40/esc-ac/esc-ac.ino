@@ -21,7 +21,7 @@ const std::size_t FLASH_MICROS = 100000;
 
 // Encoder sampler config.
 const std::size_t ENCODER_DIVISIONS = 16384;
-const std::size_t ENCODER_VALUE_COMPRESSION = 8;
+const std::size_t ENCODER_VALUE_COMPRESSION = 4;
 
 // Encoder pin config.
 uint32_t ENC_PIN_CSN = 10;
