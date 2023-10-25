@@ -13,6 +13,14 @@ namespace kaepek
     float proportional;
     float differential;
     float integral;
+    float power_law_set_point_divisor_cw;
+    float power_law_root_cw;
+    float power_law_set_point_divisor_ccw;
+    float power_law_root_ccw;
+    float linear_set_point_coefficient_cw;
+    float linear_set_point_coefficient_ccw;
+    float linear_bias_cw;
+    float linear_bias_ccw;
   };
 
   /**
@@ -81,6 +89,19 @@ namespace kaepek
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      */
     PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config);
+
+
+    /**
+     * PidEscL6234Teensy40AS5147P constructor with parameters.
+     * @param encoder The digital rotary encoder instance.
+     * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
+     * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
+     * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
+     * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
+     * @param ac_map_ptr Pointer to an anti-cogging calibration map.
+     */
+    PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+
 
     /**
      * Method to read the sampler each microcontroller tick and update the physical jerk model via the Kalman filter with the new measurement sample.

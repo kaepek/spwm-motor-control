@@ -18,6 +18,14 @@ namespace kaepek
         proportional_coefficient = pid_config.proportional;
         differential_coefficient = pid_config.differential;
         integral_coefficient = pid_config.integral;
+        power_law_set_point_divisor_cw = pid_config.power_law_set_point_divisor_cw;
+        power_law_root_cw = pid_config.power_law_root_cw;
+        power_law_set_point_divisor_ccw = pid_config.power_law_set_point_divisor_ccw;
+        power_law_root_ccw = pid_config.power_law_root_ccw;
+        linear_set_point_coefficient_cw = pid_config.linear_set_point_coefficient_cw;
+        linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
+        linear_bias_cw = pid_config.linear_bias_cw;
+        linear_bias_ccw = pid_config.linear_bias_ccw;
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>

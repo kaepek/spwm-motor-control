@@ -13,6 +13,14 @@ namespace kaepek
     float proportional;
     float differential;
     float integral;
+    float power_law_set_point_divisor_cw;
+    float power_law_root_cw;
+    float power_law_set_point_divisor_ccw;
+    float power_law_root_ccw;
+    float linear_set_point_coefficient_cw;
+    float linear_set_point_coefficient_ccw;
+    float linear_bias_cw;
+    float linear_bias_ccw;
   };
 
   /**

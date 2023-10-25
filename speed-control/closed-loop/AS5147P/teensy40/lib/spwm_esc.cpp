@@ -42,7 +42,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const float (*ac_map_ptr)[MAX_DUTY + 1]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
     {
         this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
@@ -266,13 +266,12 @@ namespace kaepek
         Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
 
-
         double half_max_duty = (double)MAX_DUTY / 2;
-        Serial.print((double) current_triplet.phase_a - half_max_duty);
+        Serial.print((double)current_triplet.phase_a - half_max_duty);
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_b - half_max_duty);
+        Serial.print((double)current_triplet.phase_b - half_max_duty);
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_c - half_max_duty);
+        Serial.print((double)current_triplet.phase_c - half_max_duty);
         Serial.print(",");
         Serial.print(current_encoder_displacement);
 #endif
@@ -512,42 +511,65 @@ namespace kaepek
         }
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
-        // now modify based on lookup and duty
-        
+
+        double half_max_duty = (double)MAX_DUTY / 2;
 
         double phase_a = 0.0;
         double phase_b = 0.0;
         double phase_c = 0.0;
 
-        double half_max_duty = (double)MAX_DUTY / 2;
-
+        double phase_a_before_correction = ((phase_a_lookup * com_torque_percentage) + half_max_duty);
+        double phase_b_before_correction = ((phase_b_lookup * com_torque_percentage) + half_max_duty);
+        double phase_c_before_correction = ((phase_c_lookup * com_torque_percentage) + half_max_duty);
         // find correction
         if (anti_cogging_enabled == true)
         {
-            // float value = (*ptr_to_AC_MAP)[1][100];
-            double modified_duty = (double) current_duty;
             float correction = 0.0;
-            if (direction == RotationDirection::Clockwise) {
+            if (direction == RotationDirection::Clockwise)
+            {
                 correction = (this->ac_map_ptr)[0][encoder_current_compressed_displacement];
             }
-            else {
+            else
+            {
                 correction = (this->ac_map_ptr)[1][encoder_current_compressed_displacement];
             }
-            modified_duty = modified_duty + (1.0 * correction);
-            if (modified_duty < 0) {
-                modified_duty = 0;
+
+            double phase_a_after_correction = phase_a_before_correction + (correction * 0.5);
+            double phase_b_after_correction = phase_b_before_correction + (correction * 0.5);
+            double phase_c_after_correction = phase_c_before_correction + (correction * 0.5);
+
+            if ((phase_a_before_correction < half_max_duty && phase_a_after_correction > half_max_duty) || (phase_a_before_correction > half_max_duty && phase_a_after_correction < half_max_duty))
+            {
+                phase_a = half_max_duty;
             }
-            double current_duty_over_2 = (double)modified_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + half_max_duty);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + half_max_duty);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + half_max_duty);
+            else
+            {
+                phase_a = round(phase_a_after_correction);
+            }
+
+            if ((phase_b_before_correction < half_max_duty && phase_b_after_correction > half_max_duty) || (phase_b_before_correction > half_max_duty && phase_b_after_correction < half_max_duty))
+            {
+                phase_b = half_max_duty;
+            }
+            else
+            {
+                phase_b = round(phase_b_after_correction);
+            }
+
+            if ((phase_c_before_correction < half_max_duty && phase_c_after_correction > half_max_duty) || (phase_c_before_correction > half_max_duty && phase_c_after_correction < half_max_duty))
+            {
+                phase_c = half_max_duty;
+            }
+            else
+            {
+                phase_c = round(phase_c_after_correction);
+            }
         }
         else
         {
-            double current_duty_over_2 = (double)current_duty / 2.0;
-            phase_a = round((phase_a_lookup * current_duty_over_2) + half_max_duty);
-            phase_b = round((phase_b_lookup * current_duty_over_2) + half_max_duty);
-            phase_c = round((phase_c_lookup * current_duty_over_2) + half_max_duty);
+            phase_a = round(phase_a_before_correction);
+            phase_b = round(phase_b_before_correction);
+            phase_c = round(phase_c_before_correction);
         }
 
         triplet.phase_a = phase_a;
@@ -557,8 +579,6 @@ namespace kaepek
         triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
         triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
         triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;
-
-        // Serial.print(triplet.phase_a); Serial.print("\n");
 
         return triplet;
     }

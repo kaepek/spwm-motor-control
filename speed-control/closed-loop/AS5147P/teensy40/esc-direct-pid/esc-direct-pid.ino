@@ -129,6 +129,14 @@ void setup()
   PID_CONFIG.proportional = 0.0;
   PID_CONFIG.integral = 0.0;
   PID_CONFIG.differential = 0.0;
+  PID_CONFIG.power_law_set_point_divisor_cw = 0.0;
+  PID_CONFIG.power_law_root_cw = 0.0;
+  PID_CONFIG.power_law_set_point_divisor_ccw = 0.0;
+  PID_CONFIG.power_law_root_ccw = 0.0;
+  PID_CONFIG.linear_set_point_coefficient_cw = 0.0;
+  PID_CONFIG.linear_set_point_coefficient_ccw = 0.0;
+  PID_CONFIG.linear_bias_cw = 0.0;
+  PID_CONFIG.linear_bias_ccw = 0.0;
 
   // KALMAN_CONFIG.
   KALMAN_CONFIG.alpha = KALMAN_ALPHA;

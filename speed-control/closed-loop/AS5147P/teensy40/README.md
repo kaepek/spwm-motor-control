@@ -151,6 +151,10 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 
 # TODO FIX ME WRONG DATA TYPE IS COMING OUT FROM AC MAP.... NEED TO CONVERT ESC-AC TO USE UINT_16
 
+### ESC sinusoidal anti-cogging pid
+
+# NOT IMPLEMENTED YET
+
 ### ESC direct
 
 - [ESC direct code](./esc-direct/esc-direct.ino)

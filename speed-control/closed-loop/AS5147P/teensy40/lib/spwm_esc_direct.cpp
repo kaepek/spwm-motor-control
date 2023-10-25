@@ -375,16 +375,6 @@ namespace kaepek
         phase_b_lookup = (double)this->voltage_map_ptr[this->bl_direction][1][encoder_current_compressed_displacement] / 2.0;
         phase_c_lookup = (double)this->voltage_map_ptr[this->bl_direction][2][encoder_current_compressed_displacement] / 2.0;
 
-        // e.g. -2047 -> 2047 gets mapped to .... -1023.5 -> 1023.5
-        // we then need to add half the midpoint
-
-        //  MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1 = 2^11 - 1 = 2048 - 1 = 2047
-        // half of this is 2047/2 = 1023.5
-        // check maths
-        // -1023.5  + 1023.5 = 0
-        // 1023.5 + 1023.5 = 2047
-        // this is ok
-
         double half_max_duty = (double)MAX_DUTY / 2;
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
@@ -399,8 +389,6 @@ namespace kaepek
         // find correction
         if (anti_cogging_enabled == true)
         {
-            // float value = (*ptr_to_AC_MAP)[1][100];
-            // double modified_duty = (double) current_duty;
             float correction = 0.0;
             if (direction == RotationDirection::Clockwise)
             {
@@ -441,38 +429,12 @@ namespace kaepek
             {
                 phase_c = round(phase_c_after_correction);
             }
-
-            // if phase_a_lookup * com_torque_percentage is above the midpoint and after correct lower than the midpoint clamp to midpoint.
-            // if phase_a_lookup * com_torque_percentage is below the midpoint and after correction higher than the midpoint clamp to midpoint.
-
-            // when clamping to zero we care about the midpoint 4096 / 2 if phase_x + midpoint
-
-            /*phase_a = phase_a + (0.18 * correction);
-            if (phase_a < 0)
-            {
-                phase_a = 0;
-            }
-            phase_b = phase_b + (0.18 * correction);
-            if (phase_b < 0)
-            {
-                phase_b = 0;
-            }
-            phase_c = phase_c + (0.18 * correction);
-            if (phase_c < 0)
-            {
-                phase_c = 0;
-            }*/
         }
         else
         {
             phase_a = round(phase_a_before_correction);
             phase_b = round(phase_b_before_correction);
             phase_c = round(phase_c_before_correction);
-
-            // check....
-            // phase_a_lookup = -1023.5 * 0.5 + 1023.5 = 511.75 # -511.75 below 1023.5
-            // phase_a_lookup = 0 * 0.5 + 1023.5 = 1023.5
-            // phase_a_lookup = (+1023.5 * 0.5) + 1023.5 = 1535.25 # 511.75 above 1023.5
         }
 
         triplet.phase_a = phase_a;
@@ -482,8 +444,6 @@ namespace kaepek
         triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
         triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
         triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;
-
-        // Serial.print(triplet.phase_a); Serial.print("\n");
 
         return triplet;
     }
