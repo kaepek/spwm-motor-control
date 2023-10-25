@@ -266,12 +266,15 @@ namespace kaepek
         Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
 
-        double half_max_duty = (double)MAX_DUTY / 2;
-        Serial.print((double)current_triplet.phase_a - half_max_duty);
+        double half_max_duty = (double)MAX_DUTY / 2.0;
+        Serial.print((double)current_triplet.phase_a);
+        // Serial.print((double)current_triplet.phase_a - half_max_duty);
         Serial.print(",");
-        Serial.print((double)current_triplet.phase_b - half_max_duty);
+        Serial.print((double)current_triplet.phase_b);
+        // Serial.print((double)current_triplet.phase_b - half_max_duty);
         Serial.print(",");
-        Serial.print((double)current_triplet.phase_c - half_max_duty);
+        Serial.print((double)current_triplet.phase_c);
+        //Serial.print((double)current_triplet.phase_c - half_max_duty);
         Serial.print(",");
         Serial.print(current_encoder_displacement);
 #endif
@@ -435,19 +438,24 @@ namespace kaepek
         double ccw_phase_displacement_rad = deg_to_rad(this->ccw_phase_displacement_deg);
         double sin_period_coeff = ((double)this->number_of_poles) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
 
+        double duty_max = (double)MAX_DUTY;
+
+        // herehere
+
+
         for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
         {
             double current_angular_position = (2.0 * (double)idx * M_PI) / spwm_angular_resolution_dbl;
 
             // calculate cw_phase_x_lookup.
-            cw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad));
-            cw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + cw_phase_displacement_rad));
-            cw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + (2.0 * cw_phase_displacement_rad)));
+            cw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad)) * duty_max;
+            cw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + cw_phase_displacement_rad)) * duty_max;
+            cw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + cw_zero_displacement_rad + (2.0 * cw_phase_displacement_rad))) * duty_max;
 
             // calculate ccw_phase_x_lookup.
-            ccw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad));
-            ccw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + ccw_phase_displacement_rad));
-            ccw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + (2.0 * ccw_phase_displacement_rad)));
+            ccw_phase_a_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad)) * duty_max;
+            ccw_phase_b_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + ccw_phase_displacement_rad)) * duty_max;
+            ccw_phase_c_lookup[idx] = sin(sin_period_coeff * (current_angular_position + ccw_zero_displacement_rad + (2.0 * ccw_phase_displacement_rad))) * duty_max;
         }
     }
 
@@ -498,21 +506,23 @@ namespace kaepek
         if (direction == RotationDirection::Clockwise)
         {
             // cw
-            phase_a_lookup = cw_phase_a_lookup[encoder_current_compressed_displacement];
-            phase_b_lookup = cw_phase_b_lookup[encoder_current_compressed_displacement];
-            phase_c_lookup = cw_phase_c_lookup[encoder_current_compressed_displacement];
+            phase_a_lookup = (double) cw_phase_a_lookup[encoder_current_compressed_displacement] / 2.0;
+            phase_b_lookup = (double) cw_phase_b_lookup[encoder_current_compressed_displacement] / 2.0;
+            phase_c_lookup = (double) cw_phase_c_lookup[encoder_current_compressed_displacement] / 2.0;
         }
         else
         {
             // ccw
-            phase_a_lookup = ccw_phase_a_lookup[encoder_current_compressed_displacement];
-            phase_b_lookup = ccw_phase_b_lookup[encoder_current_compressed_displacement];
-            phase_c_lookup = ccw_phase_c_lookup[encoder_current_compressed_displacement];
+            phase_a_lookup = (double) ccw_phase_a_lookup[encoder_current_compressed_displacement] / 2.0;
+            phase_b_lookup = (double) ccw_phase_b_lookup[encoder_current_compressed_displacement] / 2.0;
+            phase_c_lookup = (double) ccw_phase_c_lookup[encoder_current_compressed_displacement] / 2.0;
         }
+
+        // herehere
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
 
-        double half_max_duty = (double)MAX_DUTY / 2;
+        double half_max_duty = (double)MAX_DUTY / 2.0;
 
         double phase_a = 0.0;
         double phase_b = 0.0;

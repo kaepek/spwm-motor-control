@@ -248,7 +248,7 @@ namespace kaepek
         Serial.print(",");
         Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-        double half_max_duty = (double)MAX_DUTY / 2;
+        double half_max_duty = (double)MAX_DUTY / 2.0;
         Serial.print((double) current_triplet.phase_a - half_max_duty);
         Serial.print(",");
         Serial.print((double) current_triplet.phase_b - half_max_duty);
@@ -375,7 +375,7 @@ namespace kaepek
         phase_b_lookup = (double)this->voltage_map_ptr[this->bl_direction][1][encoder_current_compressed_displacement] / 2.0;
         phase_c_lookup = (double)this->voltage_map_ptr[this->bl_direction][2][encoder_current_compressed_displacement] / 2.0;
 
-        double half_max_duty = (double)MAX_DUTY / 2;
+        double half_max_duty = (double)MAX_DUTY / 2.0;
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
 

@@ -132,12 +132,12 @@ namespace kaepek
     volatile uint32_t loop_ctr = 0;
     volatile uint32_t sample_ctr = 0;
 
-    float cw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-    float cw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-    float cw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-    float ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-    float ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-    float ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t cw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t cw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t cw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
+    int16_t ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
 
     const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR];
     bool anti_cogging_enabled = false;
