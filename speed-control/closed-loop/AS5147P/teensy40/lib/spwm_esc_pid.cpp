@@ -262,6 +262,62 @@ namespace kaepek
             *((unsigned char *)&float_value + 3) = data_buffer[3];
             differential_coefficient = float_value;
             break;
+        case SerialInputCommandWord::PowerLawSetPointDivisorCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_set_point_divisor_cw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawSetPointDivisorCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_set_point_divisor_ccw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawRootCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_root_cw = float_value;
+            break;
+        case SerialInputCommandWord::PowerLawRootCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            power_law_root_ccw = float_value;
+            break;
+        case SerialInputCommandWord::LinearSetpointCoefficientCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_set_point_coefficient_cw = float_value;
+            break;
+        case SerialInputCommandWord::LinearSetpointCoefficientCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_set_point_coefficient_ccw = float_value;
+            break;
+        case SerialInputCommandWord::LinearBiasCW:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_bias_cw = float_value;
+            break;
+        case SerialInputCommandWord::LinearBiasCCW:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_bias_ccw = float_value;
+            break;
         default:
             // unknown word
             break;

@@ -134,12 +134,18 @@ namespace kaepek
                     {
                         duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
                     }
+                    else {
+                        duty += (double) linear_set_point_coefficient_cw * fabs((double) cache_set_point) +  (double) linear_bias_cw;
+                    }
                 }
                 else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
                 {
                     if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
                     {
                         duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
+                    }
+                    else {
+                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) cache_set_point) + (double) linear_bias_ccw;
                     }
                 }
 
@@ -277,6 +283,34 @@ namespace kaepek
             *((unsigned char *)&float_value + 3) = data_buffer[3];
             power_law_root_ccw = float_value;
             break;
+        case SerialInputCommandWord::LinearSetpointCoefficientCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_set_point_coefficient_cw = float_value;
+            break;
+        case SerialInputCommandWord::LinearSetpointCoefficientCCWF32:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_set_point_coefficient_ccw = float_value;
+            break;
+        case SerialInputCommandWord::LinearBiasCW:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_bias_cw = float_value;
+            break;
+        case SerialInputCommandWord::LinearBiasCCW:
+            *((unsigned char *)&float_value + 0) = data_buffer[0];
+            *((unsigned char *)&float_value + 1) = data_buffer[1];
+            *((unsigned char *)&float_value + 2) = data_buffer[2];
+            *((unsigned char *)&float_value + 3) = data_buffer[3];
+            linear_bias_ccw = float_value;
+            break;
         default:
             // unknown word
             break;
@@ -328,7 +362,7 @@ namespace kaepek
         Serial.print(",");
         Serial.print(BaseEscClass::com_torque_percentage, 4); // put me back!
 
-        // Serial.print(power_law_set_point_divisor_cw, 4); // value is ok
+        // Serial.print(linear_bias_cw, 18); // value is ok
         // Serial.print(power_law_root_cw, 4); // value is ok
 
         /*if (BaseEscClass::direction == RotationDirection::Clockwise)
