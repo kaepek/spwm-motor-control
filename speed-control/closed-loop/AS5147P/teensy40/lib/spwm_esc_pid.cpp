@@ -217,6 +217,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Reset:
             this->stop();
+            BaseEscClass::RotaryEncoderSampleValidator::stop();
             BaseEscClass::RotaryEncoderSampleValidator::reset();
             BaseEscClass::fault = false;
             break;

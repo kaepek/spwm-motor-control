@@ -35,8 +35,7 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
             this.start_duty = this.idle_duty_override;
         }
 
-        console2.info(`SetIdleDuty program running, targeting a thrustui16 value of ${this.idle_duty}`);
-        console2.info("Resetting controller");
+        console2.info(`SetIdleDuty program running, targeting an idle thrustui16 value of ${this.idle_duty}`);
         /*await delay(1000);
         await this.word_sender.send_word("stop");
         await delay(1000);
@@ -47,20 +46,20 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         await this.word_sender.send_word("reset");
         await delay(1000);
         await this.word_sender.send_word("start");*/
-        await delay(1000);
         console2.info("Sending word thrustui16", this.start_duty);
         await this.word_sender.send_word("thrustui16", this.start_duty as number);
         console2.info("Waiting for startup");
-        await delay(start_time * 4);
+        await delay(start_time);
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
-        await delay(start_time * 4);
+        console2.warn("Waiting for motor idle.");
         return super.run(); // tick will now run every time the device outputs a line. 
     }
 
     async create_timeout() {
         if (this.wait_timeout) clearTimeout(this.wait_timeout);
         this.wait_timeout = setTimeout(async () => {
+            console2.success("Detected motor idle.");
             this.return_promise_resolver();
         }, this.wait_time);
     }

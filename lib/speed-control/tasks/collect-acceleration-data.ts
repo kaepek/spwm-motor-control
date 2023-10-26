@@ -74,8 +74,8 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         this.idle_duty = state[this.direction_str].idle_duty;
         // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
         // 20425 / 65534
-        console2.info(`CollectAccelerationData program running`);
-        console2.info("Sending word thrustui16", 0);
+        console2.info(`CollectAccelerationData program running`); // assume we are already at idle speed make sure to run set-idle task first.
+        /*console2.info("Sending word thrustui16", 0);
         await this.word_sender.send_word("thrustui16", 0);
         await this.word_sender.send_word("directionui8", this.direction);
         await delay(100);
@@ -87,7 +87,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         await delay(1000);
         console2.info("Sending word thrustui16", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
-        await delay(1000);
+        await delay(1000);*/
         return super.run(); // tick will now run every time the device outputs a line.
     }
 

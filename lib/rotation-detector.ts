@@ -64,14 +64,14 @@ export type RotationDetector<LineData> = {
     rotations?: undefined;
 };
 
-export function rotation_detector(data_line$: Observable<any>, direction = true, displacement_max = 1) { // false cw?
+export function rotation_detector(data_line$: Observable<any>, direction = true, displacement_max = 1) { // true cw, false ccw
     let tracking = false;
     let initial_displacment: number = null as any;
     const $ = data_line$.pipe(map((line_data: any) => {
         const velocity = parseFloat(line_data.parsed_data["kalman_velocity"]);
         const displacement = parseFloat(line_data.parsed_data["kalman_displacement"]);
         if (tracking === false && ((direction == true && velocity > 0.0) || (direction == false && velocity < 0.0))) {
-            if (initial_displacment === null) initial_displacment = displacement;
+            initial_displacment = displacement;
             tracking = true;
             return { motion: true, rotations: Math.abs(displacement - initial_displacment) / displacement_max, line_data };
         }

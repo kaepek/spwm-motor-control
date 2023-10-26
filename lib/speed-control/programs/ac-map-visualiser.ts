@@ -8,18 +8,22 @@ const cli_args: Array<CliArg> = [
         name: "input_file",
         type: CliArgType.InputJSONFile, // InputJSONFilePathArgumentHandler
         short: "i",
+        help: "An input file which corresponds to anti-cogging-calibration result json file.",
         required: true
     },
     {
         name: "input_config_file",
         type: CliArgType.InputJSONFile,
         short: "c",
+        help: "The anti cogging results graph config: ./lib/speed-control/graph_configs/ac_map_graphs.json",
+        default: "./lib/speed-control/graph_configs/ac_map_graphs.json",
         required: true
     },
     {
         name: "output_file",
         type: CliArgType.OutputFilePath,
         short: "o",
+        help: "An output csv file to save the converted anti-cogging-calibration results to.",
         required: true
     },
 ];

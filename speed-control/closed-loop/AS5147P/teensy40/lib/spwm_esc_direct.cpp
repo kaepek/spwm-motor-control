@@ -47,6 +47,8 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_sample_logic(uint32_t encoder_value)
     {
+        if (started == false) return;
+
         sample_ctr++;
 
         // Take encoder value.
@@ -202,7 +204,7 @@ namespace kaepek
         start_attempted = false;
         started = false;
         // Stop the encoder sample validator.
-        RotaryEncoderSampleValidator::stop(); // maybe not but prevent loop
+        // RotaryEncoderSampleValidator::stop(); // maybe not but prevent loop
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // Disable SPWM pins.
@@ -303,6 +305,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Reset:
             stop();
+            RotaryEncoderSampleValidator::stop();
             RotaryEncoderSampleValidator::reset();
             fault = false;
             break;
