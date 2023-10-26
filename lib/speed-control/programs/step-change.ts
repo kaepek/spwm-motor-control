@@ -649,7 +649,7 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
     // create linear model vs real speed fit chart
     // create create for power law model vs real speed fit.
 
-    console2.success("All finished, result:", JSON.stringify(output));
+    console2.success("All finished."); // JSON.stringify(output)
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output, null, 4));
