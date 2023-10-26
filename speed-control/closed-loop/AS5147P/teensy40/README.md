@@ -439,4 +439,8 @@ A program to perform a step change analysis and get PID values.
     - `./calibration-data/<step-change-output-file-name>.regression.ccw.config.json`
     - `./calibration-data/<step-change-output-file-name>.regression.cw.csv.html`
 
+### Rotation analyser
+
+1. Run the command choosing the relevant incoming and outgoing ports: ``
+
 # [Home Readme](../../../../README.md)

@@ -9,7 +9,7 @@ import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
-        type: CliArgType.InputJSONFile,
+        type: CliArgType.InputFilePath,
         short: "c",
         help: "Config file for microcontroller input format for data coming from kaepek-io-direction",
         required: true
@@ -78,10 +78,10 @@ const cli_args: Array<CliArg> = [
     {
         name: "n_rotations",
         type: CliArgType.Number,
-        short: "n",
+        short: "w",
         help: "The number of rotations before statistics about rotation are updated",
         required: false,
-        default: 5
+        default: 1
     }
 ];
 
@@ -114,7 +114,10 @@ let acceleration_values: Array<number> = [];
 const dp = 4;
 // 4 decimal places?
 
-const rotations$ = rotation_detector(adaptor.incoming_data$, direction).subscribe((rotation_data) => {
+const rotations$ = rotation_detector(adaptor.incoming_data$, direction_bl);
+
+rotations$.subscribe((rotation_data) => {
+    console.log("rotation_data", rotation_data);
     if (rotation_data.motion === false) {
         // reset
         initial_rotations = 0.0;
@@ -122,6 +125,8 @@ const rotations$ = rotation_detector(adaptor.incoming_data$, direction).subscrib
     else {
         const net_rotation_since_last_stat = (rotation_data.rotations - initial_rotations);
         if (net_rotation_since_last_stat > parsed_args.n_rotations) {
+            initial_rotations = rotation_data.rotations;
+
             // compute stats
             let min_velocity = Number.POSITIVE_INFINITY;
             let max_velocity  = Number.NEGATIVE_INFINITY;
@@ -160,26 +165,31 @@ const rotations$ = rotation_detector(adaptor.incoming_data$, direction).subscrib
                 return acc;
             },0))/acceleration_values.length);
             const now = new Date();
-            const time = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds}}`;
+            const time = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
             console2.success(
-`Time: ${time}
-Velocity:
-Min: ${min_velocity.toFixed(dp)}
-Max: ${max_velocity.toFixed(dp)}
-Avg: ${mean_velocity.toFixed(dp)}
-Std: ${std_velocity.toFixed(dp)}
-Acceleration:
-MinA: ${min_acceleration.toFixed(dp)}
-MaxA: ${max_acceleration.toFixed(dp)}
-AvgA: ${mean_acceleration.toFixed(dp)}
-StdA: ${std_acceleration.toFixed(dp)}`
+`Time: ${time} -------------
+Velocity  ------------------
+Min: ${min_velocity.toFixed(dp)} [Hz]
+Max: ${max_velocity.toFixed(dp)} [Hz]
+Avg: ${mean_velocity.toFixed(dp)} [Hz]
+Std: ${std_velocity.toFixed(dp)} [Hz]
+Acceleration ---------------
+MinA: ${min_acceleration.toFixed(dp)} [Hz^2]
+MaxA: ${max_acceleration.toFixed(dp)} [Hz^2]
+AvgA: ${mean_acceleration.toFixed(dp)} [Hz^2]
+StdA: ${std_acceleration.toFixed(dp)} [Hz^2]
+----------------------------`
+
 );
             velocity_values = [];
             acceleration_values = [];
         }
         else {
-            velocity_values.push(rotation_data.line_data.kalman_velocity);
-            acceleration_values.push(rotation_data.line_data.kalman_acceleration);
+            velocity_values.push(rotation_data.line_data.parsed_data.kalman_velocity);
+            acceleration_values.push(rotation_data.line_data.parsed_data.kalman_acceleration);
         }
     }
 });
+
+
+adaptor.ready();

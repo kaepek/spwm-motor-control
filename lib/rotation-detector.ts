@@ -65,6 +65,9 @@ export type RotationDetector<LineData> = {
 };
 
 export function rotation_detector(data_line$: Observable<any>, direction = true, displacement_max = 1) { // true cw, false ccw
+    if (direction != true && direction != false) {
+        throw "Unrecognised direction boolean, true is cw (clockwise), false is ccw (counter-clockwise)"
+    }
     let tracking = false;
     let initial_displacment: number = null as any;
     const $ = data_line$.pipe(map((line_data: any) => {
@@ -80,7 +83,7 @@ export function rotation_detector(data_line$: Observable<any>, direction = true,
         }
         else {
             tracking = false;
-            return { motion: false, rotations: Math.abs(displacement - initial_displacment) / displacement_max, line_data }
+            return { motion: false, rotations: 0, line_data } // Math.abs(displacement - initial_displacment) / displacement_max
         };
     }));
     return $;
