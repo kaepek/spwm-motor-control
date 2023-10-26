@@ -441,6 +441,9 @@ A program to perform a step change analysis and get PID values.
 
 ### Rotation analyser
 
-1. Run the command choosing the relevant incoming and outgoing ports: ``
+1. Run the command choosing the config file. Note one may want to change the incoming and outgoing ports of this program (and the director/program) so that one could have multiple chains of programs analysing the data, for instance you could use ports to pipe data from the director into the step change program, then from the step change program to the rotation stats program, and finally pipe the rotation stats program to the kaepek-io-graph program. Using the `--incoming-port`, `--incoming_address`, `--incoming-protocol`, `--outgoing-port`, `--outgoing_address`, `--outgoing-protocol` can achieve program chaining thus all would recieve the stream, each potentially modifying it. Another perhaps prefered technique would be for the direct to output from `kaepek-io-director` to many network output sinks on differing ports e.g. `-o network=localhost,9001,udp network=localhost,9002,upd` output flag could be used sending udp data out on both 9001 and 9002, this is prefered as it would ensure that each program gets a direct copy from the director without having to think about whether any of the programs in the chain have modified the data.
+
+- For PID (with anti cogging or otherwise) use this for example: `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid.json --direction cw`
+- For ESC-sinusoidal,ESC-direct,ESC sinudoidal anti-cogging and ESC direct anti-cogging use this for example: `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json --direction cw`
 
 # [Home Readme](../../../../README.md)

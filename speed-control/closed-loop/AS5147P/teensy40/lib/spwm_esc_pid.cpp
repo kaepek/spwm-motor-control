@@ -446,6 +446,9 @@ namespace kaepek
         Serial.print(BaseEscClass::com_direction_value);
         Serial.print(",");
 
+        Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4);
+        Serial.print(",");
+
         Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4);
         Serial.print(",");
 

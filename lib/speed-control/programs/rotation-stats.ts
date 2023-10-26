@@ -117,7 +117,6 @@ const dp = 4;
 const rotations$ = rotation_detector(adaptor.incoming_data$, direction_bl);
 
 rotations$.subscribe((rotation_data) => {
-    console.log("rotation_data", rotation_data);
     if (rotation_data.motion === false) {
         // reset
         initial_rotations = 0.0;
@@ -164,18 +163,33 @@ rotations$.subscribe((rotation_data) => {
                 acc += Math.pow(acceleration - mean_acceleration, 2);
                 return acc;
             },0))/acceleration_values.length);
+
+            const velocity_range = Math.abs(max_velocity - min_velocity);
+            const acceleration_range = Math.abs(max_acceleration - min_acceleration);
+
+            const velocity_min_offset_percentage = ((mean_velocity - min_velocity) / mean_velocity) * 100;
+            const velocity_max_offset_percentage = ((max_velocity - mean_velocity) / mean_velocity) * 100;
+
+            const acceleration_min_offset_percentage = ((mean_acceleration - min_acceleration) / mean_acceleration) * 100;
+            const acceleration_max_offset_percentage = ((max_acceleration - mean_acceleration) / mean_acceleration) * 100;
+
+
             const now = new Date();
             const time = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+
             console2.success(
 `Time: ${time} -------------
 Velocity  ------------------
-Min: ${min_velocity.toFixed(dp)} [Hz]
-Max: ${max_velocity.toFixed(dp)} [Hz]
+Min: ${min_velocity.toFixed(dp)} [Hz] Avg-${velocity_min_offset_percentage.toFixed(2)}%
+Max: ${max_velocity.toFixed(dp)} [Hz] Avg+${velocity_max_offset_percentage.toFixed(2)}%
+Range: ${velocity_range.toFixed(dp)} [Hz]
 Avg: ${mean_velocity.toFixed(dp)} [Hz]
 Std: ${std_velocity.toFixed(dp)} [Hz]
 Acceleration ---------------
-MinA: ${min_acceleration.toFixed(dp)} [Hz^2]
-MaxA: ${max_acceleration.toFixed(dp)} [Hz^2]
+MinA: ${min_acceleration.toFixed(dp)} [Hz^2] Avg-${acceleration_min_offset_percentage.toFixed(2)}%
+MaxA: ${max_acceleration.toFixed(dp)} [Hz^2] Avg+${acceleration_max_offset_percentage.toFixed(2)}%
+Range: ${acceleration_range.toFixed(dp)} [Hz^2]
 AvgA: ${mean_acceleration.toFixed(dp)} [Hz^2]
 StdA: ${std_acceleration.toFixed(dp)} [Hz^2]
 ----------------------------`
