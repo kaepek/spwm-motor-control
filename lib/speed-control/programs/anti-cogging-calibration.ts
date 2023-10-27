@@ -172,13 +172,15 @@ const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "cw");
 const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
+const despin_task = new SetIdleDuty(cw_rotation$, word_sender, "cw", 0);
+
 const ccw_get_start_duty_task1 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_start_duty_task2 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
-const tasks = [ccw_get_start_duty_task1, ccw_get_start_duty_task2, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_collect_acceleration_data, cw_get_start_duty_task1, cw_get_start_duty_task2, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_collect_acceleration_data];
+const tasks = [ccw_get_start_duty_task1, ccw_get_start_duty_task2, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_collect_acceleration_data, despin_task, cw_get_start_duty_task1, cw_get_start_duty_task2, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_collect_acceleration_data];
 
 // need to parse state to each task when we are running it
 

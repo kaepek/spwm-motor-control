@@ -16,14 +16,14 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load the `ESC sinusoidal` code onto the teensy40 microcontroller.
-3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+- Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
         - `[space]` to start.
@@ -59,11 +59,12 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_CCW_PHASE_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load the code onto the teensy40 microcontroller.
-3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp`
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs:
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
         - `[space]` to start.
@@ -108,8 +109,8 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load a configured `ESC sinusoidal` program onto the Teensy 4.0 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
-4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json` also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`
 6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --angular_compression_ratio <angular-compression-ratio> --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json`
     - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-sinusoidal-ac.json`
     - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
@@ -122,14 +123,14 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 - Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv.html`.
 8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
 9. Load the `ESC sinusoidal anti-cogging` ino onto the Teensy4.0 microcontroller.
-10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+- Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
         - `[space]` to start.
@@ -166,8 +167,8 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `MOTOR_CONFIG_NUMBER_OF_POLES`
 2. Load a configured `ESC sinusoidal` program onto the Teensy 4.0 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
-4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json` also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`
 6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --angular_compression_ratio <angular-compression-ratio> --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json`
     - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-sinusoidal-ac.json`
     - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
@@ -180,11 +181,12 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 - Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-sinusoidal-ac.json.csv.html`.
 8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
 9. Load the `ESC sinusoidal anti-cogging pid` ino onto the Teensy4.0 microcontroller.
-10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp`
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs:
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
         - `[space]` to start.
@@ -221,14 +223,14 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct pwm section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
 2. Load the `ESC direct` code onto the teensy40 microcontroller.
-3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+- Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
         - `[space]` to start.
@@ -259,11 +261,12 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct PWM section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-pid/calibration/voltage-map.cpp`.
 2. Load the `ESC direct pid` code onto the teensy40 microcontroller.
-3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp`
+3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 4. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs:
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
         - `[space]` to start.
@@ -304,8 +307,8 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
 2. Load the `ESC direct` code onto the teensy40 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
-4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json` also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`
 6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --angular_compression_ratio <angular-compression-ratio> --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json`
     - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-direct-ac.json`
     - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
@@ -318,14 +321,14 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 - Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-direct-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-direct-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-direct-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-direct-ac.json.csv.html`.
 8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
 9. Load the `ESC direct anti-cogging` ino onto the Teensy4.0 microcontroller.
-10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp`
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-    - `./[spwm-root-directory]/lib/speed-control/graph_configs/`
+- Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
         - `[space]` to start.
@@ -358,8 +361,8 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./speed-control/closed-loop/AS5147P/teensy40/esc-direct/calibration/voltage-map.cpp`.
 2. Load the `ESC direct` code onto the teensy40 microcontroller.
 3. `cd` to the `./[spwm-root-directory]`
-4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
-5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp`
+4. Optionally run a realtime graph to observe the anti cogging program's influence over the ESC: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json` also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
+5. Run the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`
 6. Run the anti-cogging program: `node ./dist/lib/speed-control/programs/anti-cogging-calibration.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --angular_compression_ratio <angular-compression-ratio> --output_data_file ./calibration-data/<anti-cogging-output-file-name>.json`
     - You need to replace `<anti-cogging-output-file-name>` with a suitable name, perhaps if using a `tarot-4006` motor the following would be suitable `tarot-4006-esc-direct-ac.json`
     - `--angular_steps` defaults to `16384` so this is optional when using a AS5147P encoder.
@@ -372,11 +375,12 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 - Example combined command: `node ./dist/lib/speed-control/programs/ac-map-visualiser.js -i ./calibration-data/tarot-4006-esc-direct-ac.json -c ./lib/speed-control/graph_configs/ac_map_graphs.json -o ./calibration-data/tarot-4006-esc-direct-ac.json.csv && kaepek-io-graph-file -i ./calibration-data/tarot-4006-esc-direct-ac.json.csv -c ./lib/speed-control/graph_configs/ac_map_graphs.json`, outputed file for inspection would be `./calibration-data/tarot-4006-esc-direct-ac.json.csv.html`.
 8. Replace the file in the directory `./speed-control/closed-loop/AS5147P/teensy40/esc-direct-ac/calibration/ac.cpp` with the anti-cogging map cpp file found here: `./calibration-data/<anti-cogging-output-file-name>.cpp` make sure the file is named `ac.cpp`
 9. Load the `ESC direct anti-cogging pid` ino onto the Teensy4.0 microcontroller.
-10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp`
+10. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
 11. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs:
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
         - `[space]` to start.
@@ -406,9 +410,11 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
         - `kaepek-io-netsend -w linearsetpointcoefficientcwF32 -d <linear-setpoint-coefficient-cw>` to set the PID linear set point coefficient. As determined from the step change regression analysis (linear model 1/m value) for the clockwise direction. E.g. `kaepek-io-netsend -w linearsetpointcoefficientcwF32 -d 0.02064702106741506`
         - `kaepek-io-netsend -w linearsetpointcoefficientccwF32 -d <linear-setpoint-coefficient-ccw>` to set the PID linear set point coefficient. As determined from the step change regression analysis (linear model 1/m value) for the counter clockwise direction. E.g. `kaepek-io-netsend -w linearsetpointcoefficientccwF32 -d 0.020612730310931287`
 
-### Step change analysis - PID auto configure.
+### Step change analysis - PID auto configure
 
 A program to perform a step change analysis and get PID values.
+
+#### Usage instructions
 
 1. First load one of the following ESC's onto the Teensy 4.0 microcontroller. Note that for each of these a different step change analysis would be create and they are not interchangable. Also not that the analysis is dependant on the motor load (in the standard use case a fixed mass), if the motor load has changed the step-change analysis will no longer be relevant.
     - ESC sinusoidal.
@@ -416,13 +422,14 @@ A program to perform a step change analysis and get PID values.
     - ESC direct.
     - ESC direct anti-cogging.
 2. Configure the motor parameters as per the specific sections configuration instructions.
-3. Start the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp`.
+3. Start the director: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`.
 3. Run the realtime graphing program `kaepek-io-graph -a localhost -p 9002 -c <config-file-path>`, try one of the following configs (can start and restart this program with alternative configs as you desire):
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/all_by_time.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_by_time.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`.
+- One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 4. Run the step change analysis program: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --output_data_file ./calibration-data/<step-change-output-file-name>.json`.
 - Example command: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --output_data_file ./calibration-data/tarot-4006-esc-direct-step-change.json`.
 5. After the step change program has finished graph the step change output: `kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.cw.csv -c ./lib/speed-control/graph_configs/step_change.json && kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.ccw.csv -c ./lib/speed-control/graph_configs/step_change.json`
@@ -447,6 +454,16 @@ A program to perform a step change analysis and get PID values.
     - `./calibration-data/<step-change-output-file-name>.regression.ccw.config.json`
     - `./calibration-data/<step-change-output-file-name>.regression.cw.csv.html`
 
+#### Example of the whole chain of analysis and graphing
+
+1. Start the director in one terminal session:
+    - `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9002,udp network=localhost,9003,udp`
+2. Start the realtime graph and rotation analyser (need an additional two terminal sessions):
+    - `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+    - `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
+2. Run the logging and analysis (for the slow use case) in another additional terminal session:
+    - `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --duty_begin idle --duty_end 400 --output_data_file ./calibration-data/<step-change-output-file-name>.json && kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.cw.csv -c ./lib/speed-control/graph_configs/step_change.json && kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.detections.ccw.csv -c ./lib/speed-control/graph_configs/step_change.json && aepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.regression.cw.csv -c ./calibration-data/<step-change-output-file-name>.regression.cw.config.json && kaepek-io-graph-file -i ./calibration-data/<step-change-output-file-name>.regression.ccw.csv -c ./calibration-data/<step-change-output-file-name>.regression.ccw.config.json`
+
 #### Note on different models
 
 Depending on the usage differing model fits (power law or linear) maybe provide better or worse performance depending on the motors load and the power range in which it will be utalised. Assuming a fixed load a linear model may provide a better fit at low power ranges / speeds compared to the power law model which may provide a better fit given higher power ranges / speeds.
@@ -454,10 +471,10 @@ Depending on the usage differing model fits (power law or linear) maybe provide 
 In order to get the best fit one may configure the step change program differently depending on the desired power range / speed.
 
 - Low speed behaviour
-    - For the best low speed model fitting it is important to have some idea of the maximum duty required for a given target speed. This can be experimentally determined by loading one of the following programs `esc sinusoidal`, `esc sinusoidal anti-cogging`, `esc direct`, `esc direct anti-cogging`, then by running the `rotation stats analyser` program with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json` and the director with the following command `kaepek-io-director -i keyboard -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9003,udp`. One could then increment the thrustui16 value by keeping focus on the kaepek-io-director terminal session and using the `w` key, when the maximum operating speed expected is achieved (by inspecting the output of the rotation stats program) one could then convert the thrustui16 value to an actual duty (`<maximum-target-duty>`) by using the following formula `(<thrustui16-value>/65534)*<maximum-duty>` where `<maximum-duty>` is the maximum duty supported by the motor controller program, this can be calculated by taking the `PWM_WRITE_RESOLUTION` as read from the relevant esc ino file and calculating the duty as follows `2^PWM_WRITE_RESOLUTION - 1`. Typically the `PWM_WRITE_RESOLUTION` is set to '11' so the `<maximum-duty>` is '2047'.
-    - When the `<maximum-target-duty>` is known we could configure the step change analysis program with the following example command `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --duty_begin=idle --duty_end=<maximum-target-duty> --output_data_file ./calibration-data/tarot-4006-esc-direct-step-change.json` The step change program would then sweep from the automatically determined idle duty to the user defined `<maximum-target-duty>` in a number of steps and perform the analysis. Typically if maximum speed targetted by the `<maximum-target-duty>` is low (below 2 [Hz]) the linear model is expected to perform best, but check the the `r^2` for each model, the one closest to 1.0 is the best model to choose. One can then load the model values either using the relevant command words or by configuring the `PID_CONFIG` in the relevant pid esc ino file (see the relevant PID esc section of your choice in this readme for additional instruction on how to do this).
+    - For the best low speed model fitting it is important to have some idea of the maximum duty required for a given target speed. This can be experimentally determined by loading one of the following programs `esc sinusoidal`, `esc sinusoidal anti-cogging`, `esc direct`, `esc direct anti-cogging`, then by running the `rotation stats analyser` program with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json` and the director with the following command `kaepek-io-director -i keyboard -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9003,udp`. Firstly get focus on the kaepek-io-director terminal session and start the motor controller by hitting the `space` key. One could then increment the thrustui16 value by using the `w` key, when the maximum operating speed expected is achieved (by inspecting the output of the rotation stats program) one could then convert the thrustui16 value to an actual duty (`<maximum-target-duty>`) by using the following formula `(<thrustui16-value>/65534)*<maximum-duty>` where `<maximum-duty>` is the maximum duty supported by the motor controller program, this can be calculated by taking the `PWM_WRITE_RESOLUTION` as read from the relevant esc ino file and calculating the duty as follows `2^PWM_WRITE_RESOLUTION - 1`. Typically the `PWM_WRITE_RESOLUTION` is set to '11' so the `<maximum-duty>` is '2047'.
+    - When the `<maximum-target-duty>` is known we could configure the step change analysis program with the following example command `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --duty_begin idle --duty_end <maximum-target-duty> --output_data_file ./calibration-data/tarot-4006-esc-direct-step-change.json`. Make sure to restart the director with the following command example `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c start stop thrustui16 directionui8 reset -p serial console -o network=localhost,9001,udp network=localhost,9003,udp network=localhost,9002,udp`. The step change program would then sweep from the automatically determined idle duty to the user defined `<maximum-target-duty>` in a number of steps and perform the analysis. Typically if maximum speed targetted by the `<maximum-target-duty>` is low (below 2 [Hz]) the linear model is expected to perform best, but check the the `r^2` for each model, the one closest to 1.0 is the best model to choose. One can then load the model values either using the relevant command words or by configuring the `PID_CONFIG` in the relevant pid esc ino file (see the relevant PID esc section of your choice in this readme for additional instruction on how to do this).
 - High speed behaviour
-    - For the best high speed model fitting one would follow the normal instruction and leave the `--duty_begin` and `--duty_end` flags absent, they default to `--duty_begin=start` and `--duty_end=2047` which implies that the step change analyse would speed from the minimum speed required to start a motor from it being motionless to the maximum operating range of the motor. Typically in this higher speed domain the power law model is expected to perform best, but check the the `r^2` for each model, the one closest to 1.0 is the best model to choose. One can then load the model values either using the relevant command words or by configuring the `PID_CONFIG` in the relevant pid esc ino file (see the relevant PID esc section of your choice in this readme for additional instruction on how to do this).
+    - For the best high speed model fitting one would follow the normal instruction and leave the `--duty_begin` and `--duty_end` flags absent, they default to `--duty_begin start` and `--duty_end 2047` which implies that the step change analyse would speed from the minimum speed required to start a motor from it being motionless to the maximum operating range of the motor. Typically in this higher speed domain the power law model is expected to perform best, but check the the `r^2` for each model, the one closest to 1.0 is the best model to choose. One can then load the model values either using the relevant command words or by configuring the `PID_CONFIG` in the relevant pid esc ino file (see the relevant PID esc section of your choice in this readme for additional instruction on how to do this).
 
 ### Rotation stats analyser
 
