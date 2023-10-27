@@ -36,23 +36,20 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
 
         console2.info(`SetIdleDuty program running, targeting an idle thrustui16 value of ${this.idle_duty}`);
-        /*await delay(1000);
-        await this.word_sender.send_word("stop");
-        await delay(1000);
-        await this.word_sender.send_word("thrustui16", 0);
-        await delay(300);
-        await this.word_sender.send_word("directionui8", this.direction);
-        await delay(300);
-        await this.word_sender.send_word("reset");
-        await delay(1000);
-        await this.word_sender.send_word("start");*/
-        console2.info("Sending word thrustui16", this.start_duty);
-        await this.word_sender.send_word("thrustui16", this.start_duty as number);
-        console2.info("Waiting for startup");
-        await delay(start_time);
-        console2.info("Sending word thrustui16", this.idle_duty);
+        
+        if (this.start_duty !== 0) {
+            console2.info("Sending word thrustui16", this.start_duty);
+            await this.word_sender.send_word("thrustui16", this.start_duty as number);
+            console2.warn(`Waiting for startup ${start_time} [s].`);
+            await delay(start_time);
+            console2.success("Startup wait done.");
+        }
+
+        console2.info("Attempting idle or set speed.");
+        console2.info("Sending word thrustui16.", this.idle_duty);
         await this.word_sender.send_word("thrustui16", this.idle_duty as number);
-        console2.warn("Waiting for motor idle.");
+        console2.warn("Checking for motor idle.");
+        this.create_timeout();
         return super.run(); // tick will now run every time the device outputs a line. 
     }
 
@@ -67,8 +64,9 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     min_speed: number = Number.POSITIVE_INFINITY;
     
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
-        const current_speed = incoming_data.line_data.parsed_data.kalman_velocity * this.direction_sign;
+        const current_speed = Math.abs(incoming_data.line_data.parsed_data.kalman_velocity); // * this.direction_sign;
         if (current_speed < this.min_speed) { // should have some sort of check to see if stalled. todo
+             // probably should be less than equals? // or maybe put a timeout on the first tick anyway...
             this.min_speed = current_speed;
             this.create_timeout();
         }
@@ -82,7 +80,7 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     direction = 0;
     direction_str = "cw";
     max_duty: number = 2047;
-    direction_sign = 1.0;
+    // direction_sign = 1.0;
     idle_duty_override: number | undefined;
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", idle_duty_override: undefined | number = undefined, max_duty = 2047, wait_time = 3000) {
         super(input$);
@@ -96,7 +94,7 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
         else if (direction_str === "ccw") {
             this.direction = 1;
-            this.direction_sign = -1.0;
+            // this.direction_sign = -1.0;
         }
         else {
             throw `Unrecognised direction ${direction_str} should be 'cw' or 'ccw'`;

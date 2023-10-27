@@ -137,7 +137,7 @@ const cli_args: Array<CliArg> = [
         type: CliArgType.Number,
         short: "t",
         help: "The velocity data points needed per each compressed angular step required before data collection is completed.",
-        default: 5,
+        default: 20,
         required: false
     }
 ];
@@ -163,8 +163,6 @@ adaptor.incoming_data$.subscribe((line_data) => {
 const cw_rotation$ = rotation_detector(adaptor.incoming_data$, true);
 const ccw_rotation$ = rotation_detector(adaptor.incoming_data$, false);
 
-// duty_max = 2047, max_angular_steps = 16384, angular_compression_ratio = 4, bin_population_threshold = 3
-
 // what tasks do we need for this program
 const cw_get_start_duty_task1 = new GetStartDuty(cw_rotation$, word_sender, "cw");
 const cw_get_start_duty_task2 = new GetStartDuty(cw_rotation$, word_sender, "cw");
@@ -172,7 +170,7 @@ const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "cw");
 const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
-// fix me despin
+const despin_task = new SetIdleDuty(ccw_rotation$, word_sender, "ccw", 0);
 
 const ccw_get_start_duty_task1 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_start_duty_task2 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
@@ -180,10 +178,10 @@ const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw"
 const ccw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_collect_acceleration_data = new CollectAccelerationData(ccw_rotation$, word_sender, "ccw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
-const tasks = [ccw_get_start_duty_task1, ccw_get_start_duty_task2, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_collect_acceleration_data, cw_get_start_duty_task1, cw_get_start_duty_task2, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_collect_acceleration_data];
+const tasks = [ccw_get_start_duty_task1, ccw_get_start_duty_task2, ccw_get_idle_duty_task, ccw_set_idle_duty_task, ccw_collect_acceleration_data, despin_task, cw_get_start_duty_task1, cw_get_start_duty_task2, cw_get_idle_duty_task, cw_set_idle_duty_task, cw_collect_acceleration_data];
 
 // need to parse state to each task when we are running it
-
+const start_time = Date.now();
 run_tasks(tasks, adaptor).then(async (output: ACMap) => {
     await delay(300);
     await word_sender.send_word("thrustui16", 0);
@@ -196,6 +194,8 @@ run_tasks(tasks, adaptor).then(async (output: ACMap) => {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));
         fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".cpp"), cpp_ac_map);
     }
+    const end_time = Date.now();
+    console2.info(`Finished in ${(end_time-start_time)/1000} [s]`);
     process.exit(0);
 }).catch(async (err) => {
     await delay(300);
