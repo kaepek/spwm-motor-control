@@ -6,14 +6,14 @@
 namespace kaepek
 {
     /**
-     * ButterworthFilter - A generic nth-order Butterworth filter.
+     * ButterworthFilter - A generic nth-ORDER Butterworth filter.
      *
-     * This class implements a generic nth-order Butterworth filter with dynamic
+     * This class implements a generic nth-ORDER Butterworth filter with dynamic
      * adjustment of filter parameters based on changes in sample rate. The filter
      * design adapts to changes in sample rate while maintaining desired transition
      * characteristics.
      */
-    template <int Order>
+    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
     class ButterworthFilter
     {
     public:
@@ -39,10 +39,10 @@ namespace kaepek
     private:
         double cutoff_frequency;
         double sample_rate;
-        double coefficients[Order + 1] = {0.0};
-        double states[Order + 1] = {0.0};
+        double coefficients[ORDER + 1] = {0.0};
+        double states[ORDER + 1] = {0.0};
         double transition_bandwidth = 0.0;
-        const double transition_bandwidth_change_threshold_percentage = 5.0; // 5%
+        const double transition_bandwidth_change_threshold_percentage = TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE / 100.0;
         bool sample_rate_ticker = false;
 
         /**
