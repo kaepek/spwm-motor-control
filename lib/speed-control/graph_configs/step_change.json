@@ -29,8 +29,8 @@
             "name": "control",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black"},
-                {"name":"com_direction", "color": "blue"}
+                {"name":"com_direction", "color": "blue"},
+                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right"}}
             ]
         },
         {
