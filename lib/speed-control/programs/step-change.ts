@@ -183,9 +183,6 @@ const cli_args: Array<CliArg> = [
   
 const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
 
-// console.log("parsed_args", parsed_args);
-// process.exit(0);
-
 const duty_multiplier = parsed_args.duty_cap_multiplier;
 
 const word_sender = new SendWord(parsed_args.command_address, parsed_args.command_port, parsed_args.command_protocol);
