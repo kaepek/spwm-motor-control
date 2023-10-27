@@ -210,10 +210,10 @@ namespace kaepek
             }
             break;
         case SerialInputCommandWord::Stop:
-            if (BaseEscClass::fault == false)
-            {
+            //if (BaseEscClass::fault == false)
+            //{
                 this->stop();
-            }
+            //}
             break;
         case SerialInputCommandWord::Reset:
             this->stop();
