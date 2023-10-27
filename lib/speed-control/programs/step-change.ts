@@ -280,6 +280,7 @@ const steady_parser = new ASCIIParser(steady_format, ",");
 const transition_parser = new ASCIIParser(transition_format, ",");
 const max_possible_duty = 2047;
 
+const start_time = Date.now();
 run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
     await delay(300);
     await word_sender.send_word("thrustui16", 0);
@@ -664,6 +665,8 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
         fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".steady.cw.csv"), charts.cw.steady.join("\n"));
         fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, ".steady.ccw.csv"), charts.ccw.steady.join("\n"));
     }
+    const end_time = Date.now();
+    console2.info(`Finished in ${(end_time-start_time)/1000} [s]`);
     process.exit(0);
 }).catch(async (err) => {
     await delay(300);
