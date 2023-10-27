@@ -218,6 +218,7 @@ const cw_set_idle_duty_task = new SetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_get_step_change_task = new GetStepChange(adaptor.incoming_data$, word_sender, "cw", parsed_args.duty_max, parsed_args.number_duty_steps, parsed_args.wait_time, parsed_args.stable_region_tolerance_percentage, parsed_args.duty_end, parsed_args.duty_begin);
 
 const despin_task = new SetIdleDuty(cw_rotation$, word_sender, "cw", 0);
+// this might not work if motor is stalled.... need to fixme this.
 
 const ccw_get_start_duty_task1 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_start_duty_task2 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");

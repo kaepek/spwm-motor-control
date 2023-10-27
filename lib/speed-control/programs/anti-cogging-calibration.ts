@@ -172,6 +172,8 @@ const cw_get_idle_duty_task = new GetIdleDuty(cw_rotation$, word_sender, "cw");
 const cw_set_idle_duty_task = new SetIdleDuty(ccw_rotation$, word_sender, "cw");
 const cw_collect_acceleration_data = new CollectAccelerationData(cw_rotation$, word_sender, "cw", duty_max, angular_steps, parsed_args.angular_compression_ratio, bin_population_threshold);
 
+// fix me despin
+
 const ccw_get_start_duty_task1 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_start_duty_task2 = new GetStartDuty(ccw_rotation$, word_sender, "ccw");
 const ccw_get_idle_duty_task = new GetIdleDuty(ccw_rotation$, word_sender, "ccw");
