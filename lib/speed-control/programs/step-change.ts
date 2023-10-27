@@ -76,7 +76,7 @@ const cli_args: Array<CliArg> = [
         short: "s",
         required: false,
         help: "The outgoing address to indicate where this program will send data to. Useful for graphing via the kaepek-io-graph program.",
-        default: "localhost",
+        default: undefined,
         group: "outgoing"
     },
     {
@@ -84,7 +84,7 @@ const cli_args: Array<CliArg> = [
         type: CliArgType.Number,
         short: "x",
         help: "The outgoing port to indicate what port this program will send data to. Useful for graphing via the kaepek-io-graph program.",
-        default: 9002,
+        default: undefined,
         required: false,
         group: "outgoing"
     },
@@ -93,7 +93,7 @@ const cli_args: Array<CliArg> = [
         type: CliArgType.String,
         short: "v",
         help: "The outgoing protocol to indicate what protocol this program will send data to. Useful for graphing via the kaepek-io-graph program.",
-        default: "udp",
+        default: undefined,
         required: false,
         group: "outgoing"
     },
