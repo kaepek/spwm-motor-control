@@ -221,7 +221,7 @@ namespace kaepek
         start_attempted = false;
         started = false;
         // Stop the encoder sample validator.
-        // RotaryEncoderSampleValidator::stop();
+        RotaryEncoderSampleValidator::stop();
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // Disable SPWM pins.
@@ -327,7 +327,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Reset:
             stop();
-            RotaryEncoderSampleValidator::stop();
+            // RotaryEncoderSampleValidator::stop();
             RotaryEncoderSampleValidator::reset();
             fault = false;
             break;
