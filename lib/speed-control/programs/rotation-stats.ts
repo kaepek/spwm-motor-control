@@ -179,17 +179,17 @@ const rotation_direction_stats_logger = (rotations$: Observable<{
                     `Time: ${time} -------------
                     Direction: ${direction_str}
                     Velocity  ------------------------
+                    Avg: ${mean_velocity.toFixed(dp)} [Hz]
+                    Std: ${std_velocity.toFixed(dp)} [Hz]
                     Min: ${min_velocity.toFixed(dp)} [Hz] Avg-${velocity_min_offset_percentage.toFixed(2)}%
                     Max: ${max_velocity.toFixed(dp)} [Hz] Avg+${velocity_max_offset_percentage.toFixed(2)}%
                     Range: ${velocity_range.toFixed(dp)} [Hz]
-                    Avg: ${mean_velocity.toFixed(dp)} [Hz]
-                    Std: ${std_velocity.toFixed(dp)} [Hz]
                     Acceleration -------------------
-                    MinA: ${min_acceleration.toFixed(dp)} [Hz^2] Avg-${acceleration_min_offset_percentage.toFixed(2)}%
-                    MaxA: ${max_acceleration.toFixed(dp)} [Hz^2] Avg+${acceleration_max_offset_percentage.toFixed(2)}%
+                    Avg: ${mean_acceleration.toFixed(dp)} [Hz^2]
+                    Std: ${std_acceleration.toFixed(dp)} [Hz^2]
+                    Min: ${min_acceleration.toFixed(dp)} [Hz^2] Avg-${acceleration_min_offset_percentage.toFixed(2)}%
+                    Max: ${max_acceleration.toFixed(dp)} [Hz^2] Avg+${acceleration_max_offset_percentage.toFixed(2)}%
                     Range: ${acceleration_range.toFixed(dp)} [Hz^2]
-                    AvgA: ${mean_acceleration.toFixed(dp)} [Hz^2]
-                    StdA: ${std_acceleration.toFixed(dp)} [Hz^2]
                     --------------------------------`.replace(/  +/g, '')
                 );
                 velocity_values = [];
