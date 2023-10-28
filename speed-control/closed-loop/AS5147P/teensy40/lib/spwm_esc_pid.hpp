@@ -1,4 +1,5 @@
 #include "spwm_esc.hpp"
+#include "butterworth.hpp"
 
 namespace kaepek
 {
@@ -63,6 +64,8 @@ namespace kaepek
     volatile double derivative_error_filtered_2 = 0.0;
 
     double desired_derivative_cutoff_frequency = 1500.0;
+
+    ButterworthFilter<5> butterworth_filter;
 
     using BaseEscClass = EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
 

@@ -2,15 +2,15 @@
 
 namespace kaepek
 {
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
-    ButterworthFilter<ORDER, TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>::ButterworthFilter(double cutoff_frequency) : cutoff_frequency(cutoff_frequency), sample_rate(initial_sample_rate)
+    template <std::size_t ORDER>
+    ButterworthFilter<ORDER>::ButterworthFilter(double cutoff_frequency, double transition_bandwidth_change_threshold_percentage) : cutoff_frequency(cutoff_frequency), sample_rate(30000.0), transition_bandwidth_change_threshold_percentage(transition_bandwidth_change_threshold_percentage)
     {
         // init coefficients
         calculate_coefficients();
     }
 
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
-    double ButterworthFilter<ORDER, TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>::filter(double input, double current_sample_rate)
+    template <std::size_t ORDER>
+    double ButterworthFilter<ORDER>::filter(double input, double current_sample_rate)
     {
         // Update the transition_bandwidth if the sample rate has changed.
         if (current_sample_rate != sample_rate)
@@ -40,7 +40,7 @@ namespace kaepek
         states[0] = input;
 
         // Update the filter's state using the calculated coefficients
-        for (int i = 1; i <= ORDER; i++)
+        for (unsigned int i = 1; i <= ORDER; i++)
         {
             states[i] = coefficients[i] * input + coefficients[i - 1] * states[i - 1];
         }
@@ -49,23 +49,25 @@ namespace kaepek
         return states[ORDER];
     }
 
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
-    bool ButterworthFilter<ORDER, TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>::sample_rate_changed()
+    template <std::size_t ORDER>
+    bool ButterworthFilter<ORDER>::sample_rate_changed()
     {
         return sample_rate_ticker;
     }
 
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
-    void ButterworthFilter<ORDER, TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>::calculate_coefficients()
+    template <std::size_t ORDER>
+    void ButterworthFilter<ORDER>::calculate_coefficients()
     {
         // Calculate the angular cutoff frequency in radians per second
         double angular_cutoff_frequency = 2.0 * M_PI * cutoff_frequency / sample_rate;
 
         // Calculate the filter coefficient parameter
-        double filter_coefficient_parameter = 1.0 / tan(angular_cutoff_frequency / 2.0);
+        double epsilon = 1e-12; // A small epsilon value
+        double filter_coefficient_parameter = 1.0 / (tan(angular_cutoff_frequency / 2.0));
+        
 
         // Calculate the filter coefficients for each term in the filter's transfer function using the filter coefficient parameter
-        for (int k = 0; k <= ORDER; k++)
+        for (unsigned int k = 0; k <= ORDER; k++)
         {
             // Each coefficient is determined by multiplying the corresponding binomial coefficient (n choose r)
             // and raising the filter coefficient parameter to the power of k.
@@ -73,8 +75,8 @@ namespace kaepek
         }
     }
 
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
-    double ButterworthFilter<ORDER, TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>::n_choose_r(int n, int r)
+    template <std::size_t ORDER>
+    double ButterworthFilter<ORDER>::n_choose_r(int n, int r)
     {
         // Calculate the binomial coefficient (n choose r)
 

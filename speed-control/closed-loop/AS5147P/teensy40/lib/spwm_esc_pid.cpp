@@ -1,5 +1,6 @@
 #include "spwm_esc_pid.hpp"
 #include "spwm_esc.cpp"
+#include "butterworth.cpp"
 
 namespace kaepek
 {
@@ -8,12 +9,12 @@ namespace kaepek
 #endif
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(), butterworth_filter(5000.0, 5.0)
     {
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config)
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config), butterworth_filter(5000.0, 5.0)
     {
         proportional_coefficient = pid_config.proportional;
         differential_coefficient = pid_config.differential;
@@ -29,7 +30,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, ac_map_ptr)
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, ac_map_ptr), butterworth_filter(5000.0, 5.0)
     {
         proportional_coefficient = pid_config.proportional;
         differential_coefficient = pid_config.differential;
@@ -116,11 +117,16 @@ namespace kaepek
                 differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
 #endif
 
+                // try butterworth
+
+                double derivative_error_filter_butterworth = butterworth_filter.filter(differential_error, 30000.0);
+                differential_error = derivative_error_filter_butterworth;
+                
                 /*double alpha = 1 / (1 + 2 * M_PI * seconds_since_last * desired_derivative_cutoff_frequency);
                 derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
                 differential_error = derivative_error_filtered;*/
 
-                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
+                /*double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
                 double alpha = omega * seconds_since_last; // this
 
                 // Apply a second-order low-pass filter
@@ -129,7 +135,7 @@ namespace kaepek
                 // Update previous filtered error values
                 derivative_error_filtered_2 = derivative_error_filtered_1; // this
                 derivative_error_filtered_1 = derivative_error_filtered; // this
-                differential_error = derivative_error_filtered; // this
+                differential_error = derivative_error_filtered; // this*/
 
                 // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
 

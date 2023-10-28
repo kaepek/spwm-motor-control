@@ -13,7 +13,7 @@ namespace kaepek
      * design adapts to changes in sample rate while maintaining desired transition
      * characteristics.
      */
-    template <std::size_t ORDER, std::size_t TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE>
+    template <std::size_t ORDER>
     class ButterworthFilter
     {
     public:
@@ -21,7 +21,7 @@ namespace kaepek
          * Constructor for the Butterworth filter.
          * @param cutoff_frequency The desired cutoff frequency for the filter.
          */
-        ButterworthFilter(double cutoff_frequency);
+        ButterworthFilter(double cutoff_frequency, double transition_bandwidth_change_threshold_percentage);
 
         /**
          * Method to filter the input signal using the Butterworth filter.
@@ -42,7 +42,7 @@ namespace kaepek
         double coefficients[ORDER + 1] = {0.0};
         double states[ORDER + 1] = {0.0};
         double transition_bandwidth = 0.0;
-        const double transition_bandwidth_change_threshold_percentage = TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE / 100.0;
+        double transition_bandwidth_change_threshold_percentage; // = TRANSITION_BANDWIDTH_CHANGE_THRESHOLD_PERCENTAGE / 100.0;
         bool sample_rate_ticker = false;
 
         /**
