@@ -7,12 +7,12 @@ namespace kaepek
 #define ENABLE_RK4 true
 #endif
 
-/*
-double KALMAN_ALPHA = 40000000000.0; // 40000000000.0; // changing this one
-double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
-double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // changing this one // 1000.0; // 10.0; // 0.000000000001;
+    /*
+    double KALMAN_ALPHA = 40000000000.0; // 40000000000.0; // changing this one
+    double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
+    double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // changing this one // 1000.0; // 10.0; // 0.000000000001;
 
-*/
+    */
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
@@ -106,6 +106,12 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
                 // Calculate errors
                 // set_point = cache_set_point;
                 proportional_error = cache_set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+
+                derivative_error_kalman_filter.step(seconds_since_last, proportional_error);
+                double *kalman_proportional_error_vec = derivative_error_kalman_filter.get_kalman_vector();
+                proportional_error = kalman_proportional_error_vec[0];
+                differential_error = kalman_proportional_error_vec[1];
+
                 integral_error += proportional_error * seconds_since_last;
 
                 // Watch out for the integral_error saturating
@@ -114,7 +120,7 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
                     integral_error = 0.0;
                 }
 
-#if ENABLE_RK4
+/*#if ENABLE_RK4
                 // RK4
                 double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
                 double k2 = calculate_eular_derivative(proportional_error + 0.5 * k1 * seconds_since_last, seconds_since_last, previous_proportional_error);
@@ -124,16 +130,11 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
 #else
                 // Eular
                 differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
-#endif
+#endif*/
 
                 /*double alpha = 1 / (1 + 2 * M_PI * seconds_since_last * desired_derivative_cutoff_frequency);
                 derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
                 differential_error = derivative_error_filtered;*/
-
-                derivative_error_kalman_filter.step(seconds_since_last, differential_error);
-                double *kalman_differential_error_vec = derivative_error_kalman_filter.get_kalman_vector();
-                differential_error = kalman_differential_error_vec[0];
-
 
                 /*double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
                 double alpha = omega * seconds_since_last; // this
@@ -162,20 +163,22 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
                 {
                     if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
                     {
-                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
+                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_cw), 1.0 / (double)power_law_root_cw);
                     }
-                    else {
-                        duty += (double) linear_set_point_coefficient_cw * fabs((double) cache_set_point) +  (double) linear_bias_cw;
+                    else
+                    {
+                        duty += (double)linear_set_point_coefficient_cw * fabs((double)cache_set_point) + (double)linear_bias_cw;
                     }
                 }
                 else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
                 {
                     if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
                     {
-                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
+                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_ccw), 1.0 / (double)power_law_root_ccw);
                     }
-                    else {
-                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) cache_set_point) + (double) linear_bias_ccw;
+                    else
+                    {
+                        duty += (double)linear_set_point_coefficient_ccw * fabs((double)cache_set_point) + (double)linear_bias_ccw;
                     }
                 }
 
@@ -225,9 +228,9 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
             }
             break;
         case SerialInputCommandWord::Stop:
-            //if (BaseEscClass::fault == false)
+            // if (BaseEscClass::fault == false)
             //{
-                this->stop();
+            this->stop();
             //}
             break;
         case SerialInputCommandWord::Reset:
@@ -455,7 +458,8 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
         }
         else {
             Serial.print(-2.0);
-        }*/ // works ok
+        }*/
+        // works ok
 
         Serial.print(",");
         Serial.print(BaseEscClass::com_direction_value);
@@ -497,11 +501,11 @@ double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // chan
 
         double half_max_duty = (double)BaseEscClass::MAX_DUTY / 2;
         Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_a - half_max_duty);
+        Serial.print((double)BaseEscClass::current_triplet.phase_a - half_max_duty);
         Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_b - half_max_duty);
+        Serial.print((double)BaseEscClass::current_triplet.phase_b - half_max_duty);
         Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_c - half_max_duty);
+        Serial.print((double)BaseEscClass::current_triplet.phase_c - half_max_duty);
 
         Serial.print("\n");
 
