@@ -7,9 +7,17 @@ namespace kaepek
 #define ENABLE_RK4 true
 #endif
 
+/*
+double KALMAN_ALPHA = 40000000000.0; // 40000000000.0; // changing this one
+double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
+double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // changing this one // 1000.0; // 10.0; // 0.000000000001;
+
+*/
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
     {
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -26,6 +34,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -42,6 +51,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -120,7 +130,12 @@ namespace kaepek
                 derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
                 differential_error = derivative_error_filtered;*/
 
-                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
+                derivative_error_kalman_filter.step(seconds_since_last, differential_error);
+                double *kalman_differential_error_vec = derivative_error_kalman_filter.get_kalman_vector();
+                differential_error = kalman_differential_error_vec[0];
+
+
+                /*double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
                 double alpha = omega * seconds_since_last; // this
 
                 // Apply a second-order low-pass filter
@@ -129,7 +144,7 @@ namespace kaepek
                 // Update previous filtered error values
                 derivative_error_filtered_2 = derivative_error_filtered_1; // this
                 derivative_error_filtered_1 = derivative_error_filtered; // this
-                differential_error = derivative_error_filtered; // this
+                differential_error = derivative_error_filtered; // this*/
 
                 // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
 
