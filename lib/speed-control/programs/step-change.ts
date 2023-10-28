@@ -287,8 +287,6 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
     await delay(300);
     await word_sender.send_word("stop");
 
-    console2.success("All finished, result:", JSON.stringify(output));
-
     const output_flat: { cw: LineData[], ccw: LineData[] } = { cw: [], ccw: [] };
 
     output.cw.segments.forEach((segment) => {
