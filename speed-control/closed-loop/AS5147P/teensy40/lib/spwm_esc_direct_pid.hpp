@@ -63,6 +63,8 @@ namespace kaepek
 
     double desired_derivative_cutoff_frequency = 1500.0; // 1500.0
 
+    KalmanJerk1D error_kalman_filter;
+
     using BaseEscClass = EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
 
     /**

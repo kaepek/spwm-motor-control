@@ -65,7 +65,7 @@ namespace kaepek
 
     double desired_derivative_cutoff_frequency = 1500.0;
 
-    KalmanJerk1D derivative_error_kalman_filter;
+    KalmanJerk1D error_kalman_filter;
 
     using BaseEscClass = EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
 

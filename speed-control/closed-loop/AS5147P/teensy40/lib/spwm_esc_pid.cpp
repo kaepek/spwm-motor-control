@@ -17,7 +17,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
     {
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
+        this->error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -34,7 +34,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
+        this->error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -51,7 +51,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
+        this->error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -107,8 +107,8 @@ namespace kaepek
                 // set_point = cache_set_point;
                 proportional_error = cache_set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
 
-                derivative_error_kalman_filter.step(seconds_since_last, proportional_error);
-                double *kalman_proportional_error_vec = derivative_error_kalman_filter.get_kalman_vector();
+                error_kalman_filter.step(seconds_since_last, proportional_error);
+                double *kalman_proportional_error_vec = error_kalman_filter.get_kalman_vector();
                 proportional_error = kalman_proportional_error_vec[0];
                 differential_error = kalman_proportional_error_vec[1];
 
