@@ -8,16 +8,16 @@ namespace kaepek
 #endif
 
     /*
-    double KALMAN_ALPHA = 40000000000.0; // 40000000000.0; // changing this one
+    double KALMAN_ALPHA = 40000000000000.0; // 40000000000000.0; // changing this one
     double KALMAN_X_RESOLUTION_ERROR = 4.0;           // 0.00001; // 4.0; // 0.00001;
-    double KALMAN_PROCESS_NOISE = 0.0000000000000001; // 0.0000000000000001; // changing this one // 1000.0; // 10.0; // 0.000000000001;
+    double KALMAN_PROCESS_NOISE = 1000000000.0; // 1000000000.0; // changing this one // 1000.0; // 10.0; // 0.000000000001;
 
     */
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
     {
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -34,7 +34,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -51,7 +51,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000.0, 4.0, 0.0000000000000001, true);
+        this->derivative_error_kalman_filter = KalmanJerk1D(40000000000000.0, 0.1, 1000000000.0, true);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -163,7 +163,7 @@ namespace kaepek
                 {
                     if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
                     {
-                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_cw), 1.0 / (double)power_law_root_cw);
+                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_cw), 0.1 / (double)power_law_root_cw);
                     }
                     else
                     {
@@ -174,7 +174,7 @@ namespace kaepek
                 {
                     if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
                     {
-                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_ccw), 1.0 / (double)power_law_root_ccw);
+                        duty += pow((fabs((double)cache_set_point) / (double)power_law_set_point_divisor_ccw), 0.1 / (double)power_law_root_ccw);
                     }
                     else
                     {
@@ -447,7 +447,7 @@ namespace kaepek
         {
             if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
             {
-                double help = pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
+                double help = pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 0.1 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
                 // double help = fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw;
                 // double help = 1.0 / (double) power_law_root_cw;
                 Serial.print(min(help, 0.3), 6);
