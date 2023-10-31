@@ -76,11 +76,18 @@ const cli_args: Array<CliArg> = [
         help: "The number of rotations before statistics about rotation are updated",
         required: false,
         default: 1
+    },
+    {
+        name: "rpm_mode",
+        type: CliArgType.Boolean,
+        short: "b",
+        help: "Makes the display read out in rpm",
+        required: false,
+        default: false
     }
 ];
 
 const parsed_args = parse_args("RotationStatistics", cli_args, ArgumentHandlers) as any;
-
 
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
 
@@ -104,6 +111,9 @@ const pad_zeros = (value: number, required_digits = 2) => {
     }
     return value_string;
 }
+
+const units = parsed_args.rpm_mode === false ? "Hz" : "Rpm";
+const hz_multiplier = parsed_args.rpm_mode === false ? 1.0 : 60.0;
 
 const rotation_direction_stats_logger = (rotations$: Observable<{
     motion: boolean;
@@ -179,25 +189,25 @@ const rotation_direction_stats_logger = (rotations$: Observable<{
                     `Time: ${time} -------------
                     Direction: ${direction_str}
                     Velocity  ------------------------
-                    Avg: ${mean_velocity.toFixed(dp)} [Hz]
-                    Std: ${std_velocity.toFixed(dp)} [Hz]
-                    Min: ${min_velocity.toFixed(dp)} [Hz] Avg -${Math.abs(velocity_min_offset_percentage).toFixed(2)}%
-                    Max: ${max_velocity.toFixed(dp)} [Hz] Avg +${Math.abs(velocity_max_offset_percentage).toFixed(2)}%
-                    Range: ${velocity_range.toFixed(dp)} [Hz]
+                    Avg: ${mean_velocity.toFixed(dp)} [${units}]
+                    Std: ${std_velocity.toFixed(dp)} [${units}] ${((std_velocity/mean_velocity)*100).toFixed(dp)}%
+                    Min: ${min_velocity.toFixed(dp)} [${units}] Avg -${Math.abs(velocity_min_offset_percentage).toFixed(2)}%
+                    Max: ${max_velocity.toFixed(dp)} [${units}] Avg +${Math.abs(velocity_max_offset_percentage).toFixed(2)}%
+                    Range: ${velocity_range.toFixed(dp)} [${units}]
                     Acceleration -------------------
-                    Avg: ${mean_acceleration.toFixed(dp)} [Hz^2]
-                    Std: ${std_acceleration.toFixed(dp)} [Hz^2]
-                    Min: ${min_acceleration.toFixed(dp)} [Hz^2] Avg -${Math.abs(acceleration_min_offset_percentage).toFixed(2)}%
-                    Max: ${max_acceleration.toFixed(dp)} [Hz^2] Avg +${Math.abs(acceleration_max_offset_percentage).toFixed(2)}%
-                    Range: ${acceleration_range.toFixed(dp)} [Hz^2]
+                    Avg: ${mean_acceleration.toFixed(dp)} [${units}^2]
+                    Std: ${std_acceleration.toFixed(dp)} [${units}^2] ${((std_acceleration/mean_acceleration)*100).toFixed(dp)}%
+                    Min: ${min_acceleration.toFixed(dp)} [${units}^2] Avg -${Math.abs(acceleration_min_offset_percentage).toFixed(2)}%
+                    Max: ${max_acceleration.toFixed(dp)} [${units}^2] Avg +${Math.abs(acceleration_max_offset_percentage).toFixed(2)}%
+                    Range: ${acceleration_range.toFixed(dp)} [${units}^2]
                     --------------------------------`.replace(/  +/g, '')
                 );
                 velocity_values = [];
                 acceleration_values = [];
             }
             else {
-                velocity_values.push(rotation_data.line_data.parsed_data.kalman_velocity);
-                acceleration_values.push(rotation_data.line_data.parsed_data.kalman_acceleration);
+                velocity_values.push(rotation_data.line_data.parsed_data.kalman_velocity * hz_multiplier);
+                acceleration_values.push(rotation_data.line_data.parsed_data.kalman_acceleration * hz_multiplier);
             }
         }
     });
