@@ -45,7 +45,7 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         this.wait_timeout = setTimeout(() => {
             // incoming data should have motion
             if (!this.incoming_data) {
-                return this.return_promise_rejector(`First message from peripheral device not received in ${this.wait_time} milliseconds, sugest checking that a director is running or increase wait_time.`);
+                return this.return_promise_rejector(`First message from peripheral device not received in ${this.wait_time} milliseconds, check that a director is running or increase wait_time.`);
             }
             else {
                 if (this.incoming_data.motion == true) {

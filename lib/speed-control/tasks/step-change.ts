@@ -73,6 +73,17 @@ export class GetStepChange extends Task<ESCParsedLineData> {
     wait_timeout: any;
     start_duty: number | null = null;
     n_duty_steps: number;
+    smallest_acc: number = Number.POSITIVE_INFINITY;
+    largest_vel: number = Number.NEGATIVE_INFINITY;
+    segments: Array<Segment> = [];
+    duties_to_apply: Array<number> = [];
+    direction = 0;
+    direction_str = "cw";
+    direction_sign = 1.0;
+    max_stability_tolerance = 1.0;
+    min_stability_tolerance = 1.0;
+    end_duty = 2047;
+    start_duty_override: number | string | undefined;
 
     async create_timeout() {
         if (this.wait_timeout) clearTimeout(this.wait_timeout);
@@ -102,7 +113,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         }
     }
 
-    duties_to_apply: Array<number> = [];
     async run(state: any) {
         const idle_duty = state[this.direction_str].idle_duty;
         const start_duty = state[this.direction_str].start_duty;
@@ -138,10 +148,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         this.send_next_word();
         return super.run(); // tick will now run every time the device outputs a line.
     }
-
-    smallest_acc: number = Number.POSITIVE_INFINITY;
-    largest_vel: number = Number.NEGATIVE_INFINITY;
-    segments: Array<Segment> = [];
 
     async tick(incoming_data: ESCParsedLineData) {
 
@@ -330,14 +336,6 @@ export class GetStepChange extends Task<ESCParsedLineData> {
 
         return { [this.direction_str]: { "segments": segments_with_stats} }
     }
-
-    direction = 0;
-    direction_str = "cw";
-    direction_sign = 1.0;
-    max_stability_tolerance = 1.0;
-    min_stability_tolerance = 1.0;
-    end_duty = 2047;
-    start_duty_override: number | string | undefined;
 
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047, n_duty_steps = 10, wait_time = 3000, stable_region_tolerance_percentage = 1, end_duty = 464, start_duty_override: number | string | undefined = "idle") {
         super(input$);
