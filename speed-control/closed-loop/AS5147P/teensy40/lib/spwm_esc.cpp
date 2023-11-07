@@ -10,12 +10,6 @@ using namespace TeensyTimerTool;
 #define DISABLE_SPWM_PIN_MODIFICATION false
 #endif
 
-#ifndef ENABLE_VERBOSE_LOGGING
-#define ENABLE_VERBOSE_LOGGING true
-#endif
-
-// PeriodicTimer logging_timer(GPT2);
-
 namespace kaepek
 {
 
@@ -247,7 +241,10 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
-        // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
+
+        double half_max_duty = (double)MAX_DUTY / 2.0;
+
+        // Note double/float Serial.print gives 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
         cli();
         double seconds_elapsed = (double)this->micros_since_last_log * 1e-6;
@@ -256,8 +253,6 @@ namespace kaepek
         Serial.print(((double)this->sample_ctr) / seconds_elapsed);
         Serial.print(",");
         Serial.print(eular_vec_store[0], 4);
-
-#if ENABLE_VERBOSE_LOGGING
         Serial.print(",");
         Serial.print(this->current_duty_ratio, 4);
         Serial.print(",");
@@ -279,19 +274,13 @@ namespace kaepek
         Serial.print(",");
         Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-
-        double half_max_duty = (double)MAX_DUTY / 2.0;
-        // Serial.print((double)current_triplet.phase_a);
         Serial.print((double)current_triplet.phase_a - half_max_duty);
         Serial.print(",");
-        // Serial.print((double)current_triplet.phase_b);
         Serial.print((double)current_triplet.phase_b - half_max_duty);
         Serial.print(",");
-        // Serial.print((double)current_triplet.phase_c);
         Serial.print((double)current_triplet.phase_c - half_max_duty);
         Serial.print(",");
         Serial.print(current_encoder_displacement);
-#endif
         Serial.print("\n");
 
         // Reset loop counter and time since last log.
