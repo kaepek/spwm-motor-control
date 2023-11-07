@@ -57,7 +57,7 @@ namespace kaepek
         integral_error = 0.0;
         differential_error = 0.0;
         previous_proportional_error = 0.0;
-        BaseEscClass::com_torque_percentage = 0.0;
+        BaseEscClass::current_duty_ratio = 0.0;
         BaseEscClass::stop();
     }
 
@@ -94,8 +94,7 @@ namespace kaepek
                 BaseEscClass::eular_vec_store[4] = eular_vec[4];
 
                 // Calculate errors
-                // set_point = cache_set_point;
-                proportional_error = cache_set_point - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+                proportional_error = set_point_hz - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
                 integral_error += proportional_error * seconds_since_last;
 
                 // Watch out for the integral_error saturating
@@ -142,25 +141,25 @@ namespace kaepek
                 // add bias term (optional default zero)
                 // duty += duty_bias
 
-                // add power law term
+                // add linear / power law terms
                 if (BaseEscClass::direction == RotationDirection::Clockwise)
                 {
                     if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
                     {
-                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
+                        duty += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
                     }
                     else {
-                        duty += (double) linear_set_point_coefficient_cw * fabs((double) cache_set_point) +  (double) linear_bias_cw;
+                        duty += (double) linear_set_point_coefficient_cw * fabs((double) set_point_hz) +  (double) linear_bias_cw;
                     }
                 }
                 else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
                 {
                     if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
                     {
-                        duty += pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
+                        duty += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
                     }
                     else {
-                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) cache_set_point) + (double) linear_bias_ccw;
+                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) set_point_hz) + (double) linear_bias_ccw;
                     }
                 }
 
@@ -175,7 +174,7 @@ namespace kaepek
                 duty = min(duty, BaseEscClass::duty_cap);
                 pid_duty = duty;
 
-                BaseEscClass::com_torque_percentage = pid_duty;
+                BaseEscClass::current_duty_ratio = pid_duty;
 
                 previous_proportional_error = proportional_error;
 
@@ -221,16 +220,16 @@ namespace kaepek
             BaseEscClass::fault = false;
             break;
         case SerialInputCommandWord::Direction1UI8:
-            if (BaseEscClass::com_torque_percentage == 0.0) // dont reverse unless thrust is zero
+            if (BaseEscClass::current_duty_ratio == 0.0) // dont reverse unless thrust is zero
             {
-                BaseEscClass::com_direction_value = data_buffer[0];
-                if (BaseEscClass::com_direction_value == 0)
+                BaseEscClass::byte_direction = data_buffer[0];
+                if (BaseEscClass::byte_direction == 0)
                 {
                     BaseEscClass::direction = RotationDirection::Clockwise;
                     BaseEscClass::bl_direction = false;
                     BaseEscClass::set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
-                else if (BaseEscClass::com_direction_value == 1)
+                else if (BaseEscClass::byte_direction == 1)
                 {
                     BaseEscClass::direction = RotationDirection::CounterClockwise;
                     BaseEscClass::bl_direction = true;
@@ -289,7 +288,7 @@ namespace kaepek
             *((unsigned char *)&float_value + 1) = data_buffer[1];
             *((unsigned char *)&float_value + 2) = data_buffer[2];
             *((unsigned char *)&float_value + 3) = data_buffer[3];
-            cache_set_point = float_value;
+            set_point_hz = float_value;
             break;
         case SerialInputCommandWord::ProportionalF32:
             *((unsigned char *)&float_value + 0) = data_buffer[0];
@@ -417,7 +416,7 @@ namespace kaepek
 
         Serial.print(BaseEscClass::eular_vec_store[0], 4);
         Serial.print(",");
-        Serial.print(BaseEscClass::com_torque_percentage, 4); // put me back!
+        Serial.print(BaseEscClass::current_duty_ratio, 4); // put me back!
 
         // Serial.print(linear_bias_cw, 18); // value is ok
         // Serial.print(power_law_root_cw, 4); // value is ok
@@ -426,8 +425,8 @@ namespace kaepek
         {
             if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
             {
-                double help = pow((fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
-                // double help = fabs((double) cache_set_point) / (double) power_law_set_point_divisor_cw;
+                double help = pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
+                // double help = fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw;
                 // double help = 1.0 / (double) power_law_root_cw;
                 Serial.print(min(help, 0.3), 6);
             }
@@ -440,7 +439,7 @@ namespace kaepek
         }*/ // works ok
 
         Serial.print(",");
-        Serial.print(BaseEscClass::com_direction_value);
+        Serial.print(BaseEscClass::byte_direction);
         Serial.print(",");
 
         Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4);
@@ -475,7 +474,7 @@ namespace kaepek
         Serial.print(pid_duty, 4);
 
         Serial.print(",");
-        Serial.print(cache_set_point * 1.0, 4);
+        Serial.print(set_point_hz * 1.0, 4);
 
         double half_max_duty = (double)BaseEscClass::MAX_DUTY / 2;
         Serial.print(",");

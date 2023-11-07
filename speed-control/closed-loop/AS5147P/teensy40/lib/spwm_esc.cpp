@@ -73,7 +73,7 @@ namespace kaepek
         // Convert to compressed.
         uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
-        current_triplet = get_pwm_triplet(com_torque_percentage * (double)MAX_DUTY, compressed_encoder_value, direction);
+        current_triplet = get_pwm_triplet(current_duty_ratio * (double)MAX_DUTY, compressed_encoder_value, direction);
         // Set pin values.
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
@@ -199,12 +199,12 @@ namespace kaepek
         }
 
         // Set initial direction.
-        if (com_direction_value == 0)
+        if (byte_direction == 0)
         {
             direction = RotationDirection::Clockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
         }
-        else if (com_direction_value == 1)
+        else if (byte_direction == 1)
         {
             direction = RotationDirection::CounterClockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
@@ -249,9 +249,9 @@ namespace kaepek
 
 #if ENABLE_VERBOSE_LOGGING
         Serial.print(",");
-        Serial.print(this->com_torque_percentage, 4);
+        Serial.print(this->current_duty_ratio, 4);
         Serial.print(",");
-        Serial.print(this->com_direction_value);
+        Serial.print(this->byte_direction);
         Serial.print(",");
         Serial.print(eular_vec_store[1]);
         Serial.print(",");
@@ -335,18 +335,18 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            com_torque_percentage = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
+            current_duty_ratio = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
             break;
         case SerialInputCommandWord::Direction1UI8:
-            if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero
+            if (current_duty_ratio == 0.0) // dont reverse unless thrust is zero
             {
-                com_direction_value = data_buffer[0];
-                if (com_direction_value == 0)
+                byte_direction = data_buffer[0];
+                if (byte_direction == 0)
                 {
                     direction = RotationDirection::Clockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
-                else if (com_direction_value == 1)
+                else if (byte_direction == 1)
                 {
                     direction = RotationDirection::CounterClockwise;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
@@ -533,9 +533,9 @@ namespace kaepek
         double phase_b = 0.0;
         double phase_c = 0.0;
 
-        double phase_a_before_correction = ((phase_a_lookup * com_torque_percentage) + half_max_duty);
-        double phase_b_before_correction = ((phase_b_lookup * com_torque_percentage) + half_max_duty);
-        double phase_c_before_correction = ((phase_c_lookup * com_torque_percentage) + half_max_duty);
+        double phase_a_before_correction = ((phase_a_lookup * current_duty_ratio) + half_max_duty);
+        double phase_b_before_correction = ((phase_b_lookup * current_duty_ratio) + half_max_duty);
+        double phase_c_before_correction = ((phase_c_lookup * current_duty_ratio) + half_max_duty);
         // find correction
         if (anti_cogging_enabled == true)
         {

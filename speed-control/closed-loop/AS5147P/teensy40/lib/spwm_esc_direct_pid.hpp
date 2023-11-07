@@ -24,20 +24,36 @@ namespace kaepek
   };
 
   /**
-   * EscDirectL6234Teensy40AS5147P
+   * PidEscDirectL6234Teensy40AS5147P
    *
-   * Based on EscDirectL6234Teensy40AS5147P a class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model,
-   * voltages (pwm duties) are fitted directly and given as a pointer. This varient implements a simple PID control loop and can use an optional anti cogging map.
+   * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
+   * The class implements a simple PID control loop and can use an optional anti cogging map.
+   * Based on EscDirectL6234Teensy40AS5147P voltages (pwm duties) are fitted directly by the calibration library and given to the class constructor as a pointer. 
    */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
   class PidEscDirectL6234Teensy40AS5147P : public EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>
   {
   private:
+    // PID coefficients.
     volatile float proportional_coefficient = 0.0;
     volatile float integral_coefficient = 0.0;
     volatile float differential_coefficient = 0.0;
 
-    // bias terms
+    // PID errors.
+    volatile double proportional_error = 0.0;
+    volatile double previous_proportional_error = 0.0;
+    volatile double differential_error = 0.0;
+    volatile double integral_error = 0.0;
+    volatile double derivative_error_filtered_1 = 0.0;
+    volatile double derivative_error_filtered_2 = 0.0;
+
+    // PID - d term low pass cutoff.
+    double desired_derivative_cutoff_frequency = 1500.0;
+
+    // Setpoint.
+    volatile float set_point_hz = 0.0;
+
+    // PID bias terms.
     volatile float power_law_set_point_divisor_cw = 0.0;
     volatile float power_law_root_cw = 0.0;
     volatile float power_law_set_point_divisor_ccw = 0.0;
@@ -47,21 +63,8 @@ namespace kaepek
     volatile float linear_bias_cw = 0.0;
     volatile float linear_bias_ccw = 0.0;
 
-    volatile double proportional_error = 0.0;
-    volatile double previous_proportional_error = 0.0;
-    volatile double differential_error = 0.0;
-    volatile double integral_error = 0.0;
-
-    volatile float set_point = 0.0;
-
+    // Calculated duty.
     volatile float pid_duty = 0.0;
-
-    volatile float cache_set_point = 0.0;
-
-    volatile double derivative_error_filtered_1 = 0.0;
-    volatile double derivative_error_filtered_2 = 0.0;
-
-    double desired_derivative_cutoff_frequency = 1500.0; // 1500.0
 
     using BaseEscClass = EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
 
@@ -115,7 +118,7 @@ namespace kaepek
     void process_host_control_word(uint32_t control_word, uint32_t *data_buffer);
 
     /**
-     * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double com_torque_percentage), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
+     * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double current_duty_ratio), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
      */
     void log();
 

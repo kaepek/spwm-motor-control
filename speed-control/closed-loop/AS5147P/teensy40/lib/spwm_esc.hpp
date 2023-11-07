@@ -102,12 +102,39 @@ namespace kaepek
     SPWML6234PinConfig spwm_pin_config;
     // Kalman filter config.
     KalmanConfig kalman_config;
+    // Motor voltage model configuration.
+    double cw_zero_displacement_deg;
+    double cw_phase_displacement_deg;
+    double ccw_zero_displacement_deg;
+    double ccw_phase_displacement_deg;
+    uint32_t number_of_poles;
+    // Const pointer to hold anti cogging duty correction map.
+    const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR];
+    // Variable to hold whether anti cogging argument has been given and therefore if it is enables
+    bool anti_cogging_enabled = false;
+    // Variables to hold SPWM angular resolution (compressed encoder steps) in various datatypes.
+    uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
+    double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
+    double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
 
+    // ESC state variables:
+
+    // Variable to indicate fault status.
+    volatile bool fault = false;
+    // Variable to indicate  time since last log.
+    elapsedMicros micros_since_last_log;
+    // Variable to indicate that after a start was attempted did the validator actually start or not.
+    bool started = false;
+    // Variable to indicate that a start was attempted.
+    volatile bool start_attempted = false;
+    // Variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
+    volatile uint32_t loop_ctr = 0;
+    volatile uint32_t sample_ctr = 0;
     // Direction.
     RotationDirection direction = RotationDirection::Clockwise;
     volatile bool bl_direction = false;
-
-    // Voltage model values.
+    volatile byte byte_direction = 0; // UInt8
+    // Voltage model current values.
     SPWMVoltageDutyTriplet current_triplet;
     // Current rotor position.
     uint32_t current_encoder_displacement = 0;
@@ -116,48 +143,15 @@ namespace kaepek
     // Physical model values.
     Dbl4x1 kalman_vec_store = {0};
     Dbl5x1 eular_vec_store = {0};
-
-    // Host communication variables
-    volatile double com_torque_percentage = 0.0;
-    volatile byte com_direction_value = 0; // UInt8
-
-    // ESC state variables
-    // Variable to indicate fault status
-    volatile bool fault = false;
-    // Variable to indicate  time since last log
-    elapsedMicros micros_since_last_log;
-    // Variable to indicate that after a start was attempted did the validator actually start or not
-    bool started = false;
-    // Variable to indicate that a start was attempted.
-    volatile bool start_attempted = false;
-    // Variables to count the number of "loop"'s (aka kalman speed loops) and "samples"'s (encoder samples) within a given time period.
-    volatile uint32_t loop_ctr = 0;
-    volatile uint32_t sample_ctr = 0;
-
+    // Current duty proportion of the MAX_DUTY, 0.3 would represent 30% of the MAX_DUTY.
+    volatile double current_duty_ratio = 0.0;
+    // Phase voltage lookup tables values generated from the 3 phase sinusoidal model given the motor voltage model configuration.
     int16_t cw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
     int16_t cw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
     int16_t cw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
     int16_t ccw_phase_a_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
     int16_t ccw_phase_b_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
     int16_t ccw_phase_c_lookup[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-
-    const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR];
-    bool anti_cogging_enabled = false;
-
-    // float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // wanted float but wont compile
-    // float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
-
-    uint32_t spwm_angular_resolution_uint32 = ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR;
-    double spwm_angular_resolution_dbl = (double)(ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR);
-    double encoder_compression_factor_dbl = ENCODER_COMPRESSION_FACTOR;
-    uint32_t number_of_poles;
-    double cw_zero_displacement_deg;
-    double cw_phase_displacement_deg;
-    double ccw_zero_displacement_deg;
-    double ccw_phase_displacement_deg;
-
-    // float cw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0}; // this works!
-    // float ccw_corrections[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR] = {0};
 
   public:
     /**
@@ -222,7 +216,7 @@ namespace kaepek
     void stop();
 
     /**
-     * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double com_torque_percentage), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
+     * Method to log the values of the communication profile and the physical models to serial out. These include communication profile variables (bool direction and double current_duty_ratio), the physical model components (time, eular_displacement, eular_velocity, eular_acceleration, eular_jerk, kalman_displacement, kalman_velocity, kalman_acceleration and kalman_jerk) and the 3 phase spwm voltages (phase_a, phase_b and phase_c).
      */
     virtual void log();
 

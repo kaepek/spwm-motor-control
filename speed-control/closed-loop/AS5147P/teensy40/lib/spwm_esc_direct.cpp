@@ -14,8 +14,6 @@ using namespace TeensyTimerTool;
 #define ENABLE_VERBOSE_LOGGING true
 #endif
 
-// PeriodicTimer logging_timer(GPT2);
-
 namespace kaepek
 {
 
@@ -49,6 +47,7 @@ namespace kaepek
     {
         if (started == false) return;
 
+        // Tick sample counter.
         sample_ctr++;
 
         // Take encoder value.
@@ -56,10 +55,12 @@ namespace kaepek
         // Convert to compressed.
         uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
-        current_triplet = get_pwm_triplet(com_torque_percentage, compressed_encoder_value, direction); // * (double)MAX_DUTY
-                                                                                                       // Set pin values.
+        current_triplet = get_pwm_triplet(current_duty_ratio, compressed_encoder_value, direction);
+
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
+        // Set pin values.
         analogWrite(spwm_pin_config.phase_a, current_triplet.phase_a);
         analogWrite(spwm_pin_config.phase_b, current_triplet.phase_b);
         analogWrite(spwm_pin_config.phase_c, current_triplet.phase_c);
@@ -86,6 +87,8 @@ namespace kaepek
     void EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
 #if !DISABLE_SPWM_PIN_MODIFICATION
+        // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
         // Set pwm pins for output.
         pinMode(spwm_pin_config.phase_a, OUTPUT);
         pinMode(spwm_pin_config.phase_b, OUTPUT);
@@ -166,6 +169,8 @@ namespace kaepek
     bool EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::start()
     {
 #if !DISABLE_SPWM_PIN_MODIFICATION
+        // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
         // Enable power circuit.
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
@@ -182,12 +187,12 @@ namespace kaepek
         }
 
         // Set initial direction.
-        if (com_direction_value == 0)
+        if (byte_direction == 0)
         {
             direction = RotationDirection::Clockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
         }
-        else if (com_direction_value == 1)
+        else if (byte_direction == 1)
         {
             direction = RotationDirection::CounterClockwise;
             set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
@@ -232,9 +237,9 @@ namespace kaepek
 
 #if ENABLE_VERBOSE_LOGGING
         Serial.print(",");
-        Serial.print(this->com_torque_percentage, 4);
+        Serial.print(this->current_duty_ratio, 4);
         Serial.print(",");
-        Serial.print(this->com_direction_value);
+        Serial.print(this->byte_direction);
         Serial.print(",");
         Serial.print((double) eular_vec_store[1] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
@@ -313,19 +318,19 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            com_torque_percentage = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
+            current_duty_ratio = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
             break;
         case SerialInputCommandWord::Direction1UI8:
-            if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero
+            if (current_duty_ratio == 0.0) // dont reverse unless thrust is zero
             {
-                com_direction_value = data_buffer[0];
-                if (com_direction_value == 0)
+                byte_direction = data_buffer[0];
+                if (byte_direction == 0)
                 {
                     direction = RotationDirection::Clockwise;
                     bl_direction = false;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
-                else if (com_direction_value == 1)
+                else if (byte_direction == 1)
                 {
                     direction = RotationDirection::CounterClockwise;
                     bl_direction = true;
@@ -369,7 +374,7 @@ namespace kaepek
     };
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    SPWMVoltageDutyTriplet EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double com_torque_percentage, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
+    SPWMVoltageDutyTriplet EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double current_duty_ratio, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
     {
 
         double phase_a_lookup;
@@ -388,9 +393,9 @@ namespace kaepek
         double phase_b = 0.0;
         double phase_c = 0.0;
 
-        double phase_a_before_correction = ((phase_a_lookup * com_torque_percentage) + half_max_duty);
-        double phase_b_before_correction = ((phase_b_lookup * com_torque_percentage) + half_max_duty);
-        double phase_c_before_correction = ((phase_c_lookup * com_torque_percentage) + half_max_duty);
+        double phase_a_before_correction = ((phase_a_lookup * current_duty_ratio) + half_max_duty);
+        double phase_b_before_correction = ((phase_b_lookup * current_duty_ratio) + half_max_duty);
+        double phase_c_before_correction = ((phase_c_lookup * current_duty_ratio) + half_max_duty);
         // find correction
         if (anti_cogging_enabled == true)
         {
