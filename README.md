@@ -43,3 +43,4 @@ npm run build
 - [Hack-a-day](https://hackaday.io/project/177958-low-power-bldc-driver-board-st-l6234#menu-details)
 - [Electro-noobs](https://electronoobs.com/eng_arduino_tut176.php)
 - [ST-l6234-three-phase-motor-drive](https://www.st.com/resource/en/application_note/cd00004062-l6234-three-phase-motor-driver-stmicroelectronics.pdf)
+- [Anti-cogging-algorithm](https://www.modlabupenn.org/wp-content/uploads/piccoli_matthew_anticogging_torque_ripple_suppression_modeling_and_parameter_selection.pdf)
