@@ -236,13 +236,13 @@ namespace kaepek
         Serial.print(",");
         Serial.print(this->com_direction_value);
         Serial.print(",");
-        Serial.print(eular_vec_store[1]);
+        Serial.print((double) eular_vec_store[1] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-        Serial.print(eular_vec_store[2]);
+        Serial.print((double) eular_vec_store[2] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-        Serial.print(eular_vec_store[3]);
+        Serial.print((double) eular_vec_store[3]  / (double)ENCODER_DIVISIONS);
         Serial.print(",");
-        Serial.print(eular_vec_store[4]);
+        Serial.print((double) eular_vec_store[4]  / (double)ENCODER_DIVISIONS);
         Serial.print(",");
         Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS);
         Serial.print(",");
