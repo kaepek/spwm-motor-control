@@ -81,6 +81,7 @@ namespace kaepek
 
     /**
      * PidEscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
      * @param encoder The digital rotary encoder instance.
      * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
      * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
@@ -88,10 +89,11 @@ namespace kaepek
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      */
-    PidEscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+    PidEscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
 
     /**
      * PidEscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
      * @param encoder The digital rotary encoder instance.
      * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
      * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
@@ -100,7 +102,7 @@ namespace kaepek
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      * @param ac_map_ptr Pointer to an anti-cogging calibration map.
      */
-    PidEscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+    PidEscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
 
     /**
      * Method to read the sampler each microcontroller tick and update the physical jerk model via the Kalman filter with the new measurement sample.

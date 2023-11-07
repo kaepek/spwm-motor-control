@@ -74,6 +74,9 @@ kaepek::SPWML6234PinConfig SPWM_PIN_CONFIG = kaepek::SPWML6234PinConfig();
 // Define the encoder ESC.
 kaepek::EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION> ESC;
 
+// Define the ESC duty cap
+double DUTY_CAP = 0.3;
+
 // Define routine to turn status led pin on and off.
 bool LED_STATUS_ON = false;
 void fault_flash()
@@ -144,7 +147,7 @@ void setup()
   ENC = kaepek::DigitalRotaryEncoderSPI(ENC_PINS);
 
   // Initalise the encoder ESC.
-  ESC = kaepek::EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(ENC, 3.8, SPWM_PIN_CONFIG, KALMAN_CONFIG, VOLTAGE_MAP); // 3us (micro) sample period 2.8 2.6
+  ESC = kaepek::EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_VALUE_COMPRESSION, PWM_WRITE_RESOLUTION>(DUTY_CAP, ENC, 3.8, SPWM_PIN_CONFIG, KALMAN_CONFIG, VOLTAGE_MAP); // 3us (micro) sample period 2.8 2.6
 
   // Allow skipping ahead a maximum value of 4.0, in terms of the read encoder value measurement, before a skip is detected.
   ESC.set_skip_tolerance(8.0);

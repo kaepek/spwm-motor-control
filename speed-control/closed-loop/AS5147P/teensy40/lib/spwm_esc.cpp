@@ -25,7 +25,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>(), duty_cap(duty_cap)
     {
         this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
@@ -42,7 +42,7 @@ namespace kaepek
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>()
+    EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::EscL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : RotaryEncoderSampleValidator(encoder, sample_period_microseconds), SerialInputControl<4>(), duty_cap(duty_cap)
     {
         this->motor_config = motor_config;
         this->spwm_pin_config = spwm_pin_config;
@@ -335,7 +335,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.3; // cap at 50%
+            com_torque_percentage = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
             break;
         case SerialInputCommandWord::Direction1UI8:
             if (com_torque_percentage == 0.0) // dont reverse unless thrust is zero

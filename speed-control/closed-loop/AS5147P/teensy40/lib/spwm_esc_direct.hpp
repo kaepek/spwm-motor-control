@@ -81,6 +81,7 @@ namespace kaepek
     // static constexpr double ccw_displacement_deg = 0.0;
     // static constexpr float log_frequency_micros = 5000;
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
+    double duty_cap;
     // static const int size_of_host_profile = 3;
     // discretiser
     RotationDirection direction = RotationDirection::Clockwise;
@@ -132,16 +133,18 @@ namespace kaepek
 
     /**
      * EscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
      * @param encoder The digital rotary encoder instance.
      * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
      * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      */
-    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+    EscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
 
     /**
      * EscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
      * @param encoder The digital rotary encoder instance.
      * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
      * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
@@ -149,7 +152,7 @@ namespace kaepek
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      * @param ac_map_ptr Pointer to an anti-cogging calibration map.
      */
-    EscDirectL6234Teensy40AS5147P(DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+    EscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
 
     /**
      * Method set the SPWM pin voltages from the SPWMVoltageModelDiscretiser when a successful encoder sample is taken and is determined to be a plausible value and the value indicates motion which obeys the direction constraint (if direction enforcement has been enabled).
