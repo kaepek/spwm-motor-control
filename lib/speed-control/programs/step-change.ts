@@ -263,6 +263,22 @@ type TransitionStat = {
     dead_time: number
 }
 
+type RegressionLines = {
+    Duty: number,
+    "Speed [Hz]": number,
+    "Speed STD": number,
+    "Duty percentage / 100%": number,
+    "LOG10(Duty percentage / 100%)": number,
+    "LOG10(Speed [Hz])": number,
+    "Linear model Speed [Hz]": number,
+    "Linear Model Speed Error [ΔHz]": number,
+    "Power law model LOG10(Speed [Hz])": number, // 
+    "Power law model Speed [Hz]": number,
+    "Power law model Speed Error [ΔHz]": number,
+    "Linear model Duty percentage / 100%": number,
+    "Power law model Duty percentage / 100%": number
+};
+
 const steady_format = [
     { "name": "duty", "position": 0 },
     { "name": "mean_velocity", "position": 1 },
@@ -428,7 +444,6 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
         // m value c value
         const linear_equation_rearraged = "duty = (speed/m) - (c/m)";
         // 1/m value -c/m value
-
         const power_law_result = regression.linear(loglog_pairs as any, {precision: 6});
         const power_law_result_gradient = power_law_result.equation[0]; // m
         const power_law_result_gradient_reciprocal = 1 / power_law_result_gradient;
@@ -436,14 +451,12 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
         const power_law_divisor = Math.pow(10.0, power_law_result_y_intercept); //10^c
         const power_law_result_r2 = power_law_result.r2;
         console.log("power_law_result_r2", direction_str, power_law_result_r2);
-
         const power_law_raw_equation = "log10(y) = m(log10(x)) + log10(c)"
         const power_law_equation = "speed = (10^c)(duty)^m";
         const power_law_equation_rearranged = "duty = (speed/(10^c))^(1/m)";
         // 10^c value m value
 
         // write csv config file
-
         // what chars format do we want
         /*
                 {"name":"Duty percentage / 100%", "position": 0},
@@ -461,8 +474,12 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
                 {"name":"Power law model Duty percentage / 100%", "position": 12}
          */
 
-
         // what plots do we want
+
+        // create chart for linear duty with best line fit.
+        // create chart for log log duty with best line fit.
+        // create linear model vs real speed fit chart
+        // create create for power law model vs real speed fit.
 
         // title 
         const linear_fit_title = `(Duty percentage / 100%) vs Speed [Hz] and Linear model Speed [Hz] and Linear Model Speed Error [ΔHz]. Raw Equation: ${linear_raw_equation}. Equation: ${linear_equation} m=${linear_result_gradient}, c=${linear_result_y_intercept}, r^2=${linear_result_r2}.`;
@@ -551,51 +568,9 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
             ]
         };
 
-        // now need to build these: 
-        type RegressionLines = {
-            Duty: number,
-            "Speed [Hz]": number,
-            "Speed STD": number,
-            "Duty percentage / 100%": number,
-            "LOG10(Duty percentage / 100%)": number,
-            "LOG10(Speed [Hz])": number,
-            "Linear model Speed [Hz]": number,
-            "Linear Model Speed Error [ΔHz]": number,
-            "Power law model LOG10(Speed [Hz])": number, // 
-            "Power law model Speed [Hz]": number,
-            "Power law model Speed Error [ΔHz]": number,
-            "Linear model Duty percentage / 100%": number,
-            "Power law model Duty percentage / 100%": number
-        };
-
+        // now need to build the RegressionLines: 
         const regression_lines: Array<RegressionLines> = [];
 
-
-        /*
-        const linear_result = regression.linear(linear_pairs as any);
-        const linear_result_gradient = linear_result.equation[0]; // m
-        const linear_result_y_intercept = linear_result.equation[1]; // c
-        const linear_result_gradient_reciprocal = 1 / linear_result_gradient; // 1/m
-        const linear_result_neg_intercept_over_gradient = - (linear_result_y_intercept / linear_result_gradient); // -c/m
-        const linear_result_r2 = linear_result.r2;
-        const linear_raw_equation = "y = mx + c";
-        const linear_equation = "speed = m(duty) + c";
-        // m value c value
-        const linear_equation_rearraged = "duty = (speed/m) - (c/m)";
-        // 1/m value -c/m value
-
-        const power_law_result = regression.linear(loglog_pairs as any);
-        const power_law_result_gradient = power_law_result.equation[0]; // m
-        const power_law_result_gradient_reciprocal = 1/power_law_result_gradient;
-        const power_law_result_y_intercept = power_law_result.equation[1]; // c
-        const power_law_divisor = Math.pow(10.0, power_law_result_y_intercept); //10^c
-        const power_law_result_r2 = power_law_result.r2;
-
-        const power_law_raw_equation = "log10(y) = m(log10(x)) + log10(c)"
-        const power_law_equation = "speed = (10^c)(duty)^m";
-        const power_law_equation_rearranged = "duty = (speed/(10^c))^(1/m)";
-
-        */
         raw_duty_speed_pairs.forEach((value, idx) => {
             const duty = value[0];
             const speed = value[1];
@@ -610,7 +585,6 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
             const power_law_model_speed_error = speed - power_law_model_speed;
             const linear_model_duty_div_100pc = (speed * linear_result_gradient_reciprocal) + (linear_result_neg_intercept_over_gradient);
             const power_model_duty_div_100pc = Math.pow((speed / power_law_divisor), power_law_result_gradient_reciprocal); // all of these are zeros!
-
 
             regression_lines.push(
                 {
@@ -641,15 +615,9 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
             fs.writeFileSync(`${parsed_args.output_data_file}`.replaceAll(/.json/g, `.regression.${direction_str}.config.json`), JSON.stringify(regression_config, null, 2));
         }
 
-    })
+    });
 
-
-    // create chart for linear duty with best line fit.
-    // create chart for log log duty with best line fit.
-    // create linear model vs real speed fit chart
-    // create create for power law model vs real speed fit.
-
-    console2.success("All finished."); // JSON.stringify(output)
+    console2.success("All finished.");
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output, null, 4));

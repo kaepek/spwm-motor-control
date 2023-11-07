@@ -21,6 +21,15 @@ export class GetIdleDuty2 extends Task<RotationDetector<ESCParsedLineData>> {
     wait_timeout: any;
     start_duty: number | null = null;
     idle_duty: number | null = null;
+    timeout_run = false;
+    all_finished = false;
+    rotations_start = 0;
+    rotation_time_recorded = false;
+    rotation_time:number | null = null;
+    start_time : Date | null = null;
+    first_run = true;
+    direction = 0;
+    direction_str = "cw";
 
     async send_next_word() {
         (this.current_duty as number)--;
@@ -53,7 +62,6 @@ export class GetIdleDuty2 extends Task<RotationDetector<ESCParsedLineData>> {
         }, wait);
     }
 
-    timeout_run = false;
     async run(state: any) {
         this.start_duty = state[this.direction_str].start_duty;
         this.current_duty = this.start_duty as number * (this.max_duty / 65534);
@@ -70,15 +78,9 @@ export class GetIdleDuty2 extends Task<RotationDetector<ESCParsedLineData>> {
         return super.run(); // tick will now run every time the device outputs a line. 
     }
 
-    all_finished = false;
-    rotations_start = 0;
-    rotation_time_recorded = false;
-    rotation_time:number | null = null;
-    start_time : Date | null = null;
-    first_run = true;
-    
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
         if (this.all_finished) return;
+
         this.incoming_data = incoming_data;
 
         if (this.first_run && this.rotations_start === 0) {
@@ -130,8 +132,6 @@ export class GetIdleDuty2 extends Task<RotationDetector<ESCParsedLineData>> {
         return { [this.direction_str]: { "idle_duty": final_duty_before_stall + 75 }}; // add a bit more (currently using battery, it will discharge and may lose rotation)
     }
 
-    direction = 0;
-    direction_str = "cw";
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
         super(input$);
         this.max_duty = max_duty;

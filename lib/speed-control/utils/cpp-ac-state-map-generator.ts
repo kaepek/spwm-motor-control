@@ -18,7 +18,6 @@ const get_direction_ac_map_definition = (name: string, data: Array<number>) => {
     return lines.join("\n");
 };
 
-
 export function generate_ac_map_cpp(ac_map: ACMap) {
     const number_of_bins = Object.keys(ac_map.cw.transformed_angular_acc_bins).length;
     const ac_map_cpp = `const int16_t AC_MAP[2][${number_of_bins}] = {CW_AC_MAP, CCW_AC_MAP};`;

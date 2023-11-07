@@ -4,12 +4,7 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
-
-async function delay(ms: number) {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(resolve, ms);
-    })
-}
+import { delay } from "../utils/delay.js";
 
 export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     max_duty: number;
@@ -21,6 +16,12 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     wait_timeout: any;
     start_duty: number | null = null;
     idle_duty: number | null = null;
+    timeout_run = false;
+    escape_duty = false;
+    all_finished = false;
+    rotations_start = 0;
+    direction = 0;
+    direction_str = "cw";
 
     async send_next_word() {
         (this.current_duty as number)--;
@@ -61,8 +62,6 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }, this.wait_time);
     }
 
-    timeout_run = false;
-    escape_duty = false;
     async run(state: any) {
         this.start_duty = state[this.direction_str].start_duty;
         const startup_time = state[this.direction_str].start_time;
@@ -86,14 +85,9 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         return super.run(); // tick will now run every time the device outputs a line. 
     }
 
-    all_finished = false;
-    rotations_start = 0;
-    
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
         if (this.all_finished) return;
-        // console.log("called tick");
         this.incoming_data = incoming_data;
-
         if (this.timeout_run === false) {
             // wait for timout atleast.
             return;
@@ -106,7 +100,6 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
             }
             if ((incoming_data["rotations"] as number - this.rotations_start) > 1.1) {
                 // we have n complete rotations
-                // console.log("Rotations achieved", incoming_data["rotations"] - this.rotations_start);
                 this.send_next_word();
             }
         }
@@ -115,10 +108,7 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     async done() {
         // this will be called after return_promise_resolver is called.
         // turn off motor
-        // await delay(300);
         await this.word_sender.send_word("thrustui16", 0);
-        // await delay(300);
-        // await this.word_sender.send_word("stop");
         const final_duty_before_stall = parseInt(((65534 / this.max_duty) * ((this.current_duty as number) + 10)).toString());
         console2.info(`GetMinDuty program finished`);
         console2.success(`Found idle duty ${final_duty_before_stall}`);
@@ -126,8 +116,6 @@ export class GetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         return { [this.direction_str]: { "idle_duty": final_duty_before_stall }};
     }
 
-    direction = 0;
-    direction_str = "cw";
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
         super(input$);
         this.max_duty = max_duty;

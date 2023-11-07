@@ -17,9 +17,22 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
     start_duty: number | null = null;
     start_time: Date | null = null;
     end_time: Date | null = null;
-
     spin_up_down_wait_timeout: any;
     spin_up_down_wait_time = 3000;
+    direction = 0;
+    direction_str = "cw";
+    direction_sign = 1.0;
+    timeout_run = false;
+    escape_duty = false;
+    state: any = null;
+    all_finished = false;
+    min_speed: number = Number.POSITIVE_INFINITY;
+    max_speed: number = Number.NEGATIVE_INFINITY;
+    max_speed_detected = false;
+    zero_speed_detected = false;
+    running_spin_up_routine = false;
+    running_spin_down_routine = false;
+    exit_routine = false;
 
     async send_next_word() {
         (this.current_duty as number)++;
@@ -57,9 +70,6 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }, this.wait_time);
     }
 
-    timeout_run = false;
-    escape_duty = false;
-    state: any = null;
     async run(state: any) {
         this.state = state;
         this.current_duty = 0;
@@ -79,15 +89,6 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         return super.run(); // tick will now run every time the device outputs a line.
     }
 
-    all_finished = false;
-    min_speed: number = Number.POSITIVE_INFINITY;
-    max_speed: number = Number.NEGATIVE_INFINITY;
-
-    max_speed_detected = false;
-    zero_speed_detected = false;
-
-    running_spin_up_routine = false;
-
     check_spin_up_status(current_speed: number) {
         if (this.running_spin_up_routine === false) {
             this.running_spin_up_routine = true;
@@ -105,8 +106,6 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
     }
 
-    running_spin_down_routine = false;
-
     check_spin_down_status(current_speed: number) {
         if (this.running_spin_down_routine === false) {
             this.running_spin_down_routine = true;
@@ -122,8 +121,6 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
             },this.spin_up_down_wait_time);
         }
     }
-
-    exit_routine = false;
 
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
         if (this.all_finished) return;
@@ -193,10 +190,6 @@ export class GetStartDuty extends Task<RotationDetector<ESCParsedLineData>> {
 
         return { [this.direction_str]: { "start_duty": start_duty_with_excess, "start_time": delta_time } };
     }
-
-    direction = 0;
-    direction_str = "cw";
-    direction_sign = 1.0;
 
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", max_duty = 2047) {
         super(input$);

@@ -72,22 +72,7 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
     async run(state: any) {
         this.start_duty = state[this.direction_str].start_duty;
         this.idle_duty = state[this.direction_str].idle_duty;
-        // parseInt(((65534 / this.max_duty) * (this.current_duty as number)).toString())
-        // 20425 / 65534
         console2.info(`CollectAccelerationData program running`); // assume we are already at idle speed make sure to run set-idle task first.
-        /*console2.info("Sending word thrustui16", 0);
-        await this.word_sender.send_word("thrustui16", 0);
-        await this.word_sender.send_word("directionui8", this.direction);
-        await delay(100);
-        console2.info("Sending word thrustui16", this.start_duty);
-        await this.word_sender.send_word("thrustui16", this.start_duty as number);
-        await delay(100);
-        await this.word_sender.send_word("reset");
-        await this.word_sender.send_word("start");
-        await delay(1000);
-        console2.info("Sending word thrustui16", this.idle_duty);
-        await this.word_sender.send_word("thrustui16", this.idle_duty as number);
-        await delay(1000);*/
         return super.run(); // tick will now run every time the device outputs a line.
     }
 
@@ -133,8 +118,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             console2.info("previous_results", previous_results);
             console2.info("next_results", next_results);
 
-
-
             const previous_results_mean = previous_results.reduce((acc, it) => {
                 acc += it;
                 return acc;
@@ -163,8 +146,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             console2.info("previous_results_vel", previous_results_vel);
             console2.info("next_results_vel", next_results_vel);
 
-
-
             const previous_results_mean_vel = previous_results_vel.reduce((acc, it) => {
                 acc += it;
                 return acc;
@@ -184,7 +165,6 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
             console2.info("combined_vel", combined_vel);
 
             this.angular_vel_bins[this.max_angular_acc_bins - 1] = combined_vel;
-
 
             return this.return_promise_resolver();
         }
@@ -317,10 +297,5 @@ export class CollectAccelerationData extends Task<RotationDetector<ESCParsedLine
         else if (direction_str === "ccw") {
             this.direction = 1;
         }
-        // console.log("((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1))", ((this.max_angular_acc_bins - 1) / (this.max_angular_steps - 1)));
-        // console.log("max_angular_acc_bins", );
-
-        // process.exit(1);
-        // console.log(JSON.stringify(Object.keys(this.angular_acc_bins)));
     }
 }

@@ -4,12 +4,7 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
-
-async function delay(ms: number) {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(resolve, ms);
-    })
-}
+import { delay } from "../utils/delay.js";
 
 export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     start_duty: number | null = null;
@@ -17,9 +12,13 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
     word_sender: SendWord;
     wait_time: number;
     wait_timeout: any;
-
-
     timeout_run = false;
+    min_speed: number = Number.POSITIVE_INFINITY;
+    direction = 0;
+    direction_str = "cw";
+    max_duty: number = 2047;
+    idle_duty_override: number | undefined;
+
     async run(state: any) {
         const start_duty = state[this.direction_str].start_duty;
         const start_time = state[this.direction_str].start_time;
@@ -60,13 +59,10 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
             this.return_promise_resolver();
         }, this.wait_time);
     }
-
-    min_speed: number = Number.POSITIVE_INFINITY;
     
     async tick(incoming_data: RotationDetector<ESCParsedLineData>) {
-        const current_speed = Math.abs(incoming_data.line_data.parsed_data.kalman_velocity); // * this.direction_sign;
+        const current_speed = Math.abs(incoming_data.line_data.parsed_data.kalman_velocity);
         if (current_speed < this.min_speed) { // should have some sort of check to see if stalled. todo
-             // probably should be less than equals? // or maybe put a timeout on the first tick anyway...
             this.min_speed = current_speed;
             this.create_timeout();
         }
@@ -77,11 +73,6 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         return {}
     }
 
-    direction = 0;
-    direction_str = "cw";
-    max_duty: number = 2047;
-    // direction_sign = 1.0;
-    idle_duty_override: number | undefined;
     constructor(input$: Observable<any>, word_sender: SendWord, direction_str = "cw", idle_duty_override: undefined | number = undefined, max_duty = 2047, wait_time = 3000) {
         super(input$);
         this.max_duty = max_duty;
@@ -94,7 +85,6 @@ export class SetIdleDuty extends Task<RotationDetector<ESCParsedLineData>> {
         }
         else if (direction_str === "ccw") {
             this.direction = 1;
-            // this.direction_sign = -1.0;
         }
         else {
             throw `Unrecognised direction ${direction_str} should be 'cw' or 'ccw'`;
