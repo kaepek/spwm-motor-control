@@ -197,7 +197,6 @@ namespace kaepek
     void PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::process_host_control_word(uint32_t control_word, uint32_t *data_buffer)
     {
         // Handle serial word input.
-        uint16_t com_torque_value = 0;
         float float_value = 0;
         switch (control_word)
         {
@@ -284,8 +283,6 @@ namespace kaepek
             }
             break;
         case SerialInputCommandWord::Thrust1UI16:
-            com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            BaseEscClass::com_torque_percentage = ((double)com_torque_value / (double)65535) * 0.5; // cap at 50%
             break;
         case SerialInputCommandWord::SetPointF32:
             *((unsigned char *)&float_value + 0) = data_buffer[0];

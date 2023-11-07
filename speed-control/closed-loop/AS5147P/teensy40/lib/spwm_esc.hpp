@@ -4,15 +4,14 @@
 #include "../encoder/generic/digital_rotary_encoder.hpp"
 #include "../encoder/generic/rotary_encoder_sample_validator.hpp"
 #include "TeensyTimerTool.h"
-// #include "spwm_voltage_model_discretiser.hpp"
 #include "../com/comlib.hpp"
 /*
 
 Brief:
 
-ESC with SPWM commutations.
+ESC with SPWM commutations using a three offset sinusoidal model.
 
-ESC needs to take encoder config and PWM config.
+ESC needs to take encoder config, motor config and PWM config.
 
 - It needs to be able to calculate the displacement needed for cw ccw translation of bemf signals
 - It needs to be able to start and stop
@@ -60,6 +59,9 @@ namespace kaepek
     uint32_t frequency;
   };
 
+  /**
+   * Struct to hold the current duty for each of the 3 phases.
+   */
   struct SPWMVoltageDutyTriplet
   {
     uint32_t phase_a;
@@ -82,44 +84,43 @@ namespace kaepek
    * EscL6234Teensy40AS5147P
    *
    * Class to perform SPWM switching via a L6234 motor power supply for a AS5147P rotary encoder on the teensy40 platform with a 4 state physical model.
-   * Class uses a simple sinusoidal model for to set voltages (via pwm duties).
+   * Class uses a simple sinusoidal model for to set voltages (via pwm duties) and has an optional anti-cogging map.
    */
   template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
   class EscL6234Teensy40AS5147P : public RotaryEncoderSampleValidator, public SerialInputControl<4>
   {
   protected:
-    // constants
-    // static constexpr double cw_displacement_deg = 0.0;
-    // static constexpr double ccw_displacement_deg = 0.0;
-    // static constexpr float log_frequency_micros = 5000;
+    // Configurations:
+
+    // Maximum PWM duty cycle.
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
-    // static const int size_of_host_profile = 3;
+    // Maximum value to allow the duty to rise to 0.3 means 30% of the MAX_DUTY.
     double duty_cap;
-    // discretiser
+    // Motor calibration config.
+    SPWMMotorConfig motor_config;
+    // L6234 motor driver pin configuration.
+    SPWML6234PinConfig spwm_pin_config;
+    // Kalman filter config.
+    KalmanConfig kalman_config;
+
+    // Direction.
     RotationDirection direction = RotationDirection::Clockwise;
     volatile bool bl_direction = false;
-    // typename SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::Direction discretiser_direction;
-    // SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY> discretiser;
-    // physical model values
+
+    // Voltage model values.
+    SPWMVoltageDutyTriplet current_triplet;
+    // Current rotor position.
+    uint32_t current_encoder_displacement = 0;
+    // Kalman filter instance.
+    KalmanJerk1D kalman_filter;
+    // Physical model values.
     Dbl4x1 kalman_vec_store = {0};
     Dbl5x1 eular_vec_store = {0};
-    // voltage model values
-    SPWMVoltageDutyTriplet current_triplet;
-    uint32_t current_encoder_displacement = 0;
-    // motor calibration config
-    SPWMMotorConfig motor_config;
-    // L6234 motor driver pin configuration
-    SPWML6234PinConfig spwm_pin_config;
-    // kalman filter config
-    KalmanConfig kalman_config;
-    // kalman filter instance
-    KalmanJerk1D kalman_filter;
-    // Host communication buffer to store the thrust/direction profile (3 bytes in total) from the serial stream
-    // char host_profile_buffer[size_of_host_profile] = {0, 0, 0};
-    // int host_profile_buffer_ctr = 0;
+
     // Host communication variables
     volatile double com_torque_percentage = 0.0;
     volatile byte com_direction_value = 0; // UInt8
+
     // ESC state variables
     // Variable to indicate fault status
     volatile bool fault = false;
