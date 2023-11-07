@@ -222,44 +222,44 @@ namespace kaepek
     void EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
         double half_max_duty = (double)MAX_DUTY / 2.0;
-        
+
         // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
         cli();
         double seconds_elapsed = (double)this->micros_since_last_log * 1e-6;
-        Serial.print(((double)this->loop_ctr) / seconds_elapsed);
+        Serial.print(((double)this->loop_ctr) / seconds_elapsed); // Loop counter [Hz] (how many times we are updating the Kalman filter model)
         Serial.print(",");
-        Serial.print(((double)this->sample_ctr) / seconds_elapsed);
+        Serial.print(((double)this->sample_ctr) / seconds_elapsed); // Sample counter [Hz] (how many times are we sampling the encoder and updating pwm values).
         Serial.print(",");
-        Serial.print(eular_vec_store[0], 4);
+        Serial.print(eular_vec_store[0], 4); // The time elapsed [s].
         Serial.print(",");
-        Serial.print(this->current_duty_ratio, 4);
+        Serial.print(this->current_duty_ratio, 4); // The current duty ratio (0->1).
         Serial.print(",");
-        Serial.print(this->byte_direction);
+        Serial.print(this->byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
-        Serial.print((double) eular_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print((double) eular_vec_store[1] / (double)ENCODER_DIVISIONS); // Eular Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print((double) eular_vec_store[2] / (double)ENCODER_DIVISIONS); // Eular Velocity [Hz].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[3]  / (double)ENCODER_DIVISIONS);
+        Serial.print((double) eular_vec_store[3]  / (double)ENCODER_DIVISIONS); // Eular Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[4]  / (double)ENCODER_DIVISIONS);
+        Serial.print((double) eular_vec_store[4]  / (double)ENCODER_DIVISIONS); // Eular Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS); // Kalman Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS); // Kalman Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS); // Kalman Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS);
+        Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS); // Kalman Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_a - half_max_duty);
+        Serial.print((double) current_triplet.phase_a - half_max_duty); // Normalised phase a duty.
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_b - half_max_duty);
+        Serial.print((double) current_triplet.phase_b - half_max_duty); // Normalised phase b duty.
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_c - half_max_duty);
+        Serial.print((double) current_triplet.phase_c - half_max_duty); // Normalised phase c duty.
         Serial.print(",");
-        Serial.print(current_encoder_displacement);
+        Serial.print(current_encoder_displacement); // Current encoder raw value [steps].
         Serial.print("\n");
 
         // Reset loop counter and time since last log.
