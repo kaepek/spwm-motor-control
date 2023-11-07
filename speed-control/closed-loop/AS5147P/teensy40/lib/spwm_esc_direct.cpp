@@ -221,13 +221,11 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::log()
     {
-        double half_max_duty = (double)MAX_DUTY / 2.0;
-
         // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
         cli();
         double seconds_elapsed = (double)this->micros_since_last_log * 1e-6;
-        Serial.print(((double)this->loop_ctr) / seconds_elapsed); // Loop counter [Hz] (how many times we are updating the Kalman filter model)
+        Serial.print(((double)this->loop_ctr) / seconds_elapsed); // Loop counter [Hz] (how many times we are updating the Kalman filter model).
         Serial.print(",");
         Serial.print(((double)this->sample_ctr) / seconds_elapsed); // Sample counter [Hz] (how many times are we sampling the encoder and updating pwm values).
         Serial.print(",");
@@ -379,8 +377,6 @@ namespace kaepek
         phase_a_lookup = (double)this->voltage_map_ptr[this->bl_direction][0][encoder_current_compressed_displacement] / 2.0;
         phase_b_lookup = (double)this->voltage_map_ptr[this->bl_direction][1][encoder_current_compressed_displacement] / 2.0;
         phase_c_lookup = (double)this->voltage_map_ptr[this->bl_direction][2][encoder_current_compressed_displacement] / 2.0;
-
-        double half_max_duty = (double)MAX_DUTY / 2.0;
 
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
 

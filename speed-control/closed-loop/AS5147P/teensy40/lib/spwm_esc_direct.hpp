@@ -82,6 +82,8 @@ namespace kaepek
 
     // Maximum PWM duty cycle.
     static const std::size_t MAX_DUTY = std::pow(2, PWM_WRITE_RESOLUTION) - 1; // take away 1 as starts from 0
+    // Half of the maximum duty cycle available.
+    double half_max_duty = (double)MAX_DUTY / 2.0;
     // Maximum value to allow the duty to rise to 0.3 means 30% of the MAX_DUTY
     double duty_cap;
     // L6234 motor driver pin configuration

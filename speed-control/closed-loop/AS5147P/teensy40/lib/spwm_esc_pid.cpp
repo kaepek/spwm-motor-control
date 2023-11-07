@@ -378,112 +378,43 @@ namespace kaepek
     {
         // Note double/float Serial.print giving 2 decimal places... use Serial.print(<float>,<decimal_places>) for more precision
         // Log ESC state data to serial port.
-
-        /*
-        What do we reall want to print
-        loop_ctr
-        sample_ctr
-        time
-        torque percentage
-        direction
-
-        kalman_disp
-        kalman_v
-        kalman_a
-        kalman_j
-
-        current_triplet_a
-        _b
-        _c
-
-        encoder disp
-
-        prop error
-        integral error
-        derivat error
-
-        prop coeff
-        integral coeff
-        derivat coeff
-
-        */
         cli();
         double seconds_elapsed = (double)BaseEscClass::micros_since_last_log * 1e-6;
-        Serial.print(((double)BaseEscClass::loop_ctr) / seconds_elapsed);
+        Serial.print(((double)BaseEscClass::loop_ctr) / seconds_elapsed); // Loop counter [Hz] (how many times we are updating the Kalman filter model).
         Serial.print(",");
-        Serial.print(((double)BaseEscClass::sample_ctr) / seconds_elapsed);
+        Serial.print(((double)BaseEscClass::sample_ctr) / seconds_elapsed); // Sample counter [Hz] (how many times are we sampling the encoder and updating pwm values).
         Serial.print(",");
-
-        Serial.print(BaseEscClass::eular_vec_store[0], 4);
+        Serial.print(BaseEscClass::eular_vec_store[0], 4); // The time elapsed [s].
         Serial.print(",");
-        Serial.print(BaseEscClass::current_duty_ratio, 4); // put me back!
-
-        // Serial.print(linear_bias_cw, 18); // value is ok
-        // Serial.print(power_law_root_cw, 4); // value is ok
-
-        /*if (BaseEscClass::direction == RotationDirection::Clockwise)
-        {
-            if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
-            {
-                double help = pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw); // / power_law_set_point_divisor_cw
-                // double help = fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw;
-                // double help = 1.0 / (double) power_law_root_cw;
-                Serial.print(min(help, 0.3), 6);
-            }
-            else {
-                Serial.print(-1.0);
-            }
-        }
-        else {
-            Serial.print(-2.0);
-        }*/ // works ok
-
+        Serial.print(BaseEscClass::current_duty_ratio, 4); // The current duty ratio (0->1).
         Serial.print(",");
-        Serial.print(BaseEscClass::byte_direction);
+        Serial.print(BaseEscClass::byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
-
-        Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4);
+        Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4); // Kalman Displacement [Total rotations].
         Serial.print(",");
-
-        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4);
+        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Kalman Velocity [Hz].
         Serial.print(",");
-
-        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4);
+        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Kalman Acceleration [Hz^2].
         Serial.print(",");
-
-        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4);
+        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Kalman Jerk [Hz^3].
         Serial.print(",");
-
-        Serial.print(BaseEscClass::current_encoder_displacement);
+        Serial.print(BaseEscClass::current_encoder_displacement); // Current encoder raw value [steps].
         Serial.print(",");
-
-        /*Serial.print(proportional_coefficient);
+        Serial.print(proportional_error, 4); // The current proportional error (set_point - velocity).
         Serial.print(",");
-        Serial.print(integral_coefficient);
+        Serial.print(integral_error, 4); // The proportional error integrated over time.
         Serial.print(",");
-        Serial.print(differential_coefficient);
-        Serial.print(",");*/
-
-        Serial.print(proportional_error, 4);
+        Serial.print(differential_error, 4); // The numerical derivative of the proportional error wrt time.
         Serial.print(",");
-        Serial.print(integral_error, 4);
+        Serial.print(pid_duty, 4); // The PID algorithm calculated output duty (process output).
         Serial.print(",");
-        Serial.print(differential_error, 4);
-
+        Serial.print(set_point_hz * 1.0, 4);  // The process variable setpoint target [Hz].
         Serial.print(",");
-        Serial.print(pid_duty, 4);
-
+        Serial.print((double) BaseEscClass::current_triplet.phase_a - BaseEscClass::half_max_duty); // Normalised phase a duty.
         Serial.print(",");
-        Serial.print(set_point_hz * 1.0, 4);
-
-        double half_max_duty = (double)BaseEscClass::MAX_DUTY / 2;
+        Serial.print((double) BaseEscClass::current_triplet.phase_b - BaseEscClass::half_max_duty); // Normalised phase b duty.
         Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_a - half_max_duty);
-        Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_b - half_max_duty);
-        Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_c - half_max_duty);
-
+        Serial.print((double) BaseEscClass::current_triplet.phase_c - BaseEscClass::half_max_duty); // Normalised phase c duty.
         Serial.print("\n");
 
         // Reset loop counter and time since last log.
