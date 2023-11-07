@@ -376,6 +376,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     SPWMVoltageDutyTriplet EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double current_duty_ratio, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
     {
+        // Calculate phase a,b and c based off of current encoder displacement value (compressed).
 
         double phase_a_lookup;
         double phase_b_lookup;
@@ -396,7 +397,8 @@ namespace kaepek
         double phase_a_before_correction = ((phase_a_lookup * current_duty_ratio) + half_max_duty);
         double phase_b_before_correction = ((phase_b_lookup * current_duty_ratio) + half_max_duty);
         double phase_c_before_correction = ((phase_c_lookup * current_duty_ratio) + half_max_duty);
-        // find correction
+
+        // if in ac mode find correction
         if (anti_cogging_enabled == true)
         {
             float correction = 0.0;
@@ -447,10 +449,12 @@ namespace kaepek
             phase_c = round(phase_c_before_correction);
         }
 
+        // Assign phase duties
         triplet.phase_a = phase_a;
         triplet.phase_b = phase_b;
         triplet.phase_c = phase_c;
 
+        // Cap phase duties
         triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
         triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
         triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;

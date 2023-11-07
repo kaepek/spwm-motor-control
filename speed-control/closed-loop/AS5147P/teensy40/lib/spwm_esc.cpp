@@ -74,9 +74,10 @@ namespace kaepek
         uint32_t compressed_encoder_value = raw_encoder_value_to_compressed_encoder_value(encoder_value);
         // Get and apply triplet.
         current_triplet = get_pwm_triplet(current_duty_ratio * (double)MAX_DUTY, compressed_encoder_value, direction);
-        // Set pin values.
 #if !DISABLE_SPWM_PIN_MODIFICATION
         // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
+        // Set pin values.
         analogWrite(spwm_pin_config.phase_a, current_triplet.phase_a);
         analogWrite(spwm_pin_config.phase_b, current_triplet.phase_b);
         analogWrite(spwm_pin_config.phase_c, current_triplet.phase_c);
@@ -87,10 +88,13 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::post_fault_logic(RotaryEncoderSampleValidator::Fault fault_code)
     {
         // Force stop.
+
         // Set fault flag.
         this->fault = true;
+
         // Shut off motor pins.
         stop();
+
         // Print fault message.
         Serial.print("Error SkippedSteps: ");
         Serial.println(fault_code == RotaryEncoderSampleValidator::Fault::SkippedSteps);
@@ -103,6 +107,8 @@ namespace kaepek
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::setup()
     {
 #if !DISABLE_SPWM_PIN_MODIFICATION
+        // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
         // Set pwm pins for output.
         pinMode(spwm_pin_config.phase_a, OUTPUT);
         pinMode(spwm_pin_config.phase_b, OUTPUT);
@@ -183,6 +189,8 @@ namespace kaepek
     bool EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::start()
     {
 #if !DISABLE_SPWM_PIN_MODIFICATION
+        // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
         // Enable power circuit.
         digitalWrite(spwm_pin_config.en, HIGH);
 #endif
@@ -226,6 +234,8 @@ namespace kaepek
         RotaryEncoderSampleValidator::reset();
 
 #if !DISABLE_SPWM_PIN_MODIFICATION
+        // This section of code will be disabled when DISABLE_SPWM_PIN_MODIFICATION is true.
+
         // Disable SPWM pins.
         digitalWrite(spwm_pin_config.en, LOW);
         digitalWrite(spwm_pin_config.phase_a, LOW);
@@ -335,7 +345,7 @@ namespace kaepek
             break;
         case SerialInputCommandWord::Thrust1UI16:
             com_torque_value = (data_buffer[1] << 8) | data_buffer[0];
-            current_duty_ratio = ((double)com_torque_value / (double)65535) * this->duty_cap; // cap at 50%
+            current_duty_ratio = ((double)com_torque_value / (double)65535) * this->duty_cap;
             break;
         case SerialInputCommandWord::Direction1UI8:
             if (current_duty_ratio == 0.0) // dont reverse unless thrust is zero
@@ -344,11 +354,13 @@ namespace kaepek
                 if (byte_direction == 0)
                 {
                     direction = RotationDirection::Clockwise;
+                    bl_direction = false;
                     set_direction(RotaryEncoderSampleValidator::Direction::Clockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
                 else if (byte_direction == 1)
                 {
                     direction = RotationDirection::CounterClockwise;
+                    bl_direction = true;
                     set_direction(RotaryEncoderSampleValidator::Direction::CounterClockwise); // update validated direction ignored if set_direction_enforcement(false)
                 }
             }
@@ -403,8 +415,6 @@ namespace kaepek
         }
     }
 
-    // here
-
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     double EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::deg_to_rad(double deg)
     {
@@ -423,30 +433,18 @@ namespace kaepek
         return value - mod * floor(value / mod);
     };
 
-    /*template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
-    SPWMVoltageModelDiscretiser<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, MAX_DUTY>::SPWMVoltageModelDiscretiser(double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, double ccw_phase_displacement_deg, uint32_t number_of_poles)
-    {
-        this->number_of_poles = number_of_poles;
-        this->cw_zero_displacement_deg = cw_zero_displacement_deg;
-        this->cw_phase_displacement_deg = cw_phase_displacement_deg;
-        this->ccw_zero_displacement_deg = ccw_zero_displacement_deg;
-        this->ccw_phase_displacement_deg = ccw_phase_displacement_deg;
-        update_lookup_tables();
-    };*/
-
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::update_lookup_tables()
     {
+        // calculate 3 sinusoid model based of motor configuration
+
         double cw_zero_displacement_rad = deg_to_rad(this->cw_zero_displacement_deg);
         double cw_phase_displacement_rad = deg_to_rad(this->cw_phase_displacement_deg);
         double ccw_zero_displacement_rad = deg_to_rad(this->ccw_zero_displacement_deg);
         double ccw_phase_displacement_rad = deg_to_rad(this->ccw_phase_displacement_deg);
-        double sin_period_coeff = ((double)this->number_of_poles) / (2.0); // * (double)ENCODER_COMPRESSION_FACTOR
+        double sin_period_coeff = ((double)this->number_of_poles) / (2.0);
 
         double duty_max = (double)MAX_DUTY;
-
-        // herehere
-
 
         for (uint32_t idx = 0; idx < spwm_angular_resolution_uint32; idx++)
         {
@@ -502,8 +500,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     SPWMVoltageDutyTriplet EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::get_pwm_triplet(double current_duty, uint32_t encoder_current_compressed_displacement, RotationDirection direction)
     {
-
-        // Serial.print(encoder_current_compressed_displacement); Serial.print("\n");
+        // Calculate phase a,b and c based off of current encoder displacement value (compressed).
 
         double phase_a_lookup;
         double phase_b_lookup;
@@ -523,8 +520,6 @@ namespace kaepek
             phase_c_lookup = (double) ccw_phase_c_lookup[encoder_current_compressed_displacement] / 2.0;
         }
 
-        // herehere
-
         SPWMVoltageDutyTriplet triplet = SPWMVoltageDutyTriplet();
 
         double half_max_duty = (double)MAX_DUTY / 2.0;
@@ -536,7 +531,8 @@ namespace kaepek
         double phase_a_before_correction = ((phase_a_lookup * current_duty_ratio) + half_max_duty);
         double phase_b_before_correction = ((phase_b_lookup * current_duty_ratio) + half_max_duty);
         double phase_c_before_correction = ((phase_c_lookup * current_duty_ratio) + half_max_duty);
-        // find correction
+
+        // if in ac mode find correction
         if (anti_cogging_enabled == true)
         {
             float correction = 0.0;
@@ -587,10 +583,12 @@ namespace kaepek
             phase_c = round(phase_c_before_correction);
         }
 
+        // Assign phase duties
         triplet.phase_a = phase_a;
         triplet.phase_b = phase_b;
         triplet.phase_c = phase_c;
 
+        // Cap phase duties
         triplet.phase_a = triplet.phase_a > MAX_DUTY ? MAX_DUTY : triplet.phase_a;
         triplet.phase_b = triplet.phase_b > MAX_DUTY ? MAX_DUTY : triplet.phase_b;
         triplet.phase_c = triplet.phase_c > MAX_DUTY ? MAX_DUTY : triplet.phase_c;
