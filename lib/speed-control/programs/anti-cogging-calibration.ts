@@ -1,5 +1,4 @@
 import NetworkAdaptor from "../../../external/kaepek-io/lib/host/controller/utils/network.js";
-import { parseArgs } from "node:util";
 import fs from "fs";
 import { rotation_detector } from "../../rotation-detector.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/send-word.js";

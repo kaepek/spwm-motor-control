@@ -1,7 +1,4 @@
 import { ArgumentHandlers, CliArg, CliArgType, parse_args } from "../../../external/kaepek-io/lib/host/controller/utils/cli-args.js";
-import { ASCIIParser } from "../../../external/kaepek-io/lib/host/controller/utils/ascii-parser.js"
-import { ACMap } from "../tasks/collect-acceleration-data";
-import fs from "fs";
 import NetworkAdaptor from "../../../external/kaepek-io/lib/host/controller/utils/network.js";
 import { rotation_detector } from "../../rotation-detector.js";
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
@@ -215,6 +212,5 @@ const rotation_direction_stats_logger = (rotations$: Observable<{
 
 rotation_direction_stats_logger(rotations_cw$, "Clockwise");
 rotation_direction_stats_logger(rotations_ccw$, "Counter Clockwise");
-
 
 adaptor.ready();

@@ -1,4 +1,3 @@
-import { Subject } from "rxjs";
 import { parse_args, CliArg, ArgumentHandlers, CliArgType } from "../../../external/kaepek-io/lib/host/controller/utils/cli-args.js";
 import NetworkAdaptor from "../../../external/kaepek-io/lib/host/controller/utils/network.js";
 import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/send-word.js";
@@ -13,7 +12,6 @@ import { delay } from "../utils/delay.js";
 import { GetIdleDuty } from "../tasks/get-min-duty.js";
 import { SetIdleDuty } from "../tasks/set-idle.js";
 import regression from 'regression';
-
 
 /**
  * Brief run the get start duty for both directions. Do this apriori.
@@ -481,7 +479,6 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
         // create linear model vs real speed fit chart
         // create create for power law model vs real speed fit.
 
-        // title 
         const linear_fit_title = `(Duty percentage / 100%) vs Speed [Hz] and Linear model Speed [Hz] and Linear Model Speed Error [ΔHz]. Raw Equation: ${linear_raw_equation}. Equation: ${linear_equation} m=${linear_result_gradient}, c=${linear_result_y_intercept}, r^2=${linear_result_r2}.`;
         const linear_fit = {
             "name": linear_fit_title,
@@ -568,7 +565,7 @@ run_tasks(tasks, adaptor).then(async (output: StepChangeOuput) => {
             ]
         };
 
-        // now need to build the RegressionLines: 
+        // Now need to build the RegressionLines data needed to fulfil the needed graphs: 
         const regression_lines: Array<RegressionLines> = [];
 
         raw_duty_speed_pairs.forEach((value, idx) => {
