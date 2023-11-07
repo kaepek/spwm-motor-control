@@ -4,7 +4,6 @@ import { SendWord } from "../../../external/kaepek-io/lib/host/controller/utils/
 import { console2 } from "../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 import { ESCParsedLineData, RotationDetector } from "../../rotation-detector.js";
-import { delay } from "../utils/delay.js";
 
 export interface AngularAccBins {
     [angle_bin: string]: number[];
