@@ -7,6 +7,10 @@ namespace kaepek
 #define ENABLE_RK4 true
 #endif
 
+#ifndef CLASSIC_FILTERING
+#define CLASSIC_FILTERING true
+#endif
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P() : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>()
     {
@@ -28,6 +32,24 @@ namespace kaepek
         linear_bias_ccw = pid_config.linear_bias_ccw;
     }
 
+        template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, KalmanConfig kalman_pid_error_config) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(duty_cap, encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config)
+    {
+        proportional_coefficient = pid_config.proportional;
+        differential_coefficient = pid_config.differential;
+        integral_coefficient = pid_config.integral;
+        power_law_set_point_divisor_cw = pid_config.power_law_set_point_divisor_cw;
+        power_law_root_cw = pid_config.power_law_root_cw;
+        power_law_set_point_divisor_ccw = pid_config.power_law_set_point_divisor_ccw;
+        power_law_root_ccw = pid_config.power_law_root_ccw;
+        linear_set_point_coefficient_cw = pid_config.linear_set_point_coefficient_cw;
+        linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
+        linear_bias_cw = pid_config.linear_bias_cw;
+        linear_bias_ccw = pid_config.linear_bias_ccw;
+        kalman_pid_error_filter = new Kalman1DJerk(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
+        kalman_pid_error_filtering = true;
+    }
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(duty_cap, encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, ac_map_ptr)
     {
@@ -44,6 +66,24 @@ namespace kaepek
         linear_bias_ccw = pid_config.linear_bias_ccw;
     }
 
+        template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
+    PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::PidEscL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWMMotorConfig motor_config, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, KalmanConfig kalman_pid_error_config, const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]) : EscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>(duty_cap, encoder, sample_period_microseconds, motor_config, spwm_pin_config, kalman_config, ac_map_ptr)
+    {
+        proportional_coefficient = pid_config.proportional;
+        differential_coefficient = pid_config.differential;
+        integral_coefficient = pid_config.integral;
+        power_law_set_point_divisor_cw = pid_config.power_law_set_point_divisor_cw;
+        power_law_root_cw = pid_config.power_law_root_cw;
+        power_law_set_point_divisor_ccw = pid_config.power_law_set_point_divisor_ccw;
+        power_law_root_ccw = pid_config.power_law_root_ccw;
+        linear_set_point_coefficient_cw = pid_config.linear_set_point_coefficient_cw;
+        linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
+        linear_bias_cw = pid_config.linear_bias_cw;
+        linear_bias_ccw = pid_config.linear_bias_ccw;
+        kalman_pid_error_filter = new Kalman1DJerk(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
+        kalman_pid_error_filtering = true;
+    }
+
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     double PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::calculate_eular_derivative(double value, double dt, double previous_value)
     {
@@ -53,6 +93,7 @@ namespace kaepek
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
     void PidEscL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>::stop()
     {
+        // Reset errors and duty ratio and stop the motor.
         proportional_error = 0.0;
         integral_error = 0.0;
         differential_error = 0.0;
@@ -95,14 +136,8 @@ namespace kaepek
 
                 // Calculate errors
                 proportional_error = set_point_hz - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
-                integral_error += proportional_error * seconds_since_last;
 
-                // Watch out for the integral_error saturating
-                if (integral_error >= 100000.0)
-                {
-                    integral_error = 0.0;
-                }
-
+#if CLASSIC_FILTERING
 #if ENABLE_RK4
                 // RK4
                 double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
@@ -114,69 +149,82 @@ namespace kaepek
                 // Eular
                 differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
 #endif
-
-                /*double alpha = 1 / (1 + 2 * M_PI * seconds_since_last * desired_derivative_cutoff_frequency);
-                derivative_error_filtered = (1 - alpha) * derivative_error_filtered + alpha * differential_error;
-                differential_error = derivative_error_filtered;*/
-
-                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency; // this
-                double alpha = omega * seconds_since_last; // this
-
                 // Apply a second-order low-pass filter
+                double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency;
+                double alpha = omega * seconds_since_last;
                 double derivative_error_filtered = (1.0 / (alpha * alpha + 2.0 * alpha + 1.0)) * (alpha * alpha * differential_error + 2.0 * alpha * derivative_error_filtered_1 - (alpha * alpha - 2.0 * alpha + 1.0) * derivative_error_filtered_2); // this
 
                 // Update previous filtered error values
-                derivative_error_filtered_2 = derivative_error_filtered_1; // this
-                derivative_error_filtered_1 = derivative_error_filtered; // this
-                differential_error = derivative_error_filtered; // this
+                derivative_error_filtered_2 = derivative_error_filtered_1;
+                derivative_error_filtered_1 = derivative_error_filtered;
+                differential_error = derivative_error_filtered;
 
-                // differential_error = - (kalman_vec[3] / (double)ENCODER_DIVISIONS);
+                // Apply Kalman smoothing for the differential_error if we have one.
+                if (kalman_pid_error_filtering == true) {
+                    kalman_pid_error_filter.step(seconds_since_last, differential_error);
+                    double *kalman_differential_error_vec = derivative_error_kalman_filter.get_kalman_vector();
+                    differential_error = kalman_differential_error_vec[0];
+                }
 
-                // differential_error = fabs(differential_error) * differential_error;
+                // update the previous proportional error for the next numerical derivative.
+                previous_proportional_error = proportional_error;
+#else
+                // simply use the kalman filter to calculate the differential error and smooth the proportional error. This is not cheap!
+                error_kalman_filter.step(seconds_since_last, proportional_error);
+                double *kalman_proportional_error_vec = error_kalman_filter.get_kalman_vector();
+                proportional_error = kalman_proportional_error_vec[0];
+                differential_error = kalman_proportional_error_vec[1];
+#endif
 
-                // Calculate duty percentage
-                double duty = 0.0;
+                // Calculate the integral error.
+                integral_error += proportional_error * seconds_since_last;
 
-                duty = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
-                // add bias term (optional default zero)
-                // duty += duty_bias
+                // Watch out for the integral_error saturating
+                if (integral_error >= 100000.0)
+                {
+                    integral_error = 0.0;
+                }
 
-                // add linear / power law terms
+                // Calculate duty ratio
+                double new_pid_duty_ratio = 0.0;
+                new_pid_duty_ratio = (proportional_coefficient * proportional_error) + (integral_coefficient * integral_error) + (differential_coefficient * differential_error);
+
+                // add linear / power law terms if those models are loaded.
                 if (BaseEscClass::direction == RotationDirection::Clockwise)
                 {
                     if (power_law_set_point_divisor_cw != 0.0 && power_law_root_cw != 0.0)
                     {
-                        duty += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
+                        // Add power law contributions.
+                        new_pid_duty_ratio += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_cw), 1.0 / (double) power_law_root_cw);
                     }
                     else {
-                        duty += (double) linear_set_point_coefficient_cw * fabs((double) set_point_hz) +  (double) linear_bias_cw;
+                        // Add linear contributions.
+                        new_pid_duty_ratio += (double) linear_set_point_coefficient_cw * fabs((double) set_point_hz) +  (double) linear_bias_cw;
                     }
                 }
                 else if (BaseEscClass::direction == RotationDirection::CounterClockwise)
                 {
                     if (power_law_set_point_divisor_ccw != 0.0 && power_law_root_ccw != 0.0)
                     {
-                        duty += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
+                        // Add power law contributions.
+                        new_pid_duty_ratio += pow((fabs((double) set_point_hz) / (double) power_law_set_point_divisor_ccw), 1.0 / (double) power_law_root_ccw);
                     }
                     else {
-                        duty += (double) linear_set_point_coefficient_ccw * fabs((double) set_point_hz) + (double) linear_bias_ccw;
+                        // Add linear contributions.
+                        new_pid_duty_ratio += (double) linear_set_point_coefficient_ccw * fabs((double) set_point_hz) + (double) linear_bias_ccw;
                     }
                 }
 
-                // todo make the 0.5 cap a constructor argument
-
-                // duty = abs(duty);
-                // duty = min(abs(duty), 0.5); // cap at 50%
-                if (duty < 0.0)
+                // Cap duty ratio.
+                if (new_pid_duty_ratio < 0.0)
                 {
-                    duty = 0.0;
+                    new_pid_duty_ratio = 0.0;
                 }
-                duty = min(duty, BaseEscClass::duty_cap);
-                pid_duty = duty;
+                new_pid_duty_ratio = min(new_pid_duty_ratio, BaseEscClass::duty_cap);
 
-                BaseEscClass::current_duty_ratio = pid_duty;
-
-                previous_proportional_error = proportional_error;
+                // Update the pid duty.
+                pid_duty_ratio = new_pid_duty_ratio;
+                BaseEscClass::current_duty_ratio = pid_duty_ratio;
 
                 BaseEscClass::loop_ctr++;
                 sei();
@@ -406,7 +454,7 @@ namespace kaepek
         Serial.print(",");
         Serial.print(differential_error, 4); // The numerical derivative of the proportional error wrt time.
         Serial.print(",");
-        Serial.print(pid_duty, 4); // The PID algorithm calculated output duty (process output).
+        Serial.print(pid_duty_ratio, 4); // The PID algorithm calculated output duty (process output).
         Serial.print(",");
         Serial.print(set_point_hz * 1.0, 4);  // The process variable setpoint target [Hz].
         Serial.print(",");

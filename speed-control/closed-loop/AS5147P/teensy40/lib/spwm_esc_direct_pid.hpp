@@ -46,6 +46,8 @@ namespace kaepek
     volatile double integral_error = 0.0;
     volatile double derivative_error_filtered_1 = 0.0;
     volatile double derivative_error_filtered_2 = 0.0;
+    KalmanJerk1D kalman_pid_error_filter;
+    bool kalman_pid_error_filtering = false;
 
     // PID - d term low pass cutoff.
     double desired_derivative_cutoff_frequency = 1500.0;
@@ -64,7 +66,7 @@ namespace kaepek
     volatile float linear_bias_ccw = 0.0;
 
     // Calculated duty.
-    volatile float pid_duty = 0.0;
+    volatile float pid_duty_ratio = 0.0;
 
     using BaseEscClass = EscDirectL6234Teensy40AS5147P<ENCODER_DIVISIONS, ENCODER_COMPRESSION_FACTOR, PWM_WRITE_RESOLUTION>;
 
@@ -104,10 +106,40 @@ namespace kaepek
      * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
      * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
      * @param pid_config PID configuration, including the P, I and D term coefficients. Also including the linear model set_point coefficient and linear bias term (for each direction) OR the power law model set_point divisor and root (for each direction).
+     * @param kalman_pid_error_config Kalman config for PID error / derivative error smoothing.
+     * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
+     */
+    PidEscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, KalmanConfig kalman_pid_error_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+
+    /**
+     * PidEscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
+     * @param encoder The digital rotary encoder instance.
+     * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
+     * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
+     * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
+     * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
+     * @param pid_config PID configuration, including the P, I and D term coefficients. Also including the linear model set_point coefficient and linear bias term (for each direction) OR the power law model set_point divisor and root (for each direction).
      * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
      * @param ac_map_ptr Pointer to an anti-cogging calibration map.
      */
     PidEscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+
+    /**
+     * PidEscDirectL6234Teensy40AS5147P constructor with parameters.
+     * @param duty_cap The maximum allowable duty. E.g. duty_cap=0.3 represents that the duty cycle can only go to 30% of the largest duty value.
+     * @param encoder The digital rotary encoder instance.
+     * @param sample_period_microseconds The sample period for the RotaryEncoderSamplerValidator instance to sample the encoder.
+     * @param motor_config SPWMMotorConfig for the calibrated bldc motor includes: double cw_zero_displacement_deg, double cw_phase_displacement_deg, double ccw_zero_displacement_deg, ccw_phase_displacement_deg and uint32_t number_of_poles
+     * @param spwm_pin_config SPWML6234PinConfig for the LM6234 power circuit includes: uint32_t phase_a, uint32_t phase_b, uint32_t phase_c, uint32_t en, uint32_t frequency
+     * @param kalman_config KalmanConfig for the jerk/acceleration/velocity/position model including double alpha, double x_resolution_error, double process_noise
+     * @param pid_config PID configuration, including the P, I and D term coefficients. Also including the linear model set_point coefficient and linear bias term (for each direction) OR the power law model set_point divisor and root (for each direction).
+     * @param kalman_pid_error_config Kalman config for PID error / derivative error smoothing.
+     * @param voltage_map_ptr Pointer to an array holding for each direction (first index) and for each channel a,b or c (2nd index) and each compressed encoder angle (3rd index) gives a value for the SPWM setting.
+     * @param ac_map_ptr Pointer to an anti-cogging calibration map.
+     */
+    PidEscDirectL6234Teensy40AS5147P(double duty_cap, DigitalRotaryEncoderSPI encoder, float sample_period_microseconds, SPWML6234PinConfig spwm_pin_config, KalmanConfig kalman_config, PIDConfig pid_config, KalmanConfig kalman_pid_error_config, const int16_t (*voltage_map_ptr)[3][ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR], const int16_t (*ac_map_ptr)[ENCODER_DIVISIONS / ENCODER_COMPRESSION_FACTOR]);
+
 
     /**
      * Method to read the sampler each microcontroller tick and update the physical jerk model via the Kalman filter with the new measurement sample.
