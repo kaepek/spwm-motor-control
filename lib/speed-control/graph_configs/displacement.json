@@ -3,8 +3,8 @@
         {"name":"kalman_hz", "position": 0},
         {"name":"sample_hz", "position": 1},
         {"name":"time", "position": 2},
-        {"name":"com_thrust_percentage", "position": 3},
-        {"name":"com_direction", "position": 4},
+        {"name":"current_duty_ratio", "position": 3},
+        {"name":"direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
         {"name":"eular_acceleration", "position": 7},
@@ -21,46 +21,47 @@
         {"name":"integral_error", "position": 18},
         {"name":"differential_error", "position": 19},
         {"name":"pid_duty_percentage", "position": 20},
-        {"name":"setpoint", "position": 21}
+        {"name":"setpoint_hz", "position": 21}
     ],
-    "buffer_length": 390,
+    "buffer_length": 600,
     "plots": [
         {
             "name": "kalman_velocity",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red"},
-                {"name": "setpoint", "color": "black"},
-                {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 0.3}}
-            ]
-        },
-        {
-            "name": "proportional_integral_errors",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name": "proportional_error", "color": "black"},
-                {"name": "integral_error", "color": "gray"}
-            ]
-        },
-        {
-            "name": "differential_errors_by_time",
-            "independant_column": "time",
-            "dependant_columns": [
-                {"name": "differential_error", "color": "blue"}
-            ]
-        },
-        {
-            "name": "kalman_acceleration",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name":"kalman_acceleration", "color": "purple", "line": false}
+                {"name":"kalman_velocity", "color": "green"}
+            ]
+        },
+        {
+            "name": "displacement",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name":"eular_displacement", "color": "red", "line": false},
+                {"name": "kalman_displacement", "color": "green", "scatter": false}
+            ]
+        },
+        {
+            "name": "eular",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name":"eular_displacement", "color": "red"},
+                {"name":"eular_velocity", "color": "green"},
+                {"name": "eular_acceleration", "color": "blue"},
+                {"name": "eular_jerk", "color": "purple"}
+            ]
+        },
+        {
+            "name": "sample_hz",
+            "independant_column": "encoder_raw_displacement",
+            "dependant_columns": [
+                {"name":"sample_hz", "color": "black"}
             ]
         },
         {
             "name": "kalman_hz",
-            "independant_column": "time",
+            "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name":"kalman_hz", "color": "black", "line": false}
+                {"name":"kalman_hz", "color": "black"}
             ]
         }
     ]

@@ -3,7 +3,7 @@
         {"name":"kalman_hz", "position": 0},
         {"name":"sample_hz", "position": 1},
         {"name":"time", "position": 2},
-        {"name":"com_thrust_percentage", "position": 3, "scale": 20},
+        {"name":"current_duty_ratio", "position": 3, "scale": 20},
         {"name":"com_direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
@@ -51,7 +51,7 @@
             "name": "control",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black"},
+                {"name":"current_duty_ratio", "color": "black"},
                 {"name":"com_direction", "color": "blue"}
             ]
         },
@@ -65,7 +65,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },
@@ -79,7 +79,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },
@@ -93,7 +93,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },
@@ -107,7 +107,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },
@@ -121,7 +121,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },
@@ -135,7 +135,7 @@
                 {"name":"kalman_velocity", "color": "green"},
                 {"name": "transition_p", "color": "pink"},
                 { "name": "transition_q", "color": "magenta" },
-                {"name":"com_thrust_percentage", "color": "gray"},
+                {"name":"current_duty_ratio", "color": "gray"},
                 { "name": "transition_s", "color": "royalblue" }
             ]
         },

@@ -21,8 +21,8 @@ export type LineData = {
     kalman_hz: number,
     sample_hz: number,
     time: number,
-    com_thrust_percentage: number,
-    com_direction: number,
+    current_duty_ratio: number,
+    direction: number,
     eular_displacement: number,
     eular_velocity: number,
     eular_acceleration: number,
@@ -183,7 +183,7 @@ export class GetStepChange extends Task<ESCParsedLineData> {
         this.segments.forEach((segment, idx) => {
             // filter segments to make sure we exclude data which has not had the correct duty applied in data yet. Can happen due to latency.
             this.segments[idx].data.filter((line) => {
-                const line_duty = Math.round(line.com_thrust_percentage * this.max_duty)
+                const line_duty = Math.round(line.current_duty_ratio * this.max_duty)
                 return line_duty === segment.duty;
             })
         });

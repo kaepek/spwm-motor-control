@@ -3,7 +3,7 @@
         {"name":"kalman_hz", "position": 0},
         {"name":"sample_hz", "position": 1},
         {"name":"time", "position": 2},
-        {"name":"com_thrust_percentage", "position": 3},
+        {"name":"current_duty_ratio", "position": 3},
         {"name":"com_direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
@@ -47,7 +47,7 @@
             "name": "control",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black"},
+                {"name":"current_duty_ratio", "color": "black"},
                 {"name":"com_direction", "color": "blue"}
             ]
         },
@@ -55,7 +55,7 @@
             "name": "kalman_smoothed_acceleration_error",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed_future_kalman_acceleration_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"}
             ]
@@ -64,7 +64,7 @@
             "name": "kalman_smoothed2_acceleration_error",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed2_future_kalman_acceleration_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"}
             ]
@@ -73,7 +73,7 @@
             "name": "kalman_acceleration",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed_future_kalman_acceleration", "color": "blue"},
                 {"name": "kalman_acceleration", "color": "red"},
                 {"name":"kalman_velocity", "color": "green"}
@@ -83,7 +83,7 @@
             "name": "kalman_smoothed_jerk_error",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed_future_kalman_jerk_std", "color": "blue"},
                 {"name":"kalman_velocity", "color": "green"}
             ]
@@ -92,7 +92,7 @@
             "name": "kalman_smoothed2_jerk_error",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed2_prior_kalman_jerk_std", "color": "red"},
                 {"name":"smoothed2_central_kalman_jerk_std", "color": "black"},
                 {"name":"smoothed2_future_kalman_jerk_std", "color": "blue"},
@@ -103,7 +103,7 @@
             "name": "kalman_jerk",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
+                {"name":"current_duty_ratio", "color": "black", "axis": {"location": "right", "min": 0.0, "max": 1.0}},
                 {"name":"smoothed_prior_kalman_jerk", "color": "red"},
                 {"name":"smoothed_central_kalman_jerk", "color": "black"},
                 {"name":"smoothed_future_kalman_jerk", "color": "blue"},

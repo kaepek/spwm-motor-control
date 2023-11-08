@@ -3,8 +3,8 @@
         {"name":"kalman_hz", "position": 0},
         {"name":"sample_hz", "position": 1},
         {"name":"time", "position": 2},
-        {"name":"com_thrust_percentage", "position": 3},
-        {"name":"com_direction", "position": 4},
+        {"name":"current_duty_ratio", "position": 3},
+        {"name":"direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
         {"name":"eular_acceleration", "position": 7},
@@ -21,7 +21,7 @@
         {"name":"integral_error", "position": 18},
         {"name":"differential_error", "position": 19},
         {"name":"pid_duty_percentage", "position": 20},
-        {"name":"setpoint", "position": 21}
+        {"name":"setpoint_hz", "position": 21}
     ],
     "buffer_length": 200,
     "plots": [
@@ -29,8 +29,8 @@
             "name": "control",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"com_thrust_percentage", "color": "black"},
-                {"name":"com_direction", "color": "blue"}
+                {"name":"current_duty_ratio", "color": "black"},
+                {"name":"direction", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
         },
         {

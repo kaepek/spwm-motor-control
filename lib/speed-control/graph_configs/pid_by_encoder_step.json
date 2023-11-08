@@ -3,8 +3,8 @@
         {"name":"kalman_hz", "position": 0},
         {"name":"sample_hz", "position": 1},
         {"name":"time", "position": 2},
-        {"name":"com_thrust_percentage", "position": 3},
-        {"name":"com_direction", "position": 4},
+        {"name":"current_duty_ratio", "position": 3},
+        {"name":"direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
         {"name":"eular_acceleration", "position": 7},
@@ -21,7 +21,7 @@
         {"name":"integral_error", "position": 18},
         {"name":"differential_error", "position": 19},
         {"name":"pid_duty_percentage", "position": 20},
-        {"name":"setpoint", "position": 21}
+        {"name":"setpoint_hz", "position": 21}
     ],
     "buffer_length": 650,
     "plots": [
@@ -30,26 +30,26 @@
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name":"kalman_velocity", "color": "red", "line": false},
-                {"name": "setpoint", "color": "black", "line": false},
-                {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 0.3}}
+                {"name": "setpoint_hz", "color": "black", "line": false},
+                {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
         },
         {
-            "name": "proportional_integral_errors",
+            "name": "proportional_errors",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name": "proportional_error", "color": "black", "line": false}
             ]
         },
         {
-            "name": "integral_error_errors",
+            "name": "integral_errors",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name": "integral_error", "color": "gray", "line": false}
             ]
         },
         {
-            "name": "differential_errors_by_time",
+            "name": "differential_errors",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
                 {"name": "differential_error", "color": "blue"}
