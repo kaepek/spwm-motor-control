@@ -187,7 +187,7 @@ run_tasks(tasks, adaptor).then(async (output: ACMap) => {
     await delay(300);
     await word_sender.send_word("stop");
     const cpp_ac_map = generate_ac_map_cpp(output);
-    console2.success("All finished"); // , JSON.stringify(output)
+    console2.success("All finished");
     // write file
     if (parsed_args.hasOwnProperty("output_data_file")) {
         fs.writeFileSync(parsed_args.output_data_file, JSON.stringify(output));

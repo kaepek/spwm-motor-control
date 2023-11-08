@@ -46,7 +46,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        kalman_pid_error_filter = new Kalman1DJerk(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
+        this->kalman_pid_error_filter = KalmanJerk1D(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
         kalman_pid_error_filtering = true;
     }
 
@@ -80,7 +80,7 @@ namespace kaepek
         linear_set_point_coefficient_ccw = pid_config.linear_set_point_coefficient_ccw;
         linear_bias_cw = pid_config.linear_bias_cw;
         linear_bias_ccw = pid_config.linear_bias_ccw;
-        kalman_pid_error_filter = new Kalman1DJerk(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
+        this->kalman_pid_error_filter = KalmanJerk1D(kalman_pid_error_config.alpha, kalman_pid_error_config.x_resolution_error, kalman_pid_error_config.process_noise, true);
         kalman_pid_error_filtering = true;
     }
 
@@ -137,7 +137,6 @@ namespace kaepek
                 // Calculate errors
                 proportional_error = set_point_hz - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
 
-#if CLASSIC_FILTERING
 #if ENABLE_RK4
                 // RK4
                 double k1 = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
@@ -149,6 +148,8 @@ namespace kaepek
                 // Eular
                 differential_error = calculate_eular_derivative(proportional_error, seconds_since_last, previous_proportional_error);
 #endif
+
+#if CLASSIC_FILTERING
                 // Apply a second-order low-pass filter
                 double omega = 2.0 * M_PI * desired_derivative_cutoff_frequency;
                 double alpha = omega * seconds_since_last;
@@ -162,18 +163,20 @@ namespace kaepek
                 // Apply Kalman smoothing for the differential_error if we have one.
                 if (kalman_pid_error_filtering == true) {
                     kalman_pid_error_filter.step(seconds_since_last, differential_error);
-                    double *kalman_differential_error_vec = derivative_error_kalman_filter.get_kalman_vector();
+                    double *kalman_differential_error_vec = kalman_pid_error_filter.get_kalman_vector();
                     differential_error = kalman_differential_error_vec[0];
                 }
 
                 // update the previous proportional error for the next numerical derivative.
                 previous_proportional_error = proportional_error;
 #else
-                // simply use the kalman filter to calculate the differential error and smooth the proportional error. This is not cheap!
-                error_kalman_filter.step(seconds_since_last, proportional_error);
-                double *kalman_proportional_error_vec = error_kalman_filter.get_kalman_vector();
-                proportional_error = kalman_proportional_error_vec[0];
-                differential_error = kalman_proportional_error_vec[1];
+                if (kalman_pid_error_filtering == true) {
+                    // simply use the kalman filter to calculate the differential error and smooth the proportional error. This is not cheap!
+                    kalman_pid_error_filter.step(seconds_since_last, proportional_error);
+                    double *kalman_proportional_error_vec = kalman_pid_error_filter.get_kalman_vector();
+                    proportional_error = kalman_proportional_error_vec[0];
+                    differential_error = kalman_proportional_error_vec[1];
+                }
 #endif
 
                 // Calculate the integral error.
