@@ -235,27 +235,27 @@ namespace kaepek
         Serial.print(",");
         Serial.print(this->byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
-        Serial.print((double) eular_vec_store[1] / (double)ENCODER_DIVISIONS); // Eular Displacement [Total rotations].
+        Serial.print((double)eular_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Eular Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[2] / (double)ENCODER_DIVISIONS); // Eular Velocity [Hz].
+        Serial.print((double)eular_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Eular Velocity [Hz].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[3]  / (double)ENCODER_DIVISIONS); // Eular Acceleration [Hz^2].
+        Serial.print((double)eular_vec_store[3]  / (double)ENCODER_DIVISIONS, 4); // Eular Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double) eular_vec_store[4]  / (double)ENCODER_DIVISIONS); // Eular Jerk [Hz^3].
+        Serial.print((double)eular_vec_store[4]  / (double)ENCODER_DIVISIONS, 4); // Eular Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS); // Kalman Displacement [Total rotations].
+        Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4); // Kalman Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS); // Kalman Velocity [Hz].
+        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Kalman Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS); // Kalman Acceleration [Hz^2].
+        Serial.print((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Kalman Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS); // Kalman Jerk [Hz^3].
+        Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Kalman Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_a - half_max_duty); // Normalised phase a duty.
+        Serial.print((double)current_triplet.phase_a - half_max_duty); // Normalised phase a duty.
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_b - half_max_duty); // Normalised phase b duty.
+        Serial.print((double)current_triplet.phase_b - half_max_duty); // Normalised phase b duty.
         Serial.print(",");
-        Serial.print((double) current_triplet.phase_c - half_max_duty); // Normalised phase c duty.
+        Serial.print((double)current_triplet.phase_c - half_max_duty); // Normalised phase c duty.
         Serial.print(",");
         Serial.print(current_encoder_displacement); // Current encoder raw value [steps].
         Serial.print("\n");

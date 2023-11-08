@@ -441,6 +441,14 @@ namespace kaepek
         Serial.print(",");
         Serial.print(BaseEscClass::byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
+        Serial.print((double)BaseEscClass::eular_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Eular Displacement [Total rotations].
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::eular_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Eular Velocity [Hz].
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::eular_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Eular Acceleration [Hz^2].
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::eular_vec_store[4] / (double)ENCODER_DIVISIONS, 4); // Eular Jerk [Hz^3].
+        Serial.print(",");
         Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4); // Kalman Displacement [Total rotations].
         Serial.print(",");
         Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Kalman Velocity [Hz].
@@ -448,6 +456,12 @@ namespace kaepek
         Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Kalman Acceleration [Hz^2].
         Serial.print(",");
         Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Kalman Jerk [Hz^3].
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::current_triplet.phase_a - BaseEscClass::half_max_duty); // Normalised phase a duty.
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::current_triplet.phase_b - BaseEscClass::half_max_duty); // Normalised phase b duty.
+        Serial.print(",");
+        Serial.print((double)BaseEscClass::current_triplet.phase_c - BaseEscClass::half_max_duty); // Normalised phase c duty.
         Serial.print(",");
         Serial.print(BaseEscClass::current_encoder_displacement); // Current encoder raw value [steps].
         Serial.print(",");
@@ -460,12 +474,6 @@ namespace kaepek
         Serial.print(pid_duty_ratio, 4); // The PID algorithm calculated output duty (process output).
         Serial.print(",");
         Serial.print(set_point_hz * 1.0, 4);  // The process variable setpoint target [Hz].
-        Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_a - BaseEscClass::half_max_duty); // Normalised phase a duty.
-        Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_b - BaseEscClass::half_max_duty); // Normalised phase b duty.
-        Serial.print(",");
-        Serial.print((double) BaseEscClass::current_triplet.phase_c - BaseEscClass::half_max_duty); // Normalised phase c duty.
         Serial.print("\n");
 
         // Reset loop counter and time since last log.

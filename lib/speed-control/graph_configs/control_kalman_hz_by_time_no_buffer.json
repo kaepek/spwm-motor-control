@@ -7,16 +7,21 @@
         {"name":"com_direction", "position": 4},
         {"name":"eular_displacement", "position": 5},
         {"name":"eular_velocity", "position": 6},
-        {"name": "eular_acceleration", "position": 7},
-        {"name": "eular_jerk", "position": 8},
+        {"name":"eular_acceleration", "position": 7},
+        {"name":"eular_jerk", "position": 8},
         {"name":"kalman_displacement", "position": 9},
         {"name":"kalman_velocity", "position": 10},
-        {"name": "kalman_acceleration", "position": 11, "scale": 1.0},
-        {"name": "kalman_jerk", "position": 12},
+        {"name":"kalman_acceleration", "position": 11},
+        {"name":"kalman_jerk", "position": 12},
         {"name":"voltage_phase_a", "position": 13},
         {"name":"voltage_phase_b", "position": 14},
-        {"name": "voltage_phase_c", "position": 15},
-        {"name": "encoder_raw_displacement", "position":16}
+        {"name":"voltage_phase_c", "position": 15},
+        {"name":"encoder_raw_displacement", "position": 16},
+        {"name":"proportional_error", "position": 17},
+        {"name":"integral_error", "position": 18},
+        {"name":"differential_error", "position": 19},
+        {"name":"pid_duty_percentage", "position": 20},
+        {"name":"setpoint", "position": 21}
     ],
     "plots": [
         {
