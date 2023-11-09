@@ -27,7 +27,7 @@ npm run build
 # Position control:
 
 ## Open loop code (no feedback)
-- [Teensy40 instructions](./lib/peripheral/position-control/open-loop/README.md)
+- [Teensy40 instructions](./lib/peripheral/position-control/open-loop/teensy-40/README.md)
 
 ## Closed loop code (rotary encoder AS5147P)
 - [Todo](./)
@@ -44,3 +44,14 @@ npm run build
 - [Electro-noobs](https://electronoobs.com/eng_arduino_tut176.php)
 - [ST-l6234-three-phase-motor-drive](https://www.st.com/resource/en/application_note/cd00004062-l6234-three-phase-motor-driver-stmicroelectronics.pdf)
 - [Anti-cogging-algorithm](https://www.modlabupenn.org/wp-content/uploads/piccoli_matthew_anticogging_torque_ripple_suppression_modeling_and_parameter_selection.pdf)
+
+# How to prepare the Teensy40 platform:
+- Install [Arduino IDE v1.8.19](https://www.arduino.cc/en/software)
+- Install [Teensyduino v2.1.0](https://www.pjrc.com/teensy/teensyduino.html)
+- Install [TeensyTimerTool library](https://github.com/luni64/TeensyTimerTool) by opening up Arduino IDE click the "Sketch" menu item, go down to "Include Library" and click "Manage Libraries...". Enter in the filter you search the string "TeensyTimerTool", select the correct version "Version 1.3.0" and click the install button.
+
+# General dependancies:
+
+- [Arduino.h](https://github.com/arduino/ArduinoCore-avr)
+- [imxrt.h](https://github.com/PaulStoffregen/cores/tree/master)
+- [TeensyTimerTool](https://github.com/luni64/TeensyTimerTool/blob/master/LICENSE)

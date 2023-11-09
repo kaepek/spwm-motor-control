@@ -5,9 +5,7 @@
 #define PIN_L6234_SPWM_PHASE_C 7
 #define PIN_L6234_SPWM_EN 8
 #define PWM_FREQUENCY 36000
-
 using namespace TeensyTimerTool;
-
 PeriodicTimer logging_timer(GPT2);
 
 namespace kaepek
@@ -29,9 +27,7 @@ namespace kaepek
     volatile float total_time = 0.0;
     volatile float delta_time;
     bool enabled = false;
-
-    // Logging timer interval.
-    const std::size_t LOGGING_MICROS = 4556;
+    const std::size_t logging_micros = 4556; // Logging timer interval.
     long int t1 = millis(); // loop timing variable
 
     /**
@@ -55,7 +51,7 @@ namespace kaepek
         analogWrite(PIN_L6234_SPWM_PHASE_C, 0);
         logging_timer.begin([this]
                             { this->log_data(); },
-                            this->LOGGING_MICROS, true);
+                            this->logging_micros, true);
 
         break;
       case SerialInputCommandWord::Stop:
@@ -85,6 +81,9 @@ namespace kaepek
       }
     }
 
+    /**
+     * Method to update electrical phase values.
+     */
     void update_phase()
     {
       // increment rotation
@@ -97,16 +96,35 @@ namespace kaepek
       electrical_deg_phase_c %= 360;
     }
 
+    /**
+     * Method to convert degrees to radians
+     * @param electrical_deg_phase_x Electrical degrees to convert to radians.
+     * @return The value of the electrical_deg_phase_x in radians
+     */
     float deg_to_rad(int16_t electrical_deg_phase_x)
     {
       return (((float)electrical_deg_phase_x) * PI) / 180;
     }
 
+    /**
+     * Method to calculate spwm duty given an electrical phase in degrees.
+     * @param electrical_deg_phase_x Phase electrical degrees to convert to spwm duty values.
+     * @return The duty value calculated from the given electrical_deg_phase_x.
+     */
     float spwm_duty_calculator(int16_t electrical_deg_phase_x)
     {
       return sin(deg_to_rad(electrical_deg_phase_x)) * 127.5 + 127.5;
     }
 
+    /**
+     * Method to convert integers to floats with a given input and output min / max value.
+     * @param x The integer to convert.
+     * @param in_min The minimum value x can take.
+     * @param in_max The maximum value x can take.
+     * @param out_min The minimum value that could be returned from this method as a float.
+     * @param out_max The maximum value that could be returned from this method as a float.
+     * @return The converted float value given an input int x.
+     */
     float map_int_to_float(int x, int in_min, int in_max, float out_min, float out_max)
     {
       float dbl_x = (float)x;
@@ -115,6 +133,9 @@ namespace kaepek
       return (dbl_x - dbl_in_min) * (out_max - out_min) / (dbl_in_max - dbl_in_min) + out_min;
     }
 
+    /**
+     * Method to update SPWM pin value duties.
+     */
     void update_spwm_duties()
     {
       if (enabled == false)
