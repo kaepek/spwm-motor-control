@@ -4,6 +4,8 @@ import { rotation_detector } from "../../rotation-detector.js";
 import { console2 } from "../../../../external/kaepek-io/lib/host/controller/utils/log.js";
 import { Observable } from "rxjs";
 
+const program_description = `A program to display statistics about a motor currently rotating.`;
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
@@ -84,7 +86,7 @@ const cli_args: Array<CliArg> = [
     }
 ];
 
-const parsed_args = parse_args("RotationStatistics", cli_args, ArgumentHandlers) as any;
+const parsed_args = parse_args("RotationStatistics", program_description, cli_args, ArgumentHandlers) as any;
 
 const adaptor = new NetworkAdaptor(parsed_args.incoming_address, parsed_args.incoming_port, parsed_args.incoming_protocol, parsed_args.input_config_file, ",", parsed_args.outgoing_address, parsed_args.outgoing_port, parsed_args.outgoing_protocol);
 

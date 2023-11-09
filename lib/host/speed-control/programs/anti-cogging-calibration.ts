@@ -12,6 +12,8 @@ import { generate_ac_map_cpp } from "../utils/cpp-ac-state-map-generator.js";
 import { delay } from "../utils/delay.js";
 import { SetIdleDuty } from "../tasks/set-idle.js";
 
+const program_description = `A program to generate an anti-cogging map, helpful to smooth out motors which suffer from asymmetric performance around a full rotation.`;
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
@@ -142,7 +144,7 @@ const cli_args: Array<CliArg> = [
 ];
 
 
-const parsed_args = parse_args("AntiCoggingCalibration", cli_args, ArgumentHandlers) as any;
+const parsed_args = parse_args("AntiCoggingCalibration", program_description, cli_args, ArgumentHandlers) as any;
 
 const duty_max = parsed_args.duty_max;
 const angular_steps = parsed_args.angular_steps;

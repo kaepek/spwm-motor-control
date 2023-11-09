@@ -26,6 +26,8 @@ import regression from 'regression';
  * 
  */
 
+const program_description = `A program to perform a step change analysis. The collected data can then be used to configure PID settings to give it a model for the duty based on the set_point target, performs both a linear and power law regression analysis.`;
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_config_file",
@@ -179,7 +181,7 @@ const cli_args: Array<CliArg> = [
     }
 ];
   
-const parsed_args = parse_args("StepChange", cli_args, ArgumentHandlers) as any;
+const parsed_args = parse_args("StepChange", program_description, cli_args, ArgumentHandlers) as any;
 
 const duty_multiplier = parsed_args.duty_cap_multiplier;
 

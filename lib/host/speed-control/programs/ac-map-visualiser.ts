@@ -3,6 +3,8 @@ import { ASCIIParser } from "../../../../external/kaepek-io/lib/host/controller/
 import { ACMap } from "../tasks/collect-acceleration-data";
 import fs from "fs";
 
+const program_description = `A program to create CSVs from the data collected from the anti-cogging map program. The kaepek-io-graph-file program can then then be run on these CSVs using the ac_map_graphs.json graph config.`;
+
 const cli_args: Array<CliArg> = [
     {
         name: "input_file",
@@ -28,7 +30,7 @@ const cli_args: Array<CliArg> = [
     },
 ];
 
-const parsed_args = parse_args("AntiCoggingCalibrationGrapher", cli_args, ArgumentHandlers) as any;
+const parsed_args = parse_args("AntiCoggingCalibrationGrapher", program_description, cli_args, ArgumentHandlers) as any;
 const graph_config = parsed_args.input_config_file;
 const ac_map = parsed_args.input_file as ACMap;
 
