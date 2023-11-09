@@ -4,7 +4,7 @@
 
 ## Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#spwm-procedure) see the ESC sinusoidal section. 
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/blob/main/README.md#spwm-procedure) see the ESC sinusoidal section. 
 1. In the `ESC sinusodial code` ino update the `MOTOR_CONFIG` given the calibration fit read of a graph file `./[calibration-dir]/calibration-data/zc_reconstruction_[combined_id].png`, the following must be set:
     - `MOTOR_CONFIG_CW_ZERO_DISPLACEMENT_DEG`
     - `MOTOR_CONFIG_CW_PHASE_DISPLACEMENT_DEG`

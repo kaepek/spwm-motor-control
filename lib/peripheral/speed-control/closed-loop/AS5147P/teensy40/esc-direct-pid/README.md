@@ -4,7 +4,7 @@
 
 ## Usage instructions
 
-0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/tree/FEATURES/new-documentation#dpwm-procedure) see the ESC direct PWM section.
+0. Perform motor calibration using the [Calibration library](https://github.com/kaepek/calibration/blob/main/README.md#dpwm-procedure) see the ESC direct PWM section.
 1. Copy the contents of the relevant cpp direct fit data e.g. `combination-direct-fit-ynitlldoqesyyvgyuwyg.cpp` to the following directory file `./[spwm-root-directory]/lib/peripheral/speed-control/closed-loop/AS5147P/teensy40/esc-direct-pid/calibration/voltage-map.cpp`.
 2. Load the `ESC direct pid` code onto the teensy40 microcontroller.
 3. Run the director program: `kaepek-io-director -i keyboard network=localhost,9000,udp dualshock -c directionui8 start stop reset setpointf32 proportionalf32 integralf32 derivativef32 powerlawrootccwf32 powerlawrootcwf32 powerlawsetpointdivisorccwf32 powerlawsetpointdivisorcwf32 linearbiascwf32 linearbiasccwf32 linearsetpointcoefficientcwF32 linearsetpointcoefficientccwF32  -p serial console -o network=localhost,9002,udp network=localhost,9003,udp`
