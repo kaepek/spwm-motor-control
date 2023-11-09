@@ -23,7 +23,7 @@ namespace kaepek
     volatile int spwm_duty_phase_b = 0;
     volatile int spwm_duty_phase_c = 0;
     volatile float torque_value = 0.0;
-    volatile signed int phase_change_value = 0;
+    volatile float phase_change_value = 0;
     volatile float total_time = 0.0;
     volatile float delta_time;
     bool enabled = false;
@@ -73,7 +73,7 @@ namespace kaepek
         *((unsigned char *)&float_value + 1) = data_buffer[1];
         *((unsigned char *)&float_value + 2) = data_buffer[2];
         *((unsigned char *)&float_value + 3) = data_buffer[3];
-        phase_change_value = (signed int)float_value / 100.0;
+        phase_change_value = (float_value / 30.0);
         break;
       default:
         Serial.println(control_word);
@@ -87,7 +87,7 @@ namespace kaepek
     void update_phase()
     {
       // increment rotation
-      electrical_deg_phase_a = electrical_deg_phase_a + phase_change_value;
+      electrical_deg_phase_a = electrical_deg_phase_a + (int) phase_change_value;
       electrical_deg_phase_b = electrical_deg_phase_a + 120;
       electrical_deg_phase_c = electrical_deg_phase_b + 120;
       // obey modular arithmetic (loop at 360)
@@ -218,9 +218,9 @@ namespace kaepek
     {
       cli();
       // diagnostic prints
-      Serial.print(phase_change_value);
+      Serial.print(phase_change_value, 4);
       Serial.print(",");
-      Serial.print(electrical_deg_phase_a);
+      Serial.print(electrical_deg_phase_a, 4);
       Serial.print(",");
       Serial.print(torque_value);
       Serial.print(",");

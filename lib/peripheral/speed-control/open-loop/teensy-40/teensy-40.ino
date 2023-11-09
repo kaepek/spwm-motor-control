@@ -28,8 +28,8 @@ namespace kaepek
     volatile float delta_time;
     bool enabled = false;
     const std::size_t logging_micros = 4556; // Logging timer interval.
-    long int t1 = millis(); // loop timing variable
-
+    long int t1 = millis();                  // loop timing variable
+    int direction = 1;
 
     /**
      * Method to handler control input recieved via the serial port
@@ -40,6 +40,7 @@ namespace kaepek
     {
       uint16_t com_torque_value = 0;
       uint16_t com_delay_value = 0;
+      byte byte_direction = 0; // UInt8
       switch (control_word)
       {
       case SerialInputCommandWord::Null:
@@ -65,13 +66,23 @@ namespace kaepek
         break;
       case SerialInputCommandWord::Reset:
         break;
+      case SerialInputCommandWord::Direction1UI8:
+        byte_direction = data_buffer[0];
+        if (byte_direction == 0)
+        {
+          direction = 1;
+        }
+        else if (byte_direction == 1) {
+          direction = -1;
+        }
+        break;
       case SerialInputCommandWord::Torque1UI16:
         com_torque_value = (data_buffer[1] << 8) | data_buffer[0];       // 0 -> 65535 // we want 0 -> 1
         torque_value = min((float)com_torque_value / (float)65535, 0.7); // cap max to 0.7 ratio 70%.
         break;
       case SerialInputCommandWord::Delay1UI16:
-        com_delay_value = (uint16_t) (((float) ((data_buffer[1] << 8) | data_buffer[0])) / 10.0);
-        delay_value = com_delay_value;
+        com_delay_value = (uint16_t)(((float)((data_buffer[1] << 8) | data_buffer[0])) / 10.0);
+        delay_value = max(com_delay_value, 300);
         break;
       default:
         Serial.println(control_word);
@@ -81,11 +92,11 @@ namespace kaepek
 
     /**
      * Method to increment the rotation angle.
-    */
+     */
     void increment_rotation()
     {
       // increment rotation
-      electrical_deg_phase_a += 1;
+      electrical_deg_phase_a += direction;
       electrical_deg_phase_b = electrical_deg_phase_a + 120;
       electrical_deg_phase_c = electrical_deg_phase_b + 120;
       // obey modular arithmetic (loop at 360)
@@ -223,6 +234,9 @@ namespace kaepek
 
       Serial.print(",");
       Serial.print(total_time, 4);
+
+      Serial.print(",");
+      Serial.print(direction);
 
       Serial.print("\n");
 

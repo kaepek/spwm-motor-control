@@ -15,8 +15,8 @@
             "name": "control",
             "independant_column": "time",
             "dependant_columns": [
-                {"name":"phase_change_value", "color": "black", "axis": {"location": "right", "min": -1.8, "max": 1.8}},
-                {"name":"torque_value", "color": "blue"}
+                {"name":"phase_change_value", "color": "black"},
+                {"name":"torque_value", "color": "blue", "axis": {"location": "right", "min": 0, "max": 1}}
             ]
         },
         {

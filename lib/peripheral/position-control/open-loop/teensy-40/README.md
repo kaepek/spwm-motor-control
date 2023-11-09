@@ -28,6 +28,6 @@
         - `kaepek-io-netsend -w stop` to stop.
         - `kaepek-io-netsend -w reset` to reset.
         - `kaepek-io-netsend -w torqueui16 -d 16384` to set the torque value to 16384 out of 65535 or about 25%
-        - `kaepek-io-netsend -w offsetf32 -d -180` to set the offset value to -180, corresponds to -180/100.0 electrical degree decrements per 1000 microseconds.
+        - `kaepek-io-netsend -w offsetf32 -d -180` to set the offset value to -180, corresponds to -180/30.0 electrical degree decrements per 1000 microseconds.
 
 ## [Parent Readme](../../../../../README.md)
