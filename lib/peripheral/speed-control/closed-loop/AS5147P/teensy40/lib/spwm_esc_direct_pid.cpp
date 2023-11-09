@@ -118,7 +118,7 @@ namespace kaepek
                 // Convert microseconds to seconds.
                 double seconds_since_last = (double)elapsed_micros_since_last_sample * (double)1e-6;
                 // Perform one kalman step with the data.
-                BaseEscClass::kalman_filter.step(seconds_since_last, encoder_value);
+                BaseEscClass::kalman_filter.step(seconds_since_last, (double) encoder_value / (double) ENCODER_DIVISIONS);
                 // Extract state values.
                 double *kalman_vec = BaseEscClass::kalman_filter.get_kalman_vector();
                 double *eular_vec = BaseEscClass::kalman_filter.get_eular_vector();
@@ -135,7 +135,7 @@ namespace kaepek
                 BaseEscClass::eular_vec_store[4] = eular_vec[4];
 
                 // Calculate errors
-                proportional_error = set_point_hz - (kalman_vec[1] / (double)ENCODER_DIVISIONS);
+                proportional_error = set_point_hz - (kalman_vec[1]);
 
 #if ENABLE_RK4
                 // RK4
@@ -398,21 +398,21 @@ namespace kaepek
         Serial.print(",");
         Serial.print(BaseEscClass::byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
-        Serial.print((double)BaseEscClass::eular_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Eular Displacement [Total rotations].
+        Serial.print((double)BaseEscClass::eular_vec_store[1], 4); // Eular Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::eular_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Eular Velocity [Hz].
+        Serial.print((double)BaseEscClass::eular_vec_store[2], 4); // Eular Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::eular_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Eular Acceleration [Hz^2].
+        Serial.print((double)BaseEscClass::eular_vec_store[3], 4); // Eular Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::eular_vec_store[4] / (double)ENCODER_DIVISIONS, 4); // Eular Jerk [Hz^3].
+        Serial.print((double)BaseEscClass::eular_vec_store[4], 4); // Eular Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4); // Kalman Displacement [Total rotations].
+        Serial.print((double)BaseEscClass::kalman_vec_store[0], 4); // Kalman Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Kalman Velocity [Hz].
+        Serial.print((double)BaseEscClass::kalman_vec_store[1], 4); // Kalman Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Kalman Acceleration [Hz^2].
+        Serial.print((double)BaseEscClass::kalman_vec_store[2], 4); // Kalman Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)BaseEscClass::kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Kalman Jerk [Hz^3].
+        Serial.print((double)BaseEscClass::kalman_vec_store[3], 4); // Kalman Jerk [Hz^3].
         Serial.print(",");
         Serial.print((double)BaseEscClass::current_triplet.phase_a - BaseEscClass::half_max_duty); // Normalised phase a duty.
         Serial.print(",");

@@ -29,8 +29,8 @@
             "name": "kalman_velocity",
             "independant_column": "encoder_raw_displacement",
             "dependant_columns": [
-                {"name":"kalman_velocity", "color": "red", "line": false},
-                {"name": "setpoint_hz", "color": "black", "line": false},
+                {"name":"kalman_velocity", "color": "red"},
+                {"name": "setpoint_hz", "color": "black"},
                 {"name": "pid_duty_percentage", "color": "blue", "axis": {"location": "right", "min": 0.0, "max": 1.0}}
             ]
         },

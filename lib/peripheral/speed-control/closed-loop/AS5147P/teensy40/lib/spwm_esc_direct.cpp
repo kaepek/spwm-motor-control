@@ -24,7 +24,7 @@ namespace kaepek
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
         this->voltage_map_ptr = voltage_map_ptr;
-        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
+        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, 1.0);
     }
 
     template <std::size_t ENCODER_DIVISIONS, std::size_t ENCODER_COMPRESSION_FACTOR, std::size_t PWM_WRITE_RESOLUTION>
@@ -32,7 +32,7 @@ namespace kaepek
     {
         this->spwm_pin_config = spwm_pin_config;
         this->kalman_config = kalman_config;
-        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, (double)ENCODER_DIVISIONS);
+        this->kalman_filter = KalmanJerk1D(kalman_config.alpha, kalman_config.x_resolution_error, kalman_config.process_noise, true, 1.0);
         this->ac_map_ptr = ac_map_ptr;
         this->voltage_map_ptr = voltage_map_ptr;
         this->anti_cogging_enabled = true;
@@ -132,7 +132,7 @@ namespace kaepek
                 // Convert microseconds to seconds.
                 double seconds_since_last = (double)elapsed_micros_since_last_sample * (double)1e-6;
                 // Perform one kalman step with the data.
-                kalman_filter.step(seconds_since_last, encoder_value);
+                kalman_filter.step(seconds_since_last, (double) encoder_value / (double) ENCODER_DIVISIONS);
                 // Extract state values.
                 double *kalman_vec = kalman_filter.get_kalman_vector();
                 double *eular_vec = kalman_filter.get_eular_vector();
@@ -235,21 +235,21 @@ namespace kaepek
         Serial.print(",");
         Serial.print(this->byte_direction); // The current direction (0 clockwise, 1 anti-clockwise).
         Serial.print(",");
-        Serial.print((double)eular_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Eular Displacement [Total rotations].
+        Serial.print((double)eular_vec_store[1], 4); // Eular Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)eular_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Eular Velocity [Hz].
+        Serial.print((double)eular_vec_store[2], 4); // Eular Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)eular_vec_store[3]  / (double)ENCODER_DIVISIONS, 4); // Eular Acceleration [Hz^2].
+        Serial.print((double)eular_vec_store[3], 4); // Eular Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)eular_vec_store[4]  / (double)ENCODER_DIVISIONS, 4); // Eular Jerk [Hz^3].
+        Serial.print((double)eular_vec_store[4], 4); // Eular Jerk [Hz^3].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[0] / (double)ENCODER_DIVISIONS, 4); // Kalman Displacement [Total rotations].
+        Serial.print((double)kalman_vec_store[0], 4); // Kalman Displacement [Total rotations].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[1] / (double)ENCODER_DIVISIONS, 4); // Kalman Velocity [Hz].
+        Serial.print((double)kalman_vec_store[1], 4); // Kalman Velocity [Hz].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[2] / (double)ENCODER_DIVISIONS, 4); // Kalman Acceleration [Hz^2].
+        Serial.print((double)kalman_vec_store[2], 4); // Kalman Acceleration [Hz^2].
         Serial.print(",");
-        Serial.print((double)kalman_vec_store[3] / (double)ENCODER_DIVISIONS, 4); // Kalman Jerk [Hz^3].
+        Serial.print((double)kalman_vec_store[3], 4); // Kalman Jerk [Hz^3].
         Serial.print(",");
         Serial.print((double)current_triplet.phase_a - half_max_duty); // Normalised phase a duty.
         Serial.print(",");
