@@ -27,7 +27,7 @@ npm run build
 # Position control:
 
 ## Open loop code (no feedback)
-- [Teensy40 Code](./lib/peripheral/position-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
+- [Teensy40 instructions](./lib/peripheral/position-control/open-loop/README.md)
 
 ## Closed loop code (rotary encoder AS5147P)
 - [Todo](./)

@@ -1,3 +1,5 @@
+#include "com/comlib.cpp"
+
 #define PIN_L6234_SPWM_PHASE_A 1
 #define PIN_L6234_SPWM_PHASE_B 0
 #define PIN_L6234_SPWM_PHASE_C 7

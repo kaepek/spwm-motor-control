@@ -1,0 +1,39 @@
+{
+    "inputs": [
+        {"name":"phase_change_value", "position": 0},
+        {"name":"electrical_degrees_phase_a", "position": 1},
+        {"name":"torque_value", "position": 2},
+        {"name":"time_delta", "position": 3},
+        {"name":"spwm_duty_phase_a", "position": 4},
+        {"name":"spwm_duty_phase_b", "position": 5},
+        {"name":"spwm_duty_phase_c", "position": 6},
+        {"name": "time", "position": 7}
+    ],
+    "buffer_length": 200,
+    "plots": [
+        {
+            "name": "control",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"phase_change_value", "color": "black"},
+                {"name":"torque_value", "color": "blue", "axis": {"location": "right", "min": -1.8, "max": 1.8}}
+            ]
+        },
+        {
+            "name": "duties",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"spwm_duty_phase_a", "color": "red"},
+                {"name": "spwm_duty_phase_b", "color": "olive"},
+                {"name": "spwm_duty_phase_c", "color": "black"}
+            ]
+        },
+        {
+            "name": "update_ms",
+            "independant_column": "time",
+            "dependant_columns": [
+                {"name":"time_delta", "color": "black"}
+            ]
+        }
+    ]
+}
