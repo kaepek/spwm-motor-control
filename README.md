@@ -17,17 +17,17 @@ npm run build
 
 ## Open loop code (no feedback)
 
-- [Arduino Code](./speed-control/open-loop/arduino-uno/arduino-uno.ino)
-- [Teensy40 Code](./speed-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
+- [Arduino Code](./lib/peripheral/speed-control/open-loop/arduino-uno/arduino-uno.ino)
+- [Teensy40 Code](./lib/peripheral/speed-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
 
 ## Closed loop (AS5147P rotary encoder , Teensy 4.0 microcontroller, l6234 motor driver)
 
-- [Detailed instructions](./speed-control/closed-loop/AS5147P/teensy40/README.md)
+- [Detailed instructions](./lib/peripheral/speed-control/closed-loop/AS5147P/teensy40/README.md)
 
 # Position control:
 
 ## Open loop code (no feedback)
-- [Teensy40 Code](./position-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
+- [Teensy40 Code](./lib/peripheral/position-control/open-loop/teensy-40/teensy-40.ino) (todo fix words)
 
 ## Closed loop code (rotary encoder AS5147P)
 - [Todo](./)
