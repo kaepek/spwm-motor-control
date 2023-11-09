@@ -23,6 +23,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
 - Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
@@ -64,6 +65,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 - One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
@@ -130,6 +132,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
 - Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
@@ -186,6 +189,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 - One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
@@ -230,6 +234,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
 - Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
@@ -266,6 +271,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 - One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 5. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
@@ -328,6 +334,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
 - Also one could run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC.
     - keyboard usage: 
@@ -379,6 +386,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_time.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_by_encoder_step.json`
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/pid_voltages_by_encoder_step.json`
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 - One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/pid_by_encoder_step.json`
 12. Use the keyboard (click the director program terminal session first), ps4 dualshock controller or netsend program to control the ESC. Note you must use the netsend program to update PID values.
     - keyboard usage: 
@@ -428,6 +436,7 @@ A program to perform a step change analysis and get PID values.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_time_no_buffer.json`.
     - `./[spwm-root-directory]/lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`.
+- Realtime graphing example command: `kaepek-io-graph -a localhost -p 9002 -c ./lib/speed-control/graph_configs/control_kalman_hz_by_encoder_step.json`
 - One could also run the rotation stats analyser with the following command `node ./dist/lib/speed-control/programs/rotation-stats.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_by_time.json`
 4. Run the step change analysis program: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --output_data_file ./calibration-data/<step-change-output-file-name>.json`.
 - Example command: `node ./dist/lib/speed-control/programs/step-change.js --input_config_file ./lib/speed-control/graph_configs/control_kalman_hz_by_time.json --duty_cap_multiplier 0.3 --output_data_file ./calibration-data/tarot-4006-esc-direct-step-change.json`.
