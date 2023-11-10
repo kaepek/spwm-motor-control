@@ -23,7 +23,7 @@
         {"name":"pid_duty_percentage", "position": 20},
         {"name":"setpoint_hz", "position": 21}
     ],
-    "buffer_length": 650,
+    "buffer_length": 550,
     "plots": [
         {
             "name": "kalman_velocity",
