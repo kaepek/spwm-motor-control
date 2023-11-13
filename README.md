@@ -55,3 +55,7 @@ npm run build
 - [Arduino.h](https://github.com/arduino/ArduinoCore-avr)
 - [imxrt.h](https://github.com/PaulStoffregen/cores/tree/master)
 - [TeensyTimerTool](https://github.com/luni64/TeensyTimerTool/blob/master/LICENSE)
+- [RxJs](https://github.com/ReactiveX/rxjs/blob/master/LICENSE.txt)
+- [TS-Node](https://github.com/TypeStrong/ts-node/blob/main/LICENSE)
+- [Regression](https://github.com/tom-alexander/regression-js)
+- [Regression types](https://www.npmjs.com/package/@types/regression)
