@@ -14,7 +14,7 @@ Current support platforms Teensy40 with a AS5147P digital rotary encoder with a 
 ### Direct fit model ESC
 
 - [ESC direct](./esc-direct/README.md)
-- [ESC direct PID](./esc-direct-ac/README.md)
+- [ESC direct PID](./esc-direct-pid/README.md)
 - [ESC direct Anti-Cogging](./esc-direct-ac/README.md)
 - [ESC direct Anti-Cogging PID](./esc-direct-pid-ac/README.md)
 
